@@ -246,6 +246,29 @@ tr:hover td { background:var(--surface2); }
 .comment-input-wrap { display:flex; gap:10px; margin-top:14px; }
 .comment-input { flex:1; padding:9px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; font-family:inherit; }
 .comment-input:focus { outline:none; border-color:var(--accent); }
+.notion-filter-btn { padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s; }
+.notion-filter-btn.active { background:var(--accent)15;border-color:var(--accent);color:var(--accent); }
+.notion-filter-btn:hover:not(.active) { background:var(--surface);color:var(--text); }
+.news-kw-btn { padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s; }
+.news-kw-btn.active { background:var(--blue)15;border-color:var(--blue);color:var(--blue); }
+.news-kw-btn:hover:not(.active) { background:var(--surface);color:var(--text); }
+.portal-tab-btn { padding:8px 20px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s; }
+.portal-tab-btn.active { background:var(--accent)15;border-color:var(--accent);color:var(--accent); }
+.portal-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px; }
+.portal-card { background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 12px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all .2s;text-align:center;position:relative; }
+.portal-card:hover { border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 20px #0005; }
+.portal-card.no-url { cursor:default; }
+.portal-card.no-url:hover { transform:none;box-shadow:none;border-color:var(--border); }
+.portal-card-name { font-size:12px;font-weight:700;color:var(--text);line-height:1.3; }
+.portal-card-badge { font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600; }
+.portal-url-input { width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-family:inherit;margin-top:4px; }
+.news-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:all .15s;display:flex;gap:14px;align-items:flex-start; }
+.news-card:hover { border-color:var(--blue);transform:translateY(-1px);box-shadow:0 4px 16px #0004; }
+.news-card-body { flex:1;min-width:0; }
+.news-card-title { font-size:14px;font-weight:700;line-height:1.5;margin-bottom:5px;color:var(--text); }
+.news-card-desc { font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+.news-card-meta { display:flex;align-items:center;gap:10px;margin-top:8px;font-size:11px;color:var(--dim); }
+.news-source-badge { padding:2px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:11px;color:var(--muted);font-weight:600; }
 
 /* ── CLIENT DETAIL ── */
 .client-tab-bar { display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--border); }
@@ -737,13 +760,16 @@ kbd { font-family:'JetBrains Mono',monospace; }
     <div class="field"><label>비밀번호</label><input id="l-pw" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div class="check-row"><input type="checkbox" id="auto-login"><label for="auto-login">자동 로그인</label></div>
     <button class="btn-primary" onclick="doLogin()">로그인</button>
+    <button onclick="loginAsGuest()" style="width:100%;padding:11px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .15s"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+      👁 게스트로 입장하기
+    </button>
     <div id="login-msg" class="msg err"></div>
     <div class="auth-links">
       <button class="auth-link" onclick="showScreen('screen-find-id')">아이디 찾기</button><span class="auth-link-sep">|</span>
       <button class="auth-link" onclick="showScreen('screen-find-pw')">비밀번호 찾기</button><span class="auth-link-sep">|</span>
       <button class="auth-link" onclick="showScreen('screen-signup')">회원가입</button>
     </div>
-
   </div>
 </div>
 
@@ -910,6 +936,10 @@ kbd { font-family:'JetBrains Mono',monospace; }
     <div class="nav-item" onclick="goPage('tool-coverage',this)"><span class="icon">🤖</span> 보장분석 AI<span class="nav-toggle" onclick="toggleNavItem(event,this)" title="메뉴 숨기기/보이기">👁</span></div>
     <div class="nav-item" onclick="goPage('insurance-ref',this)"><span class="icon">🏥</span> 질병코드·특약<span class="nav-toggle" onclick="toggleNavItem(event,this)" title="메뉴 숨기기/보이기">👁</span></div>
     <div class="nav-item" onclick="openClaimForm()"><span class="icon">📋</span> 청구서 자동작성<span class="nav-toggle" onclick="toggleNavItem(event,this)" title="메뉴 숨기기/보이기">👁</span></div>
+    <div class="nav-item" onclick="goPage('notion-search',this)"><span class="icon">🔍</span> 보험서치<span class="nav-toggle" onclick="toggleNavItem(event,this)" title="메뉴 숨기기/보이기">👁</span></div>
+    <div class="nav-item" onclick="goPage('insurance-news',this)"><span class="icon">📰</span> 오늘의 뉴스<span class="nav-toggle" onclick="toggleNavItem(event,this)" title="메뉴 숨기기/보이기">👁</span></div>
+    <div class="nav-item" onclick="goPage('hira-analyzer',this)"><span class="icon">🏥</span> 알릴의무 필터<span class="nav-toggle" onclick="toggleNavItem(event,this)" title="메뉴 숨기기/보이기">👁</span></div>
+    <div class="nav-item" onclick="goPage('insurance-portal',this)"><span class="icon">🏢</span> 보험사 전산<span class="nav-toggle" onclick="toggleNavItem(event,this)" title="메뉴 숨기기/보이기">👁</span></div>
 
     <!-- 총무 전용 메뉴 -->
     <div id="nav-staff-section" style="display:none">
@@ -1010,10 +1040,18 @@ kbd { font-family:'JetBrains Mono',monospace; }
       </div>
       <!-- 범례 -->
       <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap" id="map-legend-row">
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:12px;height:12px;border-radius:50%;background:#2EA44F;display:inline-block"></span>활성</div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:12px;height:12px;border-radius:50%;background:#E3B341;display:inline-block"></span>대기</div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:12px;height:12px;border-radius:50%;background:#BC8CFF;display:inline-block"></span>VIP</div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:12px;height:12px;border-radius:50%;background:#F78166;display:inline-block"></span>기타</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:12px;height:12px;border-radius:50%;background:#2EA44F;display:inline-block"></span>활성화</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:12px;height:12px;border-radius:50%;background:#8B949E;display:inline-block"></span>비활성화</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:12px;height:12px;border-radius:50%;background:#BC8CFF;display:inline-block"></span>키맨</div>
+      </div>
+      <!-- 주소 미등록 고객 -->
+      <div id="map-no-addr" style="margin-top:18px;display:none">
+        <div style="font-size:13px;font-weight:700;color:var(--orange);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          ⚠️ 주소 미등록 고객
+          <span id="map-no-addr-count" style="background:var(--orange)22;color:var(--orange);border:1px solid var(--orange)44;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700"></span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">주소가 없어 지도에 표시되지 않습니다. 고객 정보를 수정해 주소를 등록해주세요.</div>
+        <div id="map-no-addr-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px"></div>
       </div>
     </div>
 
@@ -1525,6 +1563,225 @@ kbd { font-family:'JetBrains Mono',monospace; }
       <div class="page-header"><div><div class="page-title">🤖 보장분석 AI</div><div class="page-sub">보험 PDF 업로드 후 AI 분석 리포트 생성</div></div></div>
       <div id="tool-coverage-content"></div>
     </div>
+    <!-- ── HIRA ANALYZER (심평원 자료 분석기) ── -->
+    <div class="page" id="page-hira-analyzer">
+      <div class="page-header">
+        <div>
+          <div class="page-title">🏥 알릴의무 필터</div>
+          <div class="page-sub">심평원 자료 AI 분석 · 입원/수술/통원/복용약 자동 분류</div>
+        </div>
+        <button onclick="hiraReset()" style="padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit">🔄 초기화</button>
+      </div>
+
+      <!-- 사용방법 안내 -->
+      <div style="background:var(--blue)11;border:1px solid var(--blue)33;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:1.8">
+        <b style="color:var(--blue)">사용 방법</b><br>
+        1. 고객의 심평원 자료 (내 진료정보 열람)를 텍스트로 붙여넣거나 PDF/이미지로 업로드하세요<br>
+        2. AI가 자동으로 입원/수술, 통원, 복용약을 분류하여 고지사항 형식으로 정리합니다<br>
+        3. 결과를 복사하여 보험 가입 시 알릴의무 작성에 활용하세요
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <!-- 왼쪽: 입력 -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <!-- 입력 방식 탭 -->
+          <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+            <button id="hira-tab-text" onclick="setHiraTab('text')"
+              style="flex:1;padding:10px;background:var(--surface2);border:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s">
+              텍스트 붙여넣기
+            </button>
+            <button id="hira-tab-file" onclick="setHiraTab('file')"
+              style="flex:1;padding:10px;background:var(--blue);border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
+              📎 파일 업로드 (PDF/이미지)
+            </button>
+          </div>
+
+          <!-- 텍스트 입력 -->
+          <div id="hira-text-panel">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">심평원 자료 텍스트 <span style="color:var(--orange)">*</span></label>
+            <textarea id="hira-text-input" placeholder="심평원 내 진료정보 열람 내용을 붙여넣으세요..."
+              style="width:100%;height:280px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;outline:none;line-height:1.6"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+          </div>
+
+          <!-- 파일 업로드 -->
+          <div id="hira-file-panel" style="display:none">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">심평원 자료 업로드 <span style="color:var(--orange)">*</span></label>
+            <div id="hira-drop-zone" onclick="document.getElementById('hira-file-input').click()"
+              style="border:2px dashed var(--border);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface)"
+              ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--accent)08'"
+              ondragleave="this.style.borderColor='var(--border)';this.style.background='var(--surface)'"
+              ondrop="event.preventDefault();this.style.borderColor='var(--border)';this.style.background='var(--surface)';hiraLoadFile(event.dataTransfer.files[0])">
+              <div id="hira-file-icon" style="font-size:36px;margin-bottom:10px">📄</div>
+              <div id="hira-file-name" style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">파일을 드래그하거나 클릭하여 선택</div>
+              <div style="font-size:11px;color:var(--muted)">PDF · JPG · PNG 지원</div>
+              <input type="file" id="hira-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="hiraLoadFile(this.files[0])">
+            </div>
+          </div>
+
+          <!-- 생년월일 (PDF 비밀번호용) -->
+          <div>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">고객 생년월일 <span style="font-size:11px">(선택 — PDF에 비밀번호가 걸린 경우 자동 해제)</span></label>
+            <input id="hira-birthdate" type="text" placeholder="예: 19900101 또는 900101" maxlength="8"
+              style="width:200px;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          </div>
+
+          <!-- 분석 버튼 -->
+          <button id="hira-analyze-btn" onclick="hiraAnalyze()"
+            style="width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--accent));color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:opacity .2s">
+            🤖 AI 분석 시작
+          </button>
+
+          <!-- 분석 중 상태 -->
+          <div id="hira-loading" style="display:none;text-align:center;padding:20px;color:var(--muted)">
+            <div style="font-size:24px;margin-bottom:8px;display:inline-block;animation:spin 1s linear infinite">⏳</div>
+            <div style="font-size:13px" id="hira-loading-msg">AI 분석 중... (30초~1분 소요)</div>
+          </div>
+        </div>
+
+        <!-- 오른쪽: 결과 -->
+        <div id="hira-result-panel">
+          <div style="color:var(--muted);text-align:center;padding:80px 20px">
+            <div style="font-size:40px;margin-bottom:12px">🏥</div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:6px">분석 결과가 여기에 표시됩니다</div>
+            <div style="font-size:12px">심평원 자료를 입력 후 AI 분석을 시작하세요</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INSURANCE NEWS ── -->
+    <div class="page" id="page-insurance-news">
+      <div class="page-header">
+        <div>
+          <div class="page-title">📰 오늘의 보험 뉴스</div>
+          <div class="page-sub" id="news-sub">보험 관련 주요 뉴스 실시간 업데이트</div>
+        </div>
+        <button onclick="loadInsuranceNews(true)" style="padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit">🔄 새로고침</button>
+      </div>
+
+      <!-- 키워드 탭 -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px" id="news-keyword-bar">
+        <button class="news-kw-btn active" onclick="setNewsKeyword('보험',this)">🏥 보험</button>
+        <button class="news-kw-btn" onclick="setNewsKeyword('생명보험',this)">❤️ 생명보험</button>
+        <button class="news-kw-btn" onclick="setNewsKeyword('손해보험',this)">🛡️ 손해보험</button>
+        <button class="news-kw-btn" onclick="setNewsKeyword('실손보험',this)">💊 실손보험</button>
+        <button class="news-kw-btn" onclick="setNewsKeyword('보험료',this)">💰 보험료</button>
+        <button class="news-kw-btn" onclick="setNewsKeyword('보험금',this)">💳 보험금</button>
+        <button class="news-kw-btn" onclick="setNewsKeyword('보험사기',this)">⚠️ 보험사기</button>
+        <button class="news-kw-btn" onclick="setNewsKeyword('금융감독원',this)">🏛️ 금감원</button>
+      </div>
+
+      <!-- 뉴스 목록 -->
+      <div id="news-result">
+        <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+          <div style="font-size:40px;margin-bottom:12px">📰</div>
+          <div style="font-size:14px">뉴스를 불러오는 중...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INSURANCE PORTAL ── -->
+    <div class="page" id="page-insurance-portal">
+      <div class="page-header">
+        <div>
+          <div class="page-title">🏢 보험사 전산</div>
+          <div class="page-sub">보험사 설계사 전산 바로가기</div>
+        </div>
+        <button id="portal-edit-btn" onclick="togglePortalEdit()" style="padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit">✏️ URL 편집</button>
+      </div>
+
+      <!-- 탭 -->
+      <div style="display:flex;gap:6px;margin-bottom:20px" id="portal-tab-bar">
+        <button class="portal-tab-btn active" onclick="setPortalTab('life',this)">❤️ 생명보험</button>
+        <button class="portal-tab-btn" onclick="setPortalTab('nonlife',this)">🛡️ 손해보험</button>
+      </div>
+
+      <!-- URL 편집 모드 안내 -->
+      <div id="portal-edit-banner" style="display:none;background:var(--blue)11;border:1px solid var(--blue)44;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--muted)">
+        ✏️ 편집 모드 — 각 보험사 카드의 URL 입력란에 설계사 전산 주소를 입력 후 <b style="color:var(--text)">저장</b> 클릭
+      </div>
+
+      <!-- 보험사 그리드 -->
+      <div id="portal-grid"></div>
+    </div>
+
+    <!-- ── NOTION SEARCH ── -->
+    <div class="page" id="page-notion-search">
+      <div class="page-header">
+        <div>
+          <div class="page-title">🔍 보험서치</div>
+          <div class="page-sub">노션 페이지 · 데이터베이스 통합 검색</div>
+        </div>
+        <button onclick="openNotionSettings()" id="notion-settings-btn" style="display:none;padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit">⚙️ 설정</button>
+      </div>
+
+      <!-- API 미설정 안내 -->
+      <div id="notion-setup-banner" style="display:none;background:var(--orange)11;border:1px solid var(--orange)44;border-radius:12px;padding:18px 20px;margin-bottom:20px">
+        <div style="font-size:14px;font-weight:700;color:var(--orange);margin-bottom:6px">⚙️ Notion API 설정이 필요합니다</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7">
+          1. <a href="https://www.notion.so/my-integrations" target="_blank" style="color:var(--accent)">notion.so/my-integrations</a> → New Integration 생성<br>
+          2. Internal Integration Token 복사<br>
+          3. 검색할 노션 페이지에서 ··· → Connections → Integration 연결<br>
+          4. 우측 상단 ⚙️ 설정 버튼에서 토큰 입력
+        </div>
+      </div>
+
+      <!-- 검색창 -->
+      <div style="position:relative;margin-bottom:20px">
+        <input id="notion-search-input" type="text" placeholder="노션에서 검색할 내용을 입력하세요..."
+          style="width:100%;padding:14px 50px 14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:border .2s"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+          onkeydown="if(event.key==='Enter')notionSearch()">
+        <button onclick="notionSearch()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--accent);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">검색</button>
+      </div>
+
+      <!-- 필터 -->
+      <div style="display:flex;gap:6px;margin-bottom:18px" id="notion-filter-bar">
+        <button class="notion-filter-btn active" onclick="setNotionFilter('all',this)">전체</button>
+        <button class="notion-filter-btn" onclick="setNotionFilter('page',this)">📄 페이지</button>
+        <button class="notion-filter-btn" onclick="setNotionFilter('database',this)">🗂️ 데이터베이스</button>
+      </div>
+
+      <!-- 결과 -->
+      <div id="notion-search-result">
+        <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+          <div style="font-size:40px;margin-bottom:12px">🔍</div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px">노션 콘텐츠를 검색해보세요</div>
+          <div style="font-size:13px">연결된 모든 페이지와 데이터베이스에서 검색합니다</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 노션 설정 모달 -->
+    <div class="modal-overlay" id="modal-notion-settings" onclick="if(event.target===this)closeModal('modal-notion-settings')">
+      <div class="modal-box" style="max-width:480px">
+        <div class="modal-header">
+          <div class="modal-title">🔍 노션 연동 설정</div>
+          <button class="modal-close" onclick="closeModal('modal-notion-settings')">✕</button>
+        </div>
+        <div style="padding:4px 0 16px">
+          <div class="field">
+            <label>Notion Integration Token</label>
+            <input id="notion-token-input" type="password" placeholder="secret_xxxxxxxxxxxx..."
+              style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">
+            <div style="font-size:11px;color:var(--muted);margin-top:5px">
+              <a href="https://www.notion.so/my-integrations" target="_blank" style="color:var(--accent)">notion.so/my-integrations</a>에서 발급
+            </div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--muted);line-height:1.7;margin-top:4px">
+            ⚠️ 토큰은 이 기기의 브라우저에만 저장됩니다<br>
+            검색할 노션 페이지에 Integration이 연결되어 있어야 합니다
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-action" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="closeModal('modal-notion-settings')">취소</button>
+          <button class="btn-action" style="background:var(--accent);color:#fff;border:none" onclick="saveNotionSettings()">저장</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── DISEASE CODE (질병코드·특약 조회) ── -->
     <div class="page" id="page-insurance-ref">
       <div class="page-header">
@@ -1667,19 +1924,22 @@ kbd { font-family:'JetBrains Mono',monospace; }
       <div class="field"><label>직업</label><input id="c-job" type="text" placeholder="직업 입력"></div>
     </div>
     <div class="field">
-      <label>주소 *</label>
+      <label>주소</label>
       <div style="display:flex;gap:6px">
-        <input id="c-addr" type="text" placeholder="주소 검색 버튼을 눌러주세요" readonly
-          style="flex:1;background:var(--surface2);cursor:pointer" onclick="openAddrSearch('c-addr','c-addr-detail','c-lat','c-lng')">
+        <input id="c-addr" type="text" placeholder="주소 입력 또는 검색"
+          style="flex:1" oninput="addrAutocomplete(this.value,'c-addr-suggest','c-addr','c-lat','c-lng')">
+        <button type="button" onclick="getGPSAddr('c-addr','c-lat','c-lng')"
+          style="padding:8px 10px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap" title="현재 위치 자동 입력">📍 GPS</button>
         <button type="button" onclick="openAddrSearch('c-addr','c-addr-detail','c-lat','c-lng')"
-          style="padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔍 주소검색</button>
+          style="padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔍 검색</button>
       </div>
+      <div id="c-addr-suggest" style="display:none;position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:8px;z-index:200;max-height:180px;overflow-y:auto;width:340px;box-shadow:0 4px 16px #0008;margin-top:2px"></div>
       <input id="c-addr-detail" type="text" placeholder="상세주소 입력 (동/호수 등)" style="margin-top:6px;width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;box-sizing:border-box">
       <input type="hidden" id="c-lat"> <input type="hidden" id="c-lng">
     </div>
     <div class="field-row">
       <div class="field"><label>상태</label>
-        <select id="c-status"><option value="active">활성</option><option value="pending">대기</option><option value="vip">VIP</option></select>
+        <select id="c-status"><option value="active">활성화</option><option value="inactive">비활성화</option><option value="keyman">키맨</option></select>
       </div>
       <div class="field"><label>다음 연락일</label><input id="c-next" type="date"></div>
     </div>
@@ -2052,8 +2312,8 @@ let USERS = [
 let PENDING_USERS = [];
 
 // ── 권한 헬퍼 ──
-const ROLE_LABEL = { superadmin:"전체관리자", bureau_head:"본부장", branch_head:"지사장", team_head:"팀장", agent:"설계사", staff:"총무" };
-const ROLE_COLOR = { superadmin:"#F78166", bureau_head:"#BC8CFF", branch_head:"#388BFD", team_head:"#E3B341", agent:"#2EA44F", staff:"#20B2AA" };
+const ROLE_LABEL = { superadmin:"전체관리자", bureau_head:"본부장", branch_head:"지사장", team_head:"팀장", agent:"설계사", staff:"총무", guest:"게스트" };
+const ROLE_COLOR = { superadmin:"#F78166", bureau_head:"#BC8CFF", branch_head:"#388BFD", team_head:"#E3B341", agent:"#2EA44F", staff:"#20B2AA", guest:"#8B949E" };
 
 function getRoleLevel(role){ return {superadmin:5,bureau_head:4,branch_head:3,team_head:2,agent:1,staff:1}[role]||1; }
 
@@ -2094,6 +2354,8 @@ function getValidAgentIds(){
 
 function getVisibleAgentIds(user){
   if(!user) return [];
+  // 게스트: 전체 열람 (읽기전용)
+  if(user.role==='guest') return AGENTS.map(a=>a.id);
   let ids = [];
   const validIds = getValidAgentIds(); // USERS에 연결된 AGENTS만
 
@@ -2141,8 +2403,8 @@ function getVisibleAgentIds(user){
     // 설계사: 본인만
     ids = user.agentId ? [user.agentId] : [];
   } else if(user.role==='staff'){
-    // 총무: 전체 조직 열람 가능 (조직도/대화용)
-    ids = AGENTS.map(a=>a.id);
+    // 총무: 조직도/대화용으로 AGENTS는 볼 수 있지만 고객은 본인 것만
+    ids = user.agentId ? [user.agentId] : [];
   }
 
   // 본인 agentId 항상 포함
@@ -2172,11 +2434,11 @@ let AGENTS = [
 
 let CLIENTS = [
   { id:1, agentId:1, name:"오세진", phone:"010-1234-5678", ssn:"850101-1234567", addr:"서울시 강남구 테헤란로 123", job:"의사", status:"active", nextContact:"2026-03-20", memo:"VIP 후보. 자녀 2명 있음.", contracts:[{product:"종신보험",premium:150,date:"2025-06-01"}] },
-  { id:2, agentId:1, name:"류미향", phone:"010-9876-5432", ssn:"900505-2345678", addr:"서울시 서초구 반포대로 55", job:"회사원", status:"pending", nextContact:"2026-03-18", memo:"계약 검토 중.", contracts:[{product:"암보험",premium:80,date:"2025-09-15"}] },
+  { id:2, agentId:1, name:"류미향", phone:"010-9876-5432", ssn:"900505-2345678", addr:"서울시 서초구 반포대로 55", job:"회사원", status:"inactive", nextContact:"2026-03-18", memo:"계약 검토 중.", contracts:[{product:"암보험",premium:80,date:"2025-09-15"}] },
   { id:3, agentId:1, name:"강태양", phone:"010-5555-4444", ssn:"780320-1456789", addr:"경기도 성남시 분당구 판교로 300", job:"자영업", status:"active", nextContact:"2026-04-01", memo:"추가 상품 관심 있음.", contracts:[{product:"실손보험",premium:60,date:"2025-11-01"}] },
   { id:4, agentId:2, name:"임소희", phone:"010-3333-2222", ssn:"921210-2567890", addr:"서울시 마포구 홍익로 20", job:"교사", status:"active", nextContact:"2026-03-25", memo:"", contracts:[{product:"연금보험",premium:200,date:"2025-07-20"}] },
-  { id:5, agentId:3, name:"배종욱", phone:"010-7777-8888", ssn:"760815-1678901", addr:"부산시 해운대구 센텀중앙로 90", job:"의사", status:"vip", nextContact:"2026-03-17", memo:"고액 자산가.", contracts:[{product:"종신보험",premium:180,date:"2024-12-01"},{product:"연금보험",premium:250,date:"2025-03-01"}] },
-  { id:6, agentId:3, name:"윤채원", phone:"010-2222-9999", ssn:"950303-2789012", addr:"서울시 용산구 이태원로 100", job:"디자이너", status:"vip", nextContact:"2026-03-19", memo:"", contracts:[{product:"암보험",premium:120,date:"2025-05-15"}] },
+  { id:5, agentId:3, name:"배종욱", phone:"010-7777-8888", ssn:"760815-1678901", addr:"부산시 해운대구 센텀중앙로 90", job:"의사", status:"keyman", nextContact:"2026-03-17", memo:"고액 자산가.", contracts:[{product:"종신보험",premium:180,date:"2024-12-01"},{product:"연금보험",premium:250,date:"2025-03-01"}] },
+  { id:6, agentId:3, name:"윤채원", phone:"010-2222-9999", ssn:"950303-2789012", addr:"서울시 용산구 이태원로 100", job:"디자이너", status:"keyman", nextContact:"2026-03-19", memo:"", contracts:[{product:"암보험",premium:120,date:"2025-05-15"}] },
 ];
 
 let scheduleData = [
@@ -2218,8 +2480,8 @@ let editingAgentId = null;
 let clientNextId = 7;
 
 // ════ HELPERS ════
-const sC = s=>({active:"#2EA44F",pending:"#E3B341",vip:"#BC8CFF"}[s]||"#8B949E");
-const sL = s=>({active:"활성",pending:"대기",vip:"VIP"}[s]||s);
+const sC = s=>({active:"#2EA44F", inactive:"#8B949E", keyman:"#BC8CFF"}[s]||"#8B949E");
+const sL = s=>({active:"활성화", inactive:"비활성화", keyman:"키맨"}[s]||s);
 const tC = t=>({상담:"#388BFD",계약:"#2EA44F",방문:"#F78166"}[t]||"#8B949E");
 const pct = (a,t)=>Math.min(100,Math.round(a/t*100));
 const fmt = n=>Number(n).toLocaleString("ko-KR");
@@ -2296,6 +2558,22 @@ function fillLoginFromHint(el){
   document.getElementById('l-email').value=email;
   document.getElementById('l-pw').value=pw;
   doLogin();
+}
+
+function loginAsGuest(){
+  const guest = {
+    id: 0,
+    email: 'guest@insurepro.kr',
+    name: '게스트',
+    phone: '',
+    role: 'guest',
+    team: '', branchId: null, bureauId: null, agentId: null,
+    status: 'approved',
+    joinDate: '', lastLogin: null,
+    _isGuest: true,
+  };
+  enterApp(guest);
+  showToast('👁 게스트 모드로 입장했습니다 (읽기 전용)');
 }
 
 function doLogin(){
@@ -2399,6 +2677,18 @@ function enterApp(user){
   const isBranchHead = user.role==='branch_head';
   const isTeamHead = user.role==='team_head';
   const isMgrRole = isAdmin||isBureauHead||isBranchHead||isTeamHead;
+  const isGuest = user.role==='guest';
+
+  // 게스트 배너
+  const existingBanner = document.getElementById('guest-banner');
+  if(existingBanner) existingBanner.remove();
+  if(isGuest){
+    const banner = document.createElement('div');
+    banner.id = 'guest-banner';
+    banner.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#21262d;border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:12px;color:var(--muted);z-index:9999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px #0006';
+    banner.innerHTML = '👁 게스트 모드 — 읽기 전용 <button onclick="doLogout()" style="padding:4px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">로그인하기</button>';
+    document.body.appendChild(banner);
+  }
 
   // Admin section: superadmin + bureau_head + branch_head
   document.getElementById('nav-admin-section').style.display=(isAdmin||isBureauHead||isBranchHead)?'block':'none';
@@ -2530,10 +2820,69 @@ function renderSystemSettings(){
   if(!el) return;
 
   const kcdKey = window.KCD_API_KEY || '';
+  const geminiKey = localStorage.getItem('gemini_api_key') || '';
   const supaUrl = typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '';
 
   el.innerHTML = `
     <div style="max-width:720px;display:flex;flex-direction:column;gap:20px">
+
+      <!-- Gemini API 설정 -->
+      <div class="card" style="padding:24px">
+        <div style="font-size:16px;font-weight:700;margin-bottom:4px">🤖 Gemini API 설정</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:18px">알릴의무 필터(심평원 분석기) · 보장분석 AI에 사용됩니다</div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Gemini API Key</label>
+          <div style="display:flex;gap:8px">
+            <input id="ss-gemini-key" type="password" value="${geminiKey}"
+              placeholder="AIzaSy..."
+              style="flex:1;padding:10px 12px;font-size:13px;font-family:'JetBrains Mono',monospace">
+            <button onclick="document.getElementById('ss-gemini-key').type=document.getElementById('ss-gemini-key').type==='password'?'text':'password'"
+              style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px">👁</button>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.8">
+          <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--blue)">aistudio.google.com/apikey</a>에서 무료 발급
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="saveGeminiKey()"
+            style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+            💾 저장
+          </button>
+          <button onclick="testGeminiApi()"
+            style="padding:10px 18px;background:var(--blue)22;color:var(--blue);border:1px solid var(--blue)44;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+            🔍 연결 테스트
+          </button>
+        </div>
+        <div id="ss-gemini-result" style="margin-top:10px;font-size:12px"></div>
+      </div>
+
+      <!-- Notion API 설정 -->
+      <div class="card" style="padding:24px">
+        <div style="font-size:16px;font-weight:700;margin-bottom:4px">🔍 보험서치 (Notion) 설정</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:18px">노션 Integration Token — 보험서치 검색 기능에 사용됩니다</div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Notion Integration Token</label>
+          <div style="display:flex;gap:8px">
+            <input id="ss-notion-token" type="password"
+              value="${localStorage.getItem('notion_token')||''}"
+              placeholder="secret_xxxxxxxxxxxx..."
+              style="flex:1;padding:10px 12px;font-size:13px;font-family:'JetBrains Mono',monospace">
+            <button onclick="document.getElementById('ss-notion-token').type=document.getElementById('ss-notion-token').type==='password'?'text':'password'"
+              style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px">👁</button>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.8">
+          <b style="color:var(--text)">설정 방법</b><br>
+          1. <a href="https://www.notion.so/my-integrations" target="_blank" style="color:var(--blue)">notion.so/my-integrations</a> → New Integration 생성<br>
+          2. Internal Integration Token 복사<br>
+          3. 검색할 노션 페이지에서 ··· → Connections → Integration 연결
+        </div>
+        <button onclick="saveSystemNotionToken()"
+          style="padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+          💾 저장
+        </button>
+        <div id="ss-notion-result" style="margin-top:10px;font-size:12px"></div>
+      </div>
 
       <!-- API 키 설정 섹션 -->
       <div class="card" style="padding:24px">
@@ -2631,6 +2980,46 @@ function renderSystemSettings(){
       </div>
 
     </div>`;
+}
+
+function saveGeminiKey(){
+  const key = document.getElementById('ss-gemini-key')?.value.trim();
+  const res = document.getElementById('ss-gemini-result');
+  if(!key){ if(res) res.innerHTML='<span style="color:var(--orange)">키를 입력해주세요</span>'; return; }
+  localStorage.setItem('gemini_api_key', key);
+  window.GEMINI_API_KEY = key;
+  if(res) res.innerHTML='<span style="color:var(--accent)">✅ 저장되었습니다</span>';
+  showToast('✅ Gemini API 키가 저장되었습니다');
+}
+
+async function testGeminiApi(){
+  const key = document.getElementById('ss-gemini-key')?.value.trim() || localStorage.getItem('gemini_api_key') || '';
+  const res = document.getElementById('ss-gemini-result');
+  if(!key){ if(res) res.innerHTML='<span style="color:var(--orange)">키를 먼저 입력해주세요</span>'; return; }
+  if(res) res.innerHTML='<span style="color:var(--muted)">테스트 중...</span>';
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ contents:[{ parts:[{text:'안녕'}] }] })
+    });
+    const d = await r.json();
+    if(d.candidates?.[0]?.content){
+      if(res) res.innerHTML='<span style="color:var(--accent)">✅ 연결 성공!</span>';
+    } else {
+      throw new Error(d.error?.message || '응답 오류');
+    }
+  } catch(e){
+    if(res) res.innerHTML=`<span style="color:var(--orange)">❌ ${e.message}</span>`;
+  }
+}
+
+function saveSystemNotionToken(){
+  const token = document.getElementById('ss-notion-token')?.value.trim();
+  const res = document.getElementById('ss-notion-result');
+  if(!token){ if(res) res.innerHTML='<span style="color:var(--orange)">토큰을 입력해주세요</span>'; return; }
+  localStorage.setItem('notion_token', token);
+  if(res) res.innerHTML='<span style="color:var(--accent)">✅ 저장되었습니다</span>';
+  showToast('✅ 보험서치 토큰이 저장되었습니다');
 }
 
 function toggleSsKcdKeyVisibility(){
@@ -2931,6 +3320,10 @@ function goPage(name,el){
   if(name==='tool-calc'){renderToolCalc();}
   if(name==='tool-coverage'){renderToolCoverage();}
   if(name==='insurance-ref'){ diseaseTab='search'; renderInsuranceRef(); }
+  if(name==='notion-search'){ initNotionPage(); }
+  if(name==='insurance-news'){ loadInsuranceNews(); }
+  if(name==='hira-analyzer'){ setHiraTab('file'); }
+  if(name==='insurance-portal'){ initPortalPage(); }
   if(name==='claim-form'){ renderClaimForm(); }
   if(name==='system-settings'){ renderSystemSettings(); }
   if(name==='my-info'){renderMyInfo();}
@@ -3237,26 +3630,24 @@ function renderDashPersonal(){
     myDb=DB_CLIENTS.filter(d=>d.assignedTo&&visIds.includes(d.assignedTo));
   }
 
-  const p=agent?pct(agent.achieved,agent.target):0;
-  const pc=p>=100?'#2EA44F':p>=80?'#388BFD':p>=50?'#E3B341':'#F78166';
-
-  // 전체 인원 중 순위 계산
-  const allAgentsSorted = [...AGENTS].filter(a=>!a.isMgr).sort((a,b)=>b.achieved-a.achieved);
-  const myRank = agent ? allAgentsSorted.findIndex(a=>a.id===agent.id)+1 : 0;
-  const rankLabel = myRank===1?'🥇':myRank===2?'🥈':myRank===3?'🥉':(myRank>0?`#${myRank}`:`-`);
-
-  // 이번 달 월납 합산 (당월 계약 기준)
+  // 이번 달 / 올해 실적
   const nowYM = new Date().toISOString().slice(0,7);
-  const monthlyAchieved = myClients.reduce((s,c)=>{
-    return s + (c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYM)).reduce((s2,con)=>s2+(con.premium||0),0);
-  },0);
-  const displayAchieved = isAgent ? (agent?.achieved||0) : monthlyAchieved;
+  const nowY  = new Date().getFullYear().toString();
+  const monthPremium = myClients.reduce((s,c)=>
+    s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYM)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const yearPremium  = myClients.reduce((s,c)=>
+    s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowY)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const displayAchieved = isAgent ? (agent?.achieved||0) : monthPremium;
+
+  // DB 고객 통계
+  const dbTotal    = myDb.length;
+  const dbContract = myDb.filter(d=>d.processStatus==='계약완료').length;
 
   document.getElementById('dash-stats').innerHTML=[
-    {label:isAgent?'나의 고객':'관할 고객',val:myClients.length+'명',change:`활성 ${myClients.filter(c=>c.status==='active').length}명`,color:'#388BFD'},
-    {label:'이번 달 실적',val:fmt(displayAchieved)+'만',change:agent?`목표 ${fmt(agent.target)}만 · 수정`:'합산',color:'#2EA44F'},
-    {label:'달성률',val:agent?p+'%':'-',change:agent?(p>=100?'🎉 목표 달성!':'진행 중'):'',color:pc,onclick:agent?'quickEditTarget('+agent.id+')':null},
-    {label:'전체 순위',val:rankLabel,change:agent?`전체 ${allAgentsSorted.length}명 중`:'',color:myRank===1?'#E3B341':myRank<=3?'#BC8CFF':'#388BFD'},
+    {label:'전체 고객',          val:myClients.length+'명',  change:`활성화 ${myClients.filter(c=>c.status==='active').length} · 키맨 ${myClients.filter(c=>c.status==='keyman').length}`,color:'#388BFD'},
+    {label:'DB 고객',            val:dbTotal+'건',            change:`계약완료 ${dbContract}건`,                                                                                           color:'#BC8CFF'},
+    {label:'이번 달 실적',       val:fmt(monthPremium)+'만',  change:agent?`목표 ${fmt(agent.target)}만 · ${pct(agent.achieved,agent.target)}%`:'당월 신계약',                            color:'#2EA44F'},
+    {label:'올해 실적',          val:fmt(yearPremium)+'만',   change:`${nowY}년 누계`,                                                                                                     color:'#E3B341'},
   ].map(s=>`<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-val" style="color:${s.color};font-size:${s.val.length>6?'20px':'26px'}">${s.val}</div><div class="stat-change">${s.change}</div></div>`).join('');
 
   document.getElementById('dash-body').innerHTML=`
@@ -3293,7 +3684,7 @@ function renderDashPersonal(){
       <div class="card">
         <div class="card-title">👥 ${isAgent?'내 고객 현황':'관할 고객 현황'}</div>
         <div style="display:flex;gap:8px;margin-bottom:12px">
-          ${['active','pending','vip'].map(s=>`
+          ${['active','inactive','keyman'].map(s=>`
             <div style="flex:1;background:${sC(s)}11;border:1px solid ${sC(s)}33;border-radius:8px;padding:8px;text-align:center">
               <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${sL(s)}</div>
               <div style="font-size:18px;font-weight:700;color:${sC(s)}">${myClients.filter(c=>c.status===s).length}</div>
@@ -3325,11 +3716,18 @@ function renderDashAgent(){
   const p=agent?pct(agent.achieved,agent.target):0;
   const pc=p>=100?'#2EA44F':p>=80?'#388BFD':p>=50?'#E3B341':'#F78166';
 
+  const nowYM2 = new Date().toISOString().slice(0,7);
+  const nowY2  = new Date().getFullYear().toString();
+  const monthP = myClients.reduce((s,c)=>s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYM2)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const yearP  = myClients.reduce((s,c)=>s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowY2)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const dbTotal2 = myDb.length;
+  const dbContracted2 = myDb.filter(d=>d.processStatus==='계약완료').length;
+
   document.getElementById('dash-stats').innerHTML=[
-    {label:'담당 고객',val:myClients.length+'명',change:`활성 ${myClients.filter(c=>c.status==='active').length}명`,color:'#388BFD'},
-    {label:'이번 달 실적',val:fmt(agent?.achieved||0)+'만',change:`목표 ${fmt(agent?.target||0)}만`,color:'#2EA44F'},
-    {label:'달성률',val:p+'%',change:p>=100?'🎉 목표 달성!':'진행 중',color:pc},
-    {label:'DB 고객',val:myDb.length+'건',change:`미처리 ${myDb.filter(d=>d.processStatus==='미처리').length}건`,color:'#BC8CFF'},
+    {label:'전체 고객',    val:myClients.length+'명',  change:`활성화 ${myClients.filter(c=>c.status==='active').length} · 키맨 ${myClients.filter(c=>c.status==='keyman').length}`, color:'#388BFD'},
+    {label:'DB 고객',      val:dbTotal2+'건',           change:`계약완료 ${dbContracted2}건`,                                                                                          color:'#BC8CFF'},
+    {label:'이번 달 실적', val:fmt(monthP)+'만',         change:agent?`목표 ${fmt(agent?.target||0)}만 · ${p}%`:'당월 신계약',                                                          color:'#2EA44F'},
+    {label:'올해 실적',    val:fmt(yearP)+'만',          change:`${nowY2}년 누계`,                                                                                                      color:'#E3B341'},
   ].map(s=>`<div class="stat-card" ${s.onclick?`onclick="${s.onclick}" style="cursor:pointer" title="클릭하여 목표 수정"`:''}>
     <div class="stat-label">${s.label}</div>
     <div class="stat-val" style="color:${s.color}">${s.val}</div>
@@ -3407,11 +3805,17 @@ function renderDashTeamView(){
   const p=tt?pct(ta,tt):0;
   const pc=p>=100?'#2EA44F':p>=80?'#388BFD':p>=50?'#E3B341':'#F78166';
 
+  const nowYMt = new Date().toISOString().slice(0,7);
+  const nowYt  = new Date().getFullYear().toString();
+  const monthPt = teamClients.reduce((s,c)=>s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYMt)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const yearPt  = teamClients.reduce((s,c)=>s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYt)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const dbContractedT = teamDb.filter(d=>d.processStatus==='계약완료').length;
+
   document.getElementById('dash-stats').innerHTML=[
-    {label:'팀 설계사',val:teamAgents.length+'명',change:myTeam,color:'#388BFD'},
-    {label:'팀 고객',val:teamClients.length+'명',change:`활성 ${teamClients.filter(c=>c.status==='active').length}명`,color:'#2EA44F'},
-    {label:'팀 달성률',val:p+'%',change:`${fmt(ta)}만 / ${fmt(tt)}만`,color:pc},
-    {label:'예정 일정',val:teamSchedule.length+'건',change:'미완료',color:'#BC8CFF'},
+    {label:'전체 고객',    val:teamClients.length+'명', change:`활성화 ${teamClients.filter(c=>c.status==='active').length} · 키맨 ${teamClients.filter(c=>c.status==='keyman').length}`, color:'#388BFD'},
+    {label:'DB 실적',      val:teamDb.length+'건',      change:`계약완료 ${dbContractedT}건`,                                                                                              color:'#BC8CFF'},
+    {label:'이번 달 실적', val:fmt(monthPt)+'만',        change:`${myTeam} 합산`,                                                                                                          color:'#2EA44F'},
+    {label:'올해 실적',    val:fmt(yearPt)+'만',         change:`${nowYt}년 누계`,                                                                                                         color:'#E3B341'},
   ].map(s=>`<div class="stat-card" ${s.onclick?`onclick="${s.onclick}" style="cursor:pointer" title="클릭하여 목표 수정"`:''}>
     <div class="stat-label">${s.label}</div>
     <div class="stat-val" style="color:${s.color}">${s.val}</div>
@@ -3462,7 +3866,7 @@ function renderDashTeamView(){
       <div class="card">
         <div class="card-title">👥 팀 고객 현황</div>
         <div style="display:flex;gap:10px;margin-bottom:12px">
-          ${['active','pending','vip'].map(s=>`
+          ${['active','inactive','keyman'].map(s=>`
             <div style="flex:1;background:${sC(s)}11;border:1px solid ${sC(s)}33;border-radius:8px;padding:10px;text-align:center">
               <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${sL(s)}</div>
               <div style="font-size:20px;font-weight:700;color:${sC(s)}">${teamClients.filter(c=>c.status===s).length}</div>
@@ -3526,11 +3930,18 @@ function renderDashBranchView(){
   const pc=p>=100?'#2EA44F':p>=80?'#388BFD':p>=50?'#E3B341':'#F78166';
   const branchInfo=ORG.branches.find(b=>b.id===myBranch);
 
+  const nowYMb = new Date().toISOString().slice(0,7);
+  const nowYb  = new Date().getFullYear().toString();
+  const monthPb = branchClients.reduce((s,c)=>s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYMb)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const yearPb  = branchClients.reduce((s,c)=>s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYb)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const branchDb = DB_CLIENTS.filter(d=>d.assignedTo&&agentIds.includes(d.assignedTo));
+  const dbContractedB = branchDb.filter(d=>d.processStatus==='계약완료').length;
+
   document.getElementById('dash-stats').innerHTML=[
-    {label:'소속팀',val:branchTeams.length+'팀',change:branchInfo?.name||myBranch,color:'#388BFD'},
-    {label:'지사 설계사',val:branchAgents.length+'명',change:'활성 '+branchAgents.filter(a=>a.status==='active').length+'명',color:'#2EA44F'},
-    {label:'지사 달성률',val:p+'%',change:`${fmt(ta)}만 / ${fmt(tt)}만`,color:pc},
-    {label:'지사 고객',val:branchClients.length+'명',change:'예정 일정 '+branchSchedule.length+'건',color:'#BC8CFF'},
+    {label:'전체 고객',    val:branchClients.length+'명', change:`활성화 ${branchClients.filter(c=>c.status==='active').length} · 키맨 ${branchClients.filter(c=>c.status==='keyman').length}`, color:'#388BFD'},
+    {label:'DB 실적',      val:branchDb.length+'건',       change:`계약완료 ${dbContractedB}건`,                                                                                               color:'#BC8CFF'},
+    {label:'이번 달 실적', val:fmt(monthPb)+'만',           change:`${branchInfo?.name||myBranch} 합산`,                                                                                       color:'#2EA44F'},
+    {label:'올해 실적',    val:fmt(yearPb)+'만',            change:`${nowYb}년 누계`,                                                                                                          color:'#E3B341'},
   ].map(s=>`<div class="stat-card" ${s.onclick?`onclick="${s.onclick}" style="cursor:pointer" title="클릭하여 목표 수정"`:''}>
     <div class="stat-label">${s.label}</div>
     <div class="stat-val" style="color:${s.color}">${s.val}</div>
@@ -3615,11 +4026,17 @@ function renderDashBureauView(){
   const bureauInfo=ORG.bureaus.find(b=>b.id===myBureau);
   const bureauDb=DB_CLIENTS.filter(d=>d.assignedTo&&agentIds.includes(d.assignedTo));
 
+  const nowYMbu = new Date().toISOString().slice(0,7);
+  const nowYbu  = new Date().getFullYear().toString();
+  const monthPbu = bureauClients.reduce((s,c)=>s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYMbu)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const yearPbu  = bureauClients.reduce((s,c)=>s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYbu)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const dbContractedBu = bureauDb.filter(d=>d.processStatus==='계약완료').length;
+
   document.getElementById('dash-stats').innerHTML=[
-    {label:'소속지사',val:bureauBranches.length+'개',change:bureauInfo?.name||myBureau,color:'#388BFD'},
-    {label:'본부 설계사',val:bureauAgents.length+'명',change:'전체 설계사',color:'#2EA44F'},
-    {label:'본부 달성률',val:p+'%',change:`${fmt(ta)}만 / ${fmt(tt)}만`,color:pc},
-    {label:'본부 고객',val:bureauClients.length+'명',change:'DB '+bureauDb.length+'건',color:'#BC8CFF'},
+    {label:'전체 고객',    val:bureauClients.length+'명', change:`활성화 ${bureauClients.filter(c=>c.status==='active').length} · 키맨 ${bureauClients.filter(c=>c.status==='keyman').length}`, color:'#388BFD'},
+    {label:'DB 실적',      val:bureauDb.length+'건',       change:`계약완료 ${dbContractedBu}건`,                                                                                               color:'#BC8CFF'},
+    {label:'이번 달 실적', val:fmt(monthPbu)+'만',          change:`${bureauInfo?.name||myBureau} 합산`,                                                                                        color:'#2EA44F'},
+    {label:'올해 실적',    val:fmt(yearPbu)+'만',           change:`${nowYbu}년 누계`,                                                                                                          color:'#E3B341'},
   ].map(s=>`<div class="stat-card" ${s.onclick?`onclick="${s.onclick}" style="cursor:pointer" title="클릭하여 목표 수정"`:''}>
     <div class="stat-label">${s.label}</div>
     <div class="stat-val" style="color:${s.color}">${s.val}</div>
@@ -3702,11 +4119,17 @@ function renderDashAllView(){
   const allDb=DB_CLIENTS;
   const totalUsers=USERS.length;
 
+  const nowYMa = new Date().toISOString().slice(0,7);
+  const nowYa  = new Date().getFullYear().toString();
+  const monthPa = CLIENTS.reduce((s,c)=>s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYMa)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const yearPa  = CLIENTS.reduce((s,c)=>s+(c.contracts||[]).filter(con=>(con.date||'').startsWith(nowYa)).reduce((s2,con)=>s2+(con.premium||0),0),0);
+  const dbContractedA = allDb.filter(d=>d.processStatus==='계약완료').length;
+
   document.getElementById('dash-stats').innerHTML=[
-    {label:'전체 회원',val:totalUsers+'명',change:`대기 ${PENDING_USERS.length}명`,color:'#388BFD'},
-    {label:'전체 고객',val:CLIENTS.length+'명',change:'전체 등록 고객',color:'#2EA44F'},
-    {label:'전체 달성률',val:p+'%',change:`${fmt(ta)}만 / ${fmt(tt)}만`,color:pc},
-    {label:'전체 DB',val:allDb.length+'건',change:`계약 ${allDb.filter(d=>d.processStatus==='계약완료').length}건`,color:'#BC8CFF'},
+    {label:'전체 고객',    val:CLIENTS.length+'명',   change:`활성화 ${CLIENTS.filter(c=>c.status==='active').length} · 키맨 ${CLIENTS.filter(c=>c.status==='keyman').length}`, color:'#388BFD'},
+    {label:'DB 실적',      val:allDb.length+'건',      change:`계약완료 ${dbContractedA}건`,                                                                                      color:'#BC8CFF'},
+    {label:'이번 달 실적', val:fmt(monthPa)+'만',       change:'당월 신계약 합산',                                                                                                color:'#2EA44F'},
+    {label:'올해 실적',    val:fmt(yearPa)+'만',        change:`${nowYa}년 누계`,                                                                                                 color:'#E3B341'},
   ].map(s=>`<div class="stat-card" ${s.onclick?`onclick="${s.onclick}" style="cursor:pointer" title="클릭하여 목표 수정"`:''}>
     <div class="stat-label">${s.label}</div>
     <div class="stat-val" style="color:${s.color}">${s.val}</div>
@@ -3817,14 +4240,15 @@ function renderClients(){
       <td style="font-size:12px;color:var(--muted)">${c.nextContact||'-'}</td>
       <td onclick="event.stopPropagation()">
         <div style="display:flex;gap:6px">
-          <button class="btn-sm btn-blue" onclick="openClientEdit(${c.id})">수정</button>
-          <button class="btn-sm btn-reject" onclick="deleteClient(${c.id})">삭제</button>
+          ${canEditClient(c)?`<button class="btn-sm btn-blue" onclick="openClientEdit(${c.id})">수정</button>`:''}
+          ${canEditClient(c)?`<button class="btn-sm btn-reject" onclick="deleteClient(${c.id})">삭제</button>`:''}
         </div>
       </td>
     </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:24px">고객 없음</td></tr>';
 }
 
 function openClientModal(){
+  if(currentUser?._isGuest){ showToast('⚠️ 게스트는 고객을 등록할 수 없습니다'); return; }
   editingClientId=null;
   document.getElementById('client-modal-title').textContent='고객 등록';
   ['c-name','c-phone','c-ssn','c-job','c-addr','c-memo','c-product','c-premium','c-contract-date'].forEach(id=>document.getElementById(id).value='');
@@ -3833,9 +4257,29 @@ function openClientModal(){
   openModal('modal-client');
 }
 
+// 고객 수정/삭제 권한 체크
+function canEditClient(client){
+  if(!currentUser || !client) return false;
+  if(currentUser._isGuest) return false; // 게스트는 수정 불가
+  const role = currentUser.role;
+  // superadmin / bureau_head / branch_head: 관할 고객 전체
+  if(['superadmin','bureau_head','branch_head'].includes(role)){
+    const visIds = getVisibleAgentIds(currentUser);
+    return visIds.includes(client.agentId);
+  }
+  // team_head: 본인 팀 고객
+  if(role === 'team_head'){
+    const visIds = getVisibleAgentIds(currentUser);
+    return visIds.includes(client.agentId);
+  }
+  // 설계사: 본인 고객만
+  return client.agentId === currentUser.agentId;
+}
+
 function openClientEdit(id){
   editingClientId=id;
   const c=CLIENTS.find(c=>c.id===id);if(!c)return;
+  if(!canEditClient(c)){ showToast('⚠️ 수정 권한이 없습니다'); return; }
   document.getElementById('client-modal-title').textContent='고객 정보 수정';
   document.getElementById('c-name').value=c.name;
   document.getElementById('c-phone').value=c.phone;
@@ -3864,6 +4308,11 @@ function saveClient(){
   const name=document.getElementById('c-name').value.trim();
   const phone=document.getElementById('c-phone').value.trim();
   if(!name||!phone){alert('이름과 연락처는 필수입니다');return;}
+  // 수정 시 권한 재확인
+  if(editingClientId){
+    const existing = CLIENTS.find(c=>c.id===editingClientId);
+    if(existing && !canEditClient(existing)){ showToast('⚠️ 수정 권한이 없습니다'); return; }
+  }
   const baseAddr = document.getElementById('c-addr').value.trim();
   const detailAddr = document.getElementById('c-addr-detail')?.value.trim()||'';
   const fullAddr = detailAddr ? baseAddr + ' ' + detailAddr : baseAddr;
@@ -3902,10 +4351,12 @@ function saveClient(){
 }
 
 function deleteClient(id){
+  const c=CLIENTS.find(c=>c.id===id);
+  if(!c) return;
+  if(!canEditClient(c)){ showToast('⚠️ 삭제 권한이 없습니다'); return; }
   if(!confirm('고객을 삭제하시겠습니까?'))return;
   const idx=CLIENTS.findIndex(c=>c.id===id);
   if(idx>=0){const c=CLIENTS.splice(idx,1)[0];const ag=AGENTS.find(a=>a.id===c.agentId);if(ag&&ag.clients>0)ag.clients--;
-    // Supabase에서도 삭제
     if(_supabase) _supabase.from('clients').delete().eq('id',id).then(({error})=>{if(error)console.error('삭제 오류:',error.message);});
   }
   renderClients();renderDashboard();renderMap();
@@ -4204,18 +4655,42 @@ function openAddrSearch(addrId, detailId, latId, lngId){
 function renderMap(){
   const list = getVisibleClients();
   const subEl = document.getElementById('map-sub');
-  if(subEl) subEl.textContent = `고객 ${list.length}명 위치 현황`;
 
-  // 통계 카드
+  // 주소 있는 고객 / 없는 고객 분리
+  const withAddr    = list.filter(c => c.addr && c.addr.trim());
+  const withoutAddr = list.filter(c => !c.addr || !c.addr.trim());
+
+  if(subEl) subEl.textContent = `고객 ${withAddr.length}명 지도 표시 · ${withoutAddr.length}명 주소 미등록`;
+
+  // 주소 미등록 목록 렌더
+  const noAddrEl   = document.getElementById('map-no-addr');
+  const noAddrList = document.getElementById('map-no-addr-list');
+  const noAddrCnt  = document.getElementById('map-no-addr-count');
+  if(withoutAddr.length > 0){
+    noAddrEl.style.display = 'block';
+    noAddrCnt.textContent  = withoutAddr.length + '명';
+    noAddrList.innerHTML   = withoutAddr.map(c=>`
+      <div style="background:var(--surface2);border:1px solid var(--orange)33;border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div>
+          <div style="font-size:13px;font-weight:700">${c.name}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${c.phone||'-'}</div>
+        </div>
+        <button onclick="openClientEdit(${c.id})" style="padding:5px 10px;background:var(--orange)15;border:1px solid var(--orange)44;border-radius:6px;color:var(--orange);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✏️ 주소 등록</button>
+      </div>`).join('');
+  } else {
+    noAddrEl.style.display = 'none';
+  }
+
+  // 통계 카드 (주소 있는 고객 기준)
   const statRow = document.getElementById('map-stat-row');
   if(statRow){
-    const grp = {active:0,pending:0,vip:0,other:0};
-    list.forEach(c=>{ if(grp[c.status]!==undefined) grp[c.status]++; else grp.other++; });
+    const grp = {active:0, inactive:0, keyman:0};
+    withAddr.forEach(c=>{ if(grp[c.status]!==undefined) grp[c.status]++; });
     statRow.innerHTML = [
-      {label:'활성',val:grp.active,color:'#2EA44F'},
-      {label:'대기',val:grp.pending,color:'#E3B341'},
-      {label:'VIP',val:grp.vip,color:'#BC8CFF'},
-      {label:'전체',val:list.length,color:'#388BFD'},
+      {label:'활성화',  val:grp.active,   color:'#2EA44F'},
+      {label:'비활성화',val:grp.inactive, color:'#8B949E'},
+      {label:'키맨',    val:grp.keyman,   color:'#BC8CFF'},
+      {label:'지도표시',val:withAddr.length, color:'#388BFD'},
     ].map(s=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:10px">
       <div style="width:8px;height:8px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
       <div style="font-size:12px;color:var(--muted)">${s.label}</div>
@@ -4237,15 +4712,12 @@ function renderMap(){
       zoom: 11,
       attributionControl: true,
     });
-
-    // 카카오맵과 유사한 밝은 스타일 타일 (CartoDB Positron)
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
     }).addTo(leafletMap);
   }
 
-  // 로딩 오버레이 숨김
   if(loading) loading.style.display = 'none';
 
   // 기존 마커 전체 제거
@@ -4254,40 +4726,27 @@ function renderMap(){
 
   const statusLabel = {active:'활성',pending:'대기',vip:'VIP'};
 
-  let placed = 0;
-  list.forEach(client => {
-    // 담당 설계사 소속 지역 fallback
+  // 주소 있는 고객만 마커 표시
+  withAddr.forEach(client => {
     const ag = AGENTS.find(a=>a.id===client.agentId);
     const agUser = ag ? USERS.find(u=>u.agentId===ag.id||u.email===ag.email) : null;
     const region = getBranchName(agUser?.branchId||ag?.branchId) || getBureauName(agUser?.bureauId||ag?.bureauId) || '';
-    // 저장된 좌표 우선 사용, 없으면 주소 변환
     const coord = (client.lat && client.lng)
       ? [client.lat, client.lng]
       : addrToCoord(client.addr, region);
-    placed++;
 
-    const color = getMarkerColor(client.status);
-    const slabel = statusLabel[client.status] || '기타';
-    const contracts = client.contracts || [];
-    const prod = contracts[0]?.product || '상품 없음';
-    const prem = contracts[0]?.premium || 0;
+  const color  = {active:'#2EA44F', inactive:'#8B949E', keyman:'#BC8CFF'}[client.status] || '#8B949E';
+    const slabel = {active:'활성화', inactive:'비활성화', keyman:'키맨'}[client.status] || '기타';
 
-    // 핀 스타일 마커 (카카오맵 느낌)
     const icon = L.divIcon({
       className: '',
-      html: `<div style="
-        position:relative;width:28px;height:36px;cursor:pointer;
-        filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));
-      ">
+      html: `<div style="position:relative;width:28px;height:36px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35))">
         <svg viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg" width="28" height="36">
-          <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z"
-            fill="${color}" stroke="white" stroke-width="1.5"/>
+          <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
           <circle cx="14" cy="13" r="5" fill="white" opacity="0.9"/>
         </svg>
       </div>`,
-      iconSize: [28, 36],
-      iconAnchor: [14, 36],
-      popupAnchor: [0, -38],
+      iconSize: [28, 36], iconAnchor: [14, 36], popupAnchor: [0, -38],
     });
 
     const popup = L.popup({ maxWidth: 260, className: 'map-custom-popup' }).setContent(`
@@ -4296,26 +4755,13 @@ function renderMap(){
           ${client.name}
           <span style="background:${color};color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;font-weight:700">${slabel}</span>
         </div>
-        <!-- 전화번호 -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <span style="font-size:12px;color:#555;flex:1">📞 ${client.phone||'-'}</span>
-          ${client.phone ? `<a href="tel:${client.phone.replace(/-/g,'')}"
-            style="display:inline-flex;align-items:center;gap:3px;padding:4px 10px;background:#2EA44F;color:#fff;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">
-            📲 전화연결
-          </a>` : ''}
+          ${client.phone?`<a href="tel:${client.phone.replace(/-/g,'')}" style="display:inline-flex;align-items:center;gap:3px;padding:4px 10px;background:#2EA44F;color:#fff;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">📲 전화연결</a>`:''}
         </div>
-        <!-- 주소 -->
         <div style="display:flex;align-items:flex-start;gap:8px">
           <span style="font-size:12px;color:#555;flex:1;line-height:1.5">📍 ${client.addr||'-'}</span>
-          ${client.addr ? `<button onclick="(function(){
-            var ta=document.createElement('textarea');ta.value='${(client.addr||'').replace(/'/g,"\\'")}';
-            ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);
-            ta.select();document.execCommand('copy');document.body.removeChild(ta);
-            this.textContent='✅';setTimeout(()=>this.textContent='📋 복사',1500);
-          }).call(this)"
-            style="flex-shrink:0;padding:4px 10px;background:#388BFD;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">
-            📋 복사
-          </button>` : ''}
+          ${client.addr?`<button onclick="(function(){var ta=document.createElement('textarea');ta.value='${(client.addr||'').replace(/'/g,"\\'")}';ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);this.textContent='✅';setTimeout(()=>this.textContent='📋 복사',1500);}).call(this)" style="flex-shrink:0;padding:4px 10px;background:#388BFD;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📋 복사</button>`:''}
         </div>
       </div>
     `);
@@ -4325,22 +4771,104 @@ function renderMap(){
     leafletMarkers.push(marker);
   });
 
-  // 마커 있으면 자동 범위 조정
   if(leafletMarkers.length > 0){
     const group = L.featureGroup(leafletMarkers);
     leafletMap.fitBounds(group.getBounds().pad(0.25), { maxZoom: 13 });
-  } else if(placed === 0 && list.length > 0) {
-    // 고객은 있지만 좌표 매핑 안 된 경우
+  } else {
     leafletMap.setView([37.5665, 126.9780], 11);
   }
 
-  // 크기 재계산 (hidden div에서 전환 후 타일 깨짐 방지)
   setTimeout(() => { if(leafletMap) leafletMap.invalidateSize(); }, 50);
 }
 
 function mapZoomIn(){ if(leafletMap) leafletMap.zoomIn(); }
 function mapZoomOut(){ if(leafletMap) leafletMap.zoomOut(); }
 function mapResetView(){ if(leafletMap) leafletMap.setView([36.5, 127.5], 7); }
+
+// ── GPS 현재 위치 → 주소 변환 ──
+function getGPSAddr(addrId, latId, lngId){
+  const addrEl = document.getElementById(addrId);
+  if(!addrEl) return;
+  addrEl.placeholder = '📍 위치 가져오는 중...';
+  if(!navigator.geolocation){
+    showToast('⚠️ 이 브라우저는 GPS를 지원하지 않습니다'); return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      // 역지오코딩 (Nominatim)
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko`);
+        const data = await res.json();
+        const addr = data.address;
+        // 한국 주소 형식으로 조합
+        const parts = [
+          addr.city || addr.province || addr.state,
+          addr.city_district || addr.suburb || addr.borough,
+          addr.neighbourhood || addr.quarter,
+          addr.road,
+        ].filter(Boolean);
+        const addrStr = parts.join(' ');
+        addrEl.value = addrStr;
+        addrEl.placeholder = '주소 입력 또는 검색';
+        if(latId) document.getElementById(latId).value = lat;
+        if(lngId) document.getElementById(lngId).value = lng;
+        showToast('✅ 현재 위치 주소가 입력되었습니다');
+      } catch(e) {
+        addrEl.placeholder = '주소 입력 또는 검색';
+        showToast('⚠️ 주소 변환 실패. 직접 입력해주세요');
+      }
+    },
+    err => {
+      addrEl.placeholder = '주소 입력 또는 검색';
+      const msg = err.code === 1 ? '위치 권한을 허용해주세요' : 'GPS 오류가 발생했습니다';
+      showToast('⚠️ ' + msg);
+    },
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+}
+
+// ── 주소 자동완성 (Nominatim) ──
+let _addrTimer = null;
+function addrAutocomplete(query, suggestId, addrId, latId, lngId){
+  const suggestEl = document.getElementById(suggestId);
+  if(!suggestEl) return;
+  if(!query || query.length < 3){ suggestEl.style.display='none'; return; }
+  clearTimeout(_addrTimer);
+  _addrTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query+' 대한민국')}&format=json&limit=6&accept-language=ko&countrycodes=kr`);
+      const data = await res.json();
+      if(!data.length){ suggestEl.style.display='none'; return; }
+      suggestEl.style.display = 'block';
+      suggestEl.innerHTML = data.map(item => {
+        // 주소 간결하게 정리
+        const parts = item.display_name.split(',').map(s=>s.trim());
+        const shortAddr = parts.slice(0, 4).join(' ');
+        return `<div onclick="selectAddr('${addrId}','${suggestId}','${latId}','${lngId}',${item.lat},${item.lon},'${shortAddr.replace(/'/g,"\\'")}')"
+          style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--text);border-bottom:1px solid var(--border)22;transition:background .1s"
+          onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">${shortAddr}</div>`;
+      }).join('');
+    } catch(e){ suggestEl.style.display='none'; }
+  }, 400);
+}
+
+function selectAddr(addrId, suggestId, latId, lngId, lat, lng, addr){
+  const addrEl    = document.getElementById(addrId);
+  const suggestEl = document.getElementById(suggestId);
+  if(addrEl)    addrEl.value = addr;
+  if(suggestEl) suggestEl.style.display = 'none';
+  if(latId && document.getElementById(latId)) document.getElementById(latId).value = lat;
+  if(lngId && document.getElementById(lngId)) document.getElementById(lngId).value = lng;
+}
+
+// 외부 클릭 시 자동완성 닫기
+document.addEventListener('click', e => {
+  document.querySelectorAll('[id$="-suggest"]').forEach(el => {
+    if(!el.contains(e.target)) el.style.display = 'none';
+  });
+});
 
 
 // ════ SCHEDULE ════
@@ -4619,6 +5147,7 @@ let schedNextId=10;
 let editingSchedId=null;
 
 function openAddScheduleModal(){
+  if(currentUser?._isGuest){ showToast('⚠️ 게스트는 일정을 등록할 수 없습니다'); return; }
   editingSchedId=null;
   document.getElementById('sched-modal-title').textContent='📅 일정 등록';
   document.getElementById('sched-client').value='';
@@ -4784,25 +5313,105 @@ function showPost(id){
       <div class="post-detail-body">${p.body}</div>
       <div class="comment-wrap">
         <div style="font-size:14px;font-weight:700;margin-bottom:12px">댓글 ${p.comments.length}개</div>
-        ${p.comments.map(c=>`<div class="comment-item"><div class="comment-header"><span class="comment-author">${c.author}</span><span class="comment-time">${c.time}</span></div><div class="comment-body">${c.text}</div></div>`).join('')}
-        <div class="comment-input-wrap">
+        <div id="comment-list-${id}">
+          ${renderCommentList(p, id)}
+        </div>
+        ${currentUser?._isGuest ? '' : `
+        <div class="comment-input-wrap" style="margin-top:12px">
           <input class="comment-input" id="comment-input-${id}" placeholder="댓글을 입력하세요..." onkeydown="if(event.key==='Enter')addComment(${id})">
           <button class="btn-sm btn-approve" onclick="addComment(${id})">등록</button>
-        </div>
+        </div>`}
       </div>
     </div>`;
 }
 
+function renderCommentList(p, postId){
+  if(!p.comments.length) return '<div style="font-size:13px;color:var(--muted);padding:8px 0">첫 댓글을 남겨보세요</div>';
+  return p.comments.map((c,i)=>{
+    const isMine = c.authorId === currentUser?.id || c.author === currentUser?.name;
+    const isAdmin = ['superadmin','bureau_head'].includes(currentUser?.role);
+    const canEdit = isMine && !currentUser?._isGuest;
+    const canDel  = (isMine || isAdmin) && !currentUser?._isGuest;
+    return `
+      <div class="comment-item" id="comment-item-${postId}-${i}">
+        <div class="comment-header" style="justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="comment-author">${c.author}</span>
+            <span class="comment-time">${c.time}</span>
+            ${c.edited ? '<span style="font-size:10px;color:var(--muted)">(수정됨)</span>' : ''}
+          </div>
+          <div style="display:flex;gap:4px">
+            ${canEdit ? `<button onclick="editComment(${postId},${i})" style="padding:2px 8px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit">수정</button>` : ''}
+            ${canDel  ? `<button onclick="deleteComment(${postId},${i})" style="padding:2px 8px;background:transparent;border:1px solid var(--orange)44;border-radius:4px;color:var(--orange);font-size:11px;cursor:pointer;font-family:inherit">삭제</button>` : ''}
+          </div>
+        </div>
+        <div class="comment-body" id="comment-body-${postId}-${i}">${c.text}</div>
+      </div>`;
+  }).join('');
+}
+
 function addComment(postId){
+  if(currentUser?._isGuest){ showToast('⚠️ 게스트는 댓글을 작성할 수 없습니다'); return; }
   const input=document.getElementById(`comment-input-${postId}`);
   const text=input.value.trim();if(!text)return;
   const p=POSTS.find(p=>p.id===postId);if(!p)return;
   const now=new Date();
-  p.comments.push({author:currentUser.name,text,time:`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`});
-  showPost(postId);
+  const timeStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  p.comments.push({author:currentUser.name, authorId:currentUser.id, text, time:timeStr, edited:false});
+  input.value='';
+  // 댓글 목록만 갱신
+  const listEl = document.getElementById(`comment-list-${postId}`);
+  if(listEl) listEl.innerHTML = renderCommentList(p, postId);
+  document.querySelector(`.comment-wrap div:first-child`).textContent = `댓글 ${p.comments.length}개`;
 }
 
-function openPostModal(){openModal('modal-post');document.getElementById('post-title-input').value='';document.getElementById('post-body-input').value='';}
+function editComment(postId, idx){
+  const p=POSTS.find(p=>p.id===postId);if(!p||!p.comments[idx])return;
+  const c=p.comments[idx];
+  const bodyEl=document.getElementById(`comment-body-${postId}-${idx}`);
+  if(!bodyEl)return;
+  // 인라인 수정 UI
+  bodyEl.innerHTML=`
+    <div style="display:flex;gap:6px;margin-top:4px">
+      <input id="comment-edit-${postId}-${idx}" value="${c.text.replace(/"/g,'&quot;')}"
+        style="flex:1;padding:6px 10px;background:var(--bg);border:1px solid var(--accent);border-radius:6px;color:var(--text);font-size:13px;font-family:inherit"
+        onkeydown="if(event.key==='Enter')saveCommentEdit(${postId},${idx});if(event.key==='Escape')cancelCommentEdit(${postId},${idx})">
+      <button onclick="saveCommentEdit(${postId},${idx})" style="padding:5px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">저장</button>
+      <button onclick="cancelCommentEdit(${postId},${idx})" style="padding:5px 10px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit">취소</button>
+    </div>`;
+  document.getElementById(`comment-edit-${postId}-${idx}`)?.focus();
+}
+
+function saveCommentEdit(postId, idx){
+  const p=POSTS.find(p=>p.id===postId);if(!p||!p.comments[idx])return;
+  const input=document.getElementById(`comment-edit-${postId}-${idx}`);
+  const text=input?.value.trim();if(!text)return;
+  p.comments[idx].text=text;
+  p.comments[idx].edited=true;
+  const listEl=document.getElementById(`comment-list-${postId}`);
+  if(listEl) listEl.innerHTML=renderCommentList(p,postId);
+}
+
+function cancelCommentEdit(postId, idx){
+  const p=POSTS.find(p=>p.id===postId);if(!p||!p.comments[idx])return;
+  const bodyEl=document.getElementById(`comment-body-${postId}-${idx}`);
+  if(bodyEl) bodyEl.innerHTML=p.comments[idx].text;
+}
+
+function deleteComment(postId, idx){
+  if(!confirm('댓글을 삭제하시겠습니까?'))return;
+  const p=POSTS.find(p=>p.id===postId);if(!p)return;
+  p.comments.splice(idx,1);
+  const listEl=document.getElementById(`comment-list-${postId}`);
+  if(listEl) listEl.innerHTML=renderCommentList(p,postId);
+  const countEl=document.querySelector(`#board-detail .comment-wrap div:first-child`);
+  if(countEl) countEl.textContent=`댓글 ${p.comments.length}개`;
+}
+
+function openPostModal(){
+  if(currentUser?._isGuest){ showToast('⚠️ 게스트는 글을 작성할 수 없습니다'); return; }
+  openModal('modal-post');document.getElementById('post-title-input').value='';document.getElementById('post-body-input').value='';
+}
 function savePost(){
   const title=document.getElementById('post-title-input').value.trim();
   const body=document.getElementById('post-body-input').value.trim();
@@ -11505,6 +12114,7 @@ function renderDiseaseTab(){
 // ── 공공 API 키 설정 ──
 // 공공데이터포털(data.go.kr) 에서 "건강보험심사평가원_질병코드 목록 조회" 신청 후 발급
 window.KCD_API_KEY = localStorage.getItem('kcd_api_key') || 'f0160aab3661b0aee88c4d425e35e1d31473da8df0d0d55d17a106841c74dd52';
+window.GEMINI_API_KEY = localStorage.getItem('gemini_api_key') || '';
 let dcSearchTimer = null;
 
 function renderDiseaseSearch(){
@@ -11617,8 +12227,8 @@ async function searchDiseaseCodeAPI(){
   </div>`;
 
   try {
-    // 코드 형식 여부 판별 (A00, C50, I21 등)
-    const isCode = /^[A-Z]\d/i.test(q);
+    // M51.1, C50.9 등 점 포함 코드 인식 (알파벳 + 숫자 + 선택적 점+숫자)
+    const isCode = /^[A-Z]\d+(\.\d+)?$/i.test(q.trim());
     const edgeUrl = isCode
       ? `${SUPABASE_URL}/functions/v1/kcd-proxy?icdCd=${q.toUpperCase()}&numOfRows=20&pageNo=1`
       : `${SUPABASE_URL}/functions/v1/kcd-proxy?icdNm=${encodeURIComponent(q)}&numOfRows=20&pageNo=1`;
@@ -11636,12 +12246,10 @@ async function searchDiseaseCodeAPI(){
 
     const body = data?.response?.body || data?.body || {};
     const rawItems = body?.items?.item || body?.items || data?.items || [];
-    // 단일 item인 경우 배열로 감싸기
     const list = Array.isArray(rawItems) ? rawItems : (rawItems && Object.keys(rawItems).length ? [rawItems] : []);
 
     console.log('파싱 결과 items 수:', list.length, '/ totalCount:', body?.totalCount);
 
-    // API 실제 필드명으로 매핑: sickCd, sickNm, sickEngNm
     const mapped = list.filter(function(item){ return item && (item.sickCd||item.icdCd); }).map(function(item){
       const code = item.sickCd || item.icdCd || '';
       const name = item.sickNm || item.icdNm || '';
@@ -11651,7 +12259,6 @@ async function searchDiseaseCodeAPI(){
     });
 
     if(!mapped.length){
-      // 한글 검색 실패 시 → 로컬 DB로 fallback
       searchDiseaseCodeLocal(q, el);
       return;
     }
@@ -11679,9 +12286,18 @@ function parseKcdXml(xml){
 }
 
 function searchDiseaseCodeLocal(q, el){
-  const qUp = q.toUpperCase();
+  const qUp = q.toUpperCase().trim();
+  // M51.1 → M51 처럼 점 앞 코드로도 매칭
+  const qBase = qUp.split('.')[0];
+
   const results = Object.entries(DISEASE_CODES_DB).filter(function([code,d]){
-    return code.includes(qUp) || d.name.includes(q) || (d.eng||'').toUpperCase().includes(qUp) || (d.cat||'').includes(q);
+    const codeUp = code.toUpperCase();
+    return codeUp === qUp                          // 완전 일치
+      || codeUp.startsWith(qBase)                  // M51 → M51, M511 등
+      || qUp.startsWith(codeUp)                    // M51.1 검색 시 M51 매칭
+      || d.name.includes(q)
+      || (d.eng||'').toUpperCase().includes(qUp)
+      || (d.cat||'').includes(q);
   }).map(function([code,d]){
     return { code, name:d.name, eng:d.eng||'', cat:d.cat||'', special:d.special||[] };
   });
@@ -12703,6 +13319,663 @@ let claimWorkbook = null;
 let claimSelectedInsurers = new Set();
 let claimSelectedCount = '1-3';
 let claimOutputData = null;
+
+// ════ 노션 검색 ════
+let notionFilterType = 'all';
+
+function openNotionSettings(){
+  const saved = localStorage.getItem('notion_token')||'';
+  document.getElementById('notion-token-input').value = saved;
+  openModal('modal-notion-settings');
+}
+
+function saveNotionSettings(){
+  const token = document.getElementById('notion-token-input').value.trim();
+  if(!token){ alert('토큰을 입력해주세요'); return; }
+  localStorage.setItem('notion_token', token);
+  closeModal('modal-notion-settings');
+  document.getElementById('notion-setup-banner').style.display = 'none';
+  showToast('✅ 노션 연동 설정이 저장되었습니다');
+}
+
+function initNotionPage(){
+  const token = localStorage.getItem('notion_token')||'';
+  document.getElementById('notion-setup-banner').style.display = token ? 'none' : 'block';
+  // 설정 버튼: superadmin만 표시
+  const settingsBtn = document.getElementById('notion-settings-btn');
+  if(settingsBtn) settingsBtn.style.display = currentUser?.role==='superadmin' ? 'block' : 'none';
+}
+
+function setNotionFilter(type, btn){
+  notionFilterType = type;
+  document.querySelectorAll('.notion-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function notionSearch(){
+  const q = (document.getElementById('notion-search-input')?.value||'').trim();
+  const el = document.getElementById('notion-search-result');
+  if(!q) return;
+
+  const token = localStorage.getItem('notion_token')||'';
+  if(!token){
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--orange)">
+      <div style="font-size:28px;margin-bottom:10px">⚙️</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:6px">API 설정이 필요합니다</div>
+      <button onclick="openNotionSettings()" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">설정하기</button>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)">
+    <div style="font-size:28px;margin-bottom:10px;display:inline-block;animation:spin 1s linear infinite">⏳</div>
+    <div style="font-size:13px">노션 검색 중...</div>
+  </div>`;
+
+  try {
+    const body = {
+      query: q,
+      page_size: 20,
+    };
+    if(notionFilterType !== 'all'){
+      body.filter = { value: notionFilterType, property: 'object' };
+    }
+
+    const res = await fetch(
+      `${SUPABASE_URL}/functions/v1/notion-proxy?path=search`,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'x-notion-token': token,
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    const data = await res.json();
+    if(!data.results || data.results.length === 0){
+      el.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--muted)">
+        <div style="font-size:36px;margin-bottom:12px">🔍</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">"${q}" 검색 결과 없음</div>
+        <div style="font-size:13px">다른 키워드로 검색해보세요</div>
+      </div>`;
+      return;
+    }
+    renderNotionResults(data.results, q, el);
+
+  } catch(e) {
+    console.error('Notion 검색 오류:', e);
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--orange)">
+      <div style="font-size:28px;margin-bottom:10px">⚠️</div>
+      <div style="font-size:13px">검색 중 오류가 발생했습니다<br><small>${e.message}</small></div>
+    </div>`;
+  }
+}
+
+function renderNotionResults(results, query, el){
+  const typeIcon = { page:'📄', database:'🗂️' };
+  const typeLabel = { page:'페이지', database:'데이터베이스' };
+
+  el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">검색 결과 ${results.length}건</div>`
+    + results.map(item=>{
+      const type = item.object;
+      const icon = typeIcon[type] || '📄';
+
+      // 제목 추출
+      let title = '(제목 없음)';
+      if(item.properties?.title?.title?.[0]?.plain_text) title = item.properties.title.title[0].plain_text;
+      else if(item.properties?.Name?.title?.[0]?.plain_text) title = item.properties.Name.title[0].plain_text;
+      else if(item.title?.[0]?.plain_text) title = item.title[0].plain_text;
+
+      // 검색어 하이라이트
+      const highlighted = title.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),
+        '<mark style="background:var(--accent)33;color:var(--accent);border-radius:2px;padding:0 2px">$1</mark>');
+
+      // 마지막 수정일
+      const edited = item.last_edited_time
+        ? new Date(item.last_edited_time).toLocaleDateString('ko-KR',{year:'numeric',month:'short',day:'numeric'})
+        : '';
+
+      // 노션 URL
+      const pageUrl = item.url || `https://notion.so/${(item.id||'').replace(/-/g,'')}`;
+
+      // DB 아이템이면 properties 미리보기
+      let propsHtml = '';
+      if(type==='database' && item.properties){
+        const propKeys = Object.keys(item.properties).slice(0,4);
+        if(propKeys.length){
+          propsHtml = `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">
+            ${propKeys.map(k=>`<span style="padding:2px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:11px;color:var(--muted)">${k}</span>`).join('')}
+          </div>`;
+        }
+      }
+
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;transition:border .15s;cursor:pointer"
+        onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'"
+        onclick="window.open('${pageUrl}','_blank')">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:20px;flex-shrink:0;margin-top:1px">${icon}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px;line-height:1.4">${highlighted}</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:11px;padding:2px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted)">${typeLabel[type]||type}</span>
+              ${edited?`<span style="font-size:11px;color:var(--muted)">${edited}</span>`:''}
+            </div>
+            ${propsHtml}
+          </div>
+          <span style="font-size:18px;color:var(--muted);flex-shrink:0">↗</span>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+// ════ 오늘의 보험 뉴스 ════
+let newsCurrentKeyword = '보험';
+let newsCache = {};  // keyword → {data, time}
+const NEWS_CACHE_TTL = 5 * 60 * 1000; // 5분 캐시
+
+function setNewsKeyword(keyword, btn){
+  newsCurrentKeyword = keyword;
+  document.querySelectorAll('.news-kw-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  loadInsuranceNews();
+}
+
+async function loadInsuranceNews(forceRefresh=false){
+  const el = document.getElementById('news-result');
+  const subEl = document.getElementById('news-sub');
+  if(!el) return;
+
+  // 캐시 확인
+  const cached = newsCache[newsCurrentKeyword];
+  if(!forceRefresh && cached && Date.now()-cached.time < NEWS_CACHE_TTL){
+    renderNewsResults(cached.data, newsCurrentKeyword);
+    return;
+  }
+
+  el.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--muted)">
+    <div style="font-size:32px;margin-bottom:12px;display:inline-block;animation:spin 1s linear infinite">⏳</div>
+    <div style="font-size:13px">${newsCurrentKeyword} 뉴스 불러오는 중...</div>
+  </div>`;
+
+  try {
+    // 네이버 뉴스 RSS 피드 URL
+    const rssUrl = `https://news.naver.com/main/rss/allstories.naver`;
+    // 검색 RSS: query 기반
+    const searchRssUrl = `https://rss.naver.com/main/rssList.naver?officeid=032&sectionid=101`;
+
+    // Supabase Edge Function으로 RSS 프록시 요청
+    const proxyUrl = `${SUPABASE_URL}/functions/v1/news-proxy?keyword=${encodeURIComponent(newsCurrentKeyword)}&display=5`;
+
+    const res = await fetch(proxyUrl, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      }
+    });
+
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if(!data.items || data.items.length === 0){
+      el.innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted)">
+        <div style="font-size:32px;margin-bottom:12px">📭</div>
+        <div style="font-size:14px;font-weight:600">검색 결과가 없습니다</div>
+        <div style="font-size:12px;margin-top:6px">다른 키워드를 선택해보세요</div>
+      </div>`;
+      return;
+    }
+
+    // 캐시 저장
+    newsCache[newsCurrentKeyword] = { data: data.items, time: Date.now() };
+    renderNewsResults(data.items, newsCurrentKeyword);
+
+    if(subEl){
+      const now = new Date();
+      subEl.textContent = `"${newsCurrentKeyword}" 주요 뉴스 · 업데이트 ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+    }
+
+  } catch(e) {
+    console.error('뉴스 로드 오류:', e);
+    // Edge Function 미배포 시 안내
+    el.innerHTML = `<div style="background:var(--orange)11;border:1px solid var(--orange)44;border-radius:12px;padding:24px;text-align:center">
+      <div style="font-size:28px;margin-bottom:10px">⚙️</div>
+      <div style="font-size:14px;font-weight:700;color:var(--orange);margin-bottom:8px">뉴스 프록시 설정이 필요합니다</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;text-align:left;max-width:480px;margin:0 auto">
+        Supabase Edge Functions에 <b style="color:var(--text)">news-proxy</b> 함수를 배포해주세요.<br>
+        배포 코드는 시스템 설정 → 뉴스 API 설정에서 확인하세요.
+      </div>
+    </div>`;
+  }
+}
+
+function renderNewsResults(items, keyword){
+  const el = document.getElementById('news-result');
+  if(!el) return;
+
+  // 시간 포맷
+  function fmtNewsDate(str){
+    if(!str) return '';
+    try{
+      const d = new Date(str);
+      const now = new Date();
+      const diff = Math.floor((now-d)/1000/60);
+      if(diff < 60) return `${diff}분 전`;
+      if(diff < 1440) return `${Math.floor(diff/60)}시간 전`;
+      return `${d.getMonth()+1}/${d.getDate()}`;
+    }catch{ return str; }
+  }
+
+  // HTML 태그 제거
+  function stripHtml(str){ return (str||'').replace(/<[^>]*>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>'); }
+
+  el.innerHTML = `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+      <span>"<b style="color:var(--text)">${keyword}</b>" 주요 뉴스 ${items.length}건</span>
+      <span style="width:4px;height:4px;border-radius:50%;background:var(--border);display:inline-block"></span>
+      <span style="color:var(--accent);font-weight:600">네이버 뉴스</span>
+    </div>
+    ${items.map((item,i)=>{
+      const title = stripHtml(item.title||'');
+      const desc  = stripHtml(item.description||'');
+      const link  = item.link||item.originallink||'#';
+      const pub   = fmtNewsDate(item.pubDate);
+      const source = item.source || extractDomain(link);
+      return `
+        <div class="news-card" onclick="window.open('${link}','_blank')">
+          <div style="font-size:22px;flex-shrink:0;margin-top:2px;opacity:.7">${['📌','📋','📎','🗞️','📄'][i]||'📄'}</div>
+          <div class="news-card-body">
+            <div class="news-card-title">${title}</div>
+            ${desc ? `<div class="news-card-desc">${desc}</div>` : ''}
+            <div class="news-card-meta">
+              <span class="news-source-badge">${source}</span>
+              ${pub ? `<span>${pub}</span>` : ''}
+              <span style="margin-left:auto;color:var(--blue);font-size:11px;font-weight:600">읽기 ↗</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('')}`;
+}
+
+function extractDomain(url){
+  try{ return new URL(url).hostname.replace('www.','').split('.')[0]; }
+  catch{ return '뉴스'; }
+}
+
+// ════ 보험사 전산 포털 ════
+// clearbit 로고 우선, 실패 시 google favicon fallback (JS에서 처리)
+const PORTAL_LOGOS = {
+  'samsung-life': 'https://logo.clearbit.com/samsunglife.com',
+  'hanwha-life':  'https://logo.clearbit.com/hanwhalife.com',
+  'kyobo-life':   'https://logo.clearbit.com/kyobo.co.kr',
+  'mirae-life':   'https://logo.clearbit.com/miraeassetlife.co.kr',
+  'db-life':      'https://logo.clearbit.com/idblife.com',
+  'heungkuk-life':'https://logo.clearbit.com/heungkuklife.co.kr',
+  'nh-life':      'https://logo.clearbit.com/nhlife.co.kr',
+  'hana-life':    'https://logo.clearbit.com/hanalife.co.kr',
+  'kb-life':      'https://logo.clearbit.com/kblife.co.kr',
+  'shinhan-life': 'https://logo.clearbit.com/shinhanlife.co.kr',
+  'im-life':      'https://logo.clearbit.com/imlife.co.kr',
+  'kdb-life':     'https://logo.clearbit.com/kdblife.co.kr',
+  'bnp-life':     'https://logo.clearbit.com/cardifkorea.com',
+  'cigna-life':   'https://logo.clearbit.com/cignalife.co.kr',
+  'dongyang-life':'https://logo.clearbit.com/myangel.co.kr',
+  'abl-life':     'https://logo.clearbit.com/abllife.co.kr',
+  'fubon-life':   'https://logo.clearbit.com/fubonhyundai.com',
+  'aia-life':     'https://logo.clearbit.com/aia.co.kr',
+  'chubb-life':   'https://logo.clearbit.com/chubb.com',
+  'ibk-life':     'https://logo.clearbit.com/ibkannuity.co.kr',
+  'kb-fire':      'https://logo.clearbit.com/kbinsure.co.kr',
+  'heungkuk-fire':'https://logo.clearbit.com/heungkukfire.co.kr',
+  'samsung-fire': 'https://logo.clearbit.com/samsungfire.com',
+  'meritz-fire':  'https://logo.clearbit.com/meritzfire.com',
+  'db-fire':      'https://logo.clearbit.com/idbins.com',
+  'hyundai-fire': 'https://logo.clearbit.com/hi.co.kr',
+  'lotte-fire':   'https://logo.clearbit.com/lotteins.co.kr',
+  'hanwha-fire':  'https://logo.clearbit.com/hwgeneralins.com',
+  'mg-fire':      'https://logo.clearbit.com/mgfire.co.kr',
+  'nh-fire':      'https://logo.clearbit.com/nhfire.co.kr',
+  'aig-fire':     'https://logo.clearbit.com/aig.co.kr',
+  'hana-fire':    'https://logo.clearbit.com/hanafire.co.kr',
+  'lina-fire':    'https://logo.clearbit.com/lina.co.kr',
+  'axa-fire':     'https://logo.clearbit.com/axa.co.kr',
+};
+const PORTAL_LOGO = (id) => PORTAL_LOGOS[id] || '';
+
+const PORTAL_COMPANIES = {
+  life: [
+    { id:'samsung-life',  name:'삼성생명',    logo: PORTAL_LOGO('samsung-life') },
+    { id:'hanwha-life',   name:'한화생명',     logo: PORTAL_LOGO('hanwha-life') },
+    { id:'kyobo-life',    name:'교보생명',     logo: PORTAL_LOGO('kyobo-life') },
+    { id:'mirae-life',    name:'미래에셋생명', logo: PORTAL_LOGO('mirae-life') },
+    { id:'db-life',       name:'DB생명',       logo: PORTAL_LOGO('db-life') },
+    { id:'heungkuk-life', name:'흥국생명',     logo: PORTAL_LOGO('heungkuk-life') },
+    { id:'nh-life',       name:'농협생명',     logo: PORTAL_LOGO('nh-life') },
+    { id:'hana-life',     name:'하나생명',     logo: PORTAL_LOGO('hana-life') },
+    { id:'kb-life',       name:'KB라이프',     logo: PORTAL_LOGO('kb-life') },
+    { id:'shinhan-life',  name:'신한라이프',   logo: PORTAL_LOGO('shinhan-life') },
+    { id:'im-life',       name:'iM라이프',     logo: PORTAL_LOGO('im-life') },
+    { id:'kdb-life',      name:'KDB생명',      logo: PORTAL_LOGO('kdb-life') },
+    { id:'bnp-life',      name:'BNP파리바',    logo: PORTAL_LOGO('bnp-life') },
+    { id:'cigna-life',    name:'라이나생명',   logo: PORTAL_LOGO('cigna-life') },
+    { id:'dongyang-life', name:'동양생명',     logo: PORTAL_LOGO('dongyang-life') },
+    { id:'abl-life',      name:'ABL생명',      logo: PORTAL_LOGO('abl-life') },
+    { id:'fubon-life',    name:'푸본현대생명', logo: PORTAL_LOGO('fubon-life') },
+    { id:'aia-life',      name:'AIA생명',      logo: PORTAL_LOGO('aia-life') },
+    { id:'chubb-life',    name:'처브생명',     logo: PORTAL_LOGO('chubb-life') },
+    { id:'ibk-life',      name:'IBK연금보험',  logo: PORTAL_LOGO('ibk-life') },
+  ],
+  nonlife: [
+    { id:'kb-fire',       name:'KB손해보험',   logo: PORTAL_LOGO('kb-fire') },
+    { id:'heungkuk-fire', name:'흥국화재',     logo: PORTAL_LOGO('heungkuk-fire') },
+    { id:'samsung-fire',  name:'삼성화재',     logo: PORTAL_LOGO('samsung-fire') },
+    { id:'meritz-fire',   name:'메리츠화재',   logo: PORTAL_LOGO('meritz-fire') },
+    { id:'db-fire',       name:'DB손해보험',   logo: PORTAL_LOGO('db-fire') },
+    { id:'hyundai-fire',  name:'현대해상',     logo: PORTAL_LOGO('hyundai-fire') },
+    { id:'lotte-fire',    name:'롯데손보',     logo: PORTAL_LOGO('lotte-fire') },
+    { id:'hanwha-fire',   name:'한화손해보험', logo: PORTAL_LOGO('hanwha-fire') },
+    { id:'mg-fire',       name:'MG손해보험',   logo: PORTAL_LOGO('mg-fire') },
+    { id:'nh-fire',       name:'NH농협손보',   logo: PORTAL_LOGO('nh-fire') },
+    { id:'aig-fire',      name:'AIG',          logo: PORTAL_LOGO('aig-fire') },
+    { id:'hana-fire',     name:'하나손해보험', logo: PORTAL_LOGO('hana-fire') },
+    { id:'lina-fire',     name:'라이나손보',   logo: PORTAL_LOGO('lina-fire') },
+    { id:'axa-fire',      name:'AXA손해보험',  logo: PORTAL_LOGO('axa-fire') },
+  ],
+};
+
+let portalTab = 'life';
+let portalEditMode = false;
+
+function initPortalPage(){
+  renderPortalGrid();
+}
+
+function setPortalTab(tab, btn){
+  portalTab = tab;
+  document.querySelectorAll('.portal-tab-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderPortalGrid();
+}
+
+function togglePortalEdit(){
+  portalEditMode = !portalEditMode;
+  const btn = document.getElementById('portal-edit-btn');
+  const banner = document.getElementById('portal-edit-banner');
+  if(btn) btn.textContent = portalEditMode ? '✅ 편집 완료' : '✏️ URL 편집';
+  if(banner) banner.style.display = portalEditMode ? 'block' : 'none';
+  renderPortalGrid();
+}
+
+function getPortalUrls(){
+  try { return JSON.parse(localStorage.getItem('portal_urls')||'{}'); } catch{ return {}; }
+}
+
+function savePortalUrl(id){
+  const input = document.getElementById(`portal-url-${id}`);
+  if(!input) return;
+  const urls = getPortalUrls();
+  const val = input.value.trim();
+  if(val) urls[id] = val.startsWith('http') ? val : 'https://'+val;
+  else delete urls[id];
+  localStorage.setItem('portal_urls', JSON.stringify(urls));
+  showToast('✅ URL이 저장되었습니다');
+  renderPortalGrid();
+}
+
+function openPortal(id){
+  if(portalEditMode) return;
+  const urls = getPortalUrls();
+  const url = urls[id];
+  if(url) window.open(url, '_blank');
+  else showToast('⚠️ URL을 먼저 설정해주세요 (✏️ URL 편집)');
+}
+
+function renderPortalGrid(){
+  const el = document.getElementById('portal-grid');
+  if(!el) return;
+  const companies = PORTAL_COMPANIES[portalTab] || [];
+  const urls = getPortalUrls();
+
+  el.innerHTML = `<div class="portal-grid">${companies.map(c=>{
+    const url = urls[c.id] || '';
+    const hasUrl = !!url;
+    const initials = c.name.slice(0,2);
+    return `
+      <div class="portal-card${hasUrl?'':' no-url'}" onclick="openPortal('${c.id}')" title="${hasUrl?url:'URL 미설정 — ✏️ 편집 버튼으로 URL 등록'}">
+        <div style="width:64px;height:64px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px #0002;overflow:hidden;border:1px solid #eee;flex-shrink:0">
+          <img src="${c.logo}" alt="${c.name}" width="48" height="48"
+            style="object-fit:contain"
+            onerror="this.style.display='none';this.parentElement.querySelector('.logo-fallback').style.display='flex'">
+          <div class="logo-fallback" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#555;background:#f5f5f5">${initials}</div>
+        </div>
+        <div class="portal-card-name">${c.name}</div>
+        <div class="portal-card-badge" style="background:${hasUrl?'var(--accent)15':'var(--surface2)'};color:${hasUrl?'var(--accent)':'var(--muted)'};border:1px solid ${hasUrl?'var(--accent)44':'var(--border)'}">
+          ${hasUrl ? '✅ 등록됨' : '미설정'}
+        </div>
+        ${portalEditMode ? `
+          <input class="portal-url-input" id="portal-url-${c.id}"
+            value="${url}" placeholder="https://..."
+            onclick="event.stopPropagation()"
+            onkeydown="if(event.key==='Enter')savePortalUrl('${c.id}')">
+          <button onclick="event.stopPropagation();savePortalUrl('${c.id}')"
+            style="width:100%;padding:4px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:2px">저장</button>
+        ` : ''}
+      </div>`;
+  }).join('')}</div>`;
+}
+
+// ════ 심평원 자료 분석기 (알릴의무 필터) ════
+let hiraTab = 'file';
+let hiraFileData = null; // base64
+
+function setHiraTab(tab){
+  hiraTab = tab;
+  const isFile = tab === 'file';
+  document.getElementById('hira-text-panel').style.display = isFile ? 'none' : 'block';
+  document.getElementById('hira-file-panel').style.display = isFile ? 'block' : 'none';
+  const tbText = document.getElementById('hira-tab-text');
+  const tbFile = document.getElementById('hira-tab-file');
+  tbText.style.background = isFile ? 'var(--surface2)' : 'var(--blue)';
+  tbText.style.color       = isFile ? 'var(--muted)'   : '#fff';
+  tbFile.style.background  = isFile ? 'var(--blue)'    : 'var(--surface2)';
+  tbFile.style.color        = isFile ? '#fff'           : 'var(--muted)';
+}
+
+function hiraLoadFile(file){
+  if(!file) return;
+  const nameEl = document.getElementById('hira-file-name');
+  const iconEl = document.getElementById('hira-file-icon');
+  const ext = file.name.split('.').pop().toLowerCase();
+  iconEl.textContent = ext === 'pdf' ? '📑' : '🖼️';
+  nameEl.textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    hiraFileData = e.target.result; // data:...;base64,...
+  };
+  reader.readAsDataURL(file);
+}
+
+function hiraReset(){
+  document.getElementById('hira-text-input').value = '';
+  document.getElementById('hira-file-name').textContent = '파일을 드래그하거나 클릭하여 선택';
+  document.getElementById('hira-file-icon').textContent = '📄';
+  document.getElementById('hira-file-input').value = '';
+  document.getElementById('hira-birthdate').value = '';
+  document.getElementById('hira-result-panel').innerHTML = `
+    <div style="color:var(--muted);text-align:center;padding:80px 20px">
+      <div style="font-size:40px;margin-bottom:12px">🏥</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">분석 결과가 여기에 표시됩니다</div>
+      <div style="font-size:12px">심평원 자료를 입력 후 AI 분석을 시작하세요</div>
+    </div>`;
+  hiraFileData = null;
+}
+
+async function hiraAnalyze(){
+  const textInput = document.getElementById('hira-text-input').value.trim();
+  const birthdate = document.getElementById('hira-birthdate').value.trim();
+  const btn = document.getElementById('hira-analyze-btn');
+  const loading = document.getElementById('hira-loading');
+  const result = document.getElementById('hira-result-panel');
+
+  // 입력 검증
+  if(hiraTab === 'text' && !textInput){
+    showToast('⚠️ 심평원 자료 텍스트를 입력해주세요'); return;
+  }
+  if(hiraTab === 'file' && !hiraFileData){
+    showToast('⚠️ 파일을 업로드해주세요'); return;
+  }
+
+  btn.style.display = 'none';
+  loading.style.display = 'block';
+  result.innerHTML = '';
+
+  const SYSTEM_PROMPT = `당신은 보험 설계사를 돕는 전문 AI입니다.
+고객의 심평원 진료정보를 분석하여 보험 가입 시 알릴의무 사항을 정리합니다.
+
+다음 형식으로 정확하게 분석하여 출력하세요:
+
+【분석 결과】
+고객명: (이름 또는 OOO)
+
+■ 입원·수술 내역
+- 없음 또는 각 건별로: [날짜] [병원명] [진단명/상병코드] [입원일수 또는 수술명]
+
+■ 통원 진료 내역  
+- 주요 진료과목과 빈도 요약 (전체 건수 포함)
+- 반복 진료된 상병 위주로 기재
+
+■ 복용 중인 약물
+- [약품명] - [용도/성분]
+
+■ 알릴의무 고지사항 (보험사 제출용)
+OOO님 고지사항입니다.
+---
+■ 입원·수술 내역
+(내용)
+■ 통원 진료
+(내용)  
+■ 복용 약물
+(내용)
+
+없는 항목은 "해당없음"으로 표기하세요.
+상병코드는 한글명과 함께 표기하세요 (예: M51.1 요추간판탈출증).`;
+
+  try {
+    // 메시지 구성
+    let userContent;
+    if(hiraTab === 'file' && hiraFileData){
+      const isImage = hiraFileData.startsWith('data:image');
+      const isPdf   = hiraFileData.startsWith('data:application/pdf');
+      const base64  = hiraFileData.split(',')[1];
+      const mimeType = hiraFileData.split(';')[0].replace('data:','');
+
+      if(isImage){
+        userContent = [
+          { inlineData: { mimeType, data: base64 } },
+          { text: `이 심평원 진료정보 이미지를 분석해주세요.${birthdate?` 고객 생년월일: ${birthdate}`:''}` }
+        ];
+      } else if(isPdf){
+        userContent = [
+          { inlineData: { mimeType:'application/pdf', data: base64 } },
+          { text: `이 심평원 진료정보 PDF를 분석해주세요.${birthdate?` 고객 생년월일: ${birthdate}`:''}` }
+        ];
+      } else {
+        throw new Error('지원하지 않는 파일 형식입니다');
+      }
+    } else {
+      userContent = [{ text: `다음 심평원 진료정보를 분석해주세요:\n\n${textInput}${birthdate?`\n\n고객 생년월일: ${birthdate}`:''}` }];
+    }
+
+    const geminiKey = localStorage.getItem('gemini_api_key') || window.GEMINI_API_KEY || '';
+    if(!geminiKey) throw new Error('Gemini API 키가 없습니다. 시스템 설정에서 키를 등록해주세요.');
+
+    document.getElementById('hira-loading-msg').textContent = 'AI가 진료 내역을 분석하는 중... (30초~1분 소요)';
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ parts: userContent }],
+          generationConfig: { maxOutputTokens: 2000, temperature: 0.3 }
+        })
+      }
+    );
+
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const text = data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('') || '';
+
+    if(!text) throw new Error('분석 결과를 받지 못했습니다');
+
+    renderHiraResult(text);
+
+  } catch(e) {
+    console.error('HIRA 분석 오류:', e);
+    result.innerHTML = `<div style="background:var(--orange)11;border:1px solid var(--orange)44;border-radius:10px;padding:20px;text-align:center">
+      <div style="font-size:24px;margin-bottom:8px">⚠️</div>
+      <div style="font-size:14px;font-weight:700;color:var(--orange);margin-bottom:6px">분석 오류</div>
+      <div style="font-size:12px;color:var(--muted)">${e.message}</div>
+    </div>`;
+  } finally {
+    btn.style.display = 'block';
+    loading.style.display = 'none';
+  }
+}
+
+function renderHiraResult(text){
+  const result = document.getElementById('hira-result-panel');
+  const summaryMatch = text.match(/고객명[:：]\s*(.+)/);
+  const drugMatch = text.match(/■\s*복용[\s\S]+?(?=■|$)/);
+  const drugs = drugMatch ? (drugMatch[0].match(/- .+/g)||[]) : [];
+  const admitMatch = text.match(/■\s*입원[\s\S]+?(?=■|$)/);
+  const admitNone = admitMatch ? admitMatch[0].includes('없음') || admitMatch[0].includes('해당없음') : true;
+  const visitMatch = text.match(/(\d+)\s*건/);
+  const noticeMatch = text.match(/■\s*알릴의무 고지사항[^\n]*\n([\s\S]+?)$/);
+  const noticeText = noticeMatch ? noticeMatch[1].trim() : text;
+  const clientName = summaryMatch ? summaryMatch[1].trim() : 'OOO';
+  const admitLabel = admitNone ? '0건' : '확인필요';
+  const admitColor = admitNone ? 'var(--text)' : 'var(--orange)';
+  const visitLabel = visitMatch ? visitMatch[1]+'건' : '-';
+  const drugLabel = drugs.length+'종';
+  const drugColor = drugs.length > 0 ? 'var(--orange)' : 'var(--text)';
+  const safeNotice = noticeText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const safeText = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  result.innerHTML =
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">' +
+    '<div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:12px">추출 요약</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center">' +
+    '<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">고객명</div><div style="font-size:18px;font-weight:800;color:var(--text)">'+clientName+'</div></div>' +
+    '<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">입원/수술</div><div style="font-size:18px;font-weight:800;color:'+admitColor+'">'+admitLabel+'</div></div>' +
+    '<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">통원 진료</div><div style="font-size:18px;font-weight:800;color:var(--blue)">'+visitLabel+'</div></div>' +
+    '<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">복용 약물</div><div style="font-size:18px;font-weight:800;color:'+drugColor+'">'+drugLabel+'</div></div>' +
+    '</div></div>' +
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">' +
+    '<div style="font-size:13px;font-weight:700">고지사항</div>' +
+    '<button onclick="hiraCopy()" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📋 복사하기</button>' +
+    '</div>' +
+    '<div id="hira-notice-text" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;max-height:400px;overflow-y:auto">'+safeNotice+'</div>' +
+    '</div>' +
+    '<details style="margin-top:12px">' +
+    '<summary style="cursor:pointer;font-size:12px;color:var(--muted);padding:8px 0;user-select:none">📋 전체 분석 결과 보기</summary>' +
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:8px;font-size:12px;line-height:1.8;color:var(--text);white-space:pre-wrap;max-height:400px;overflow-y:auto">'+safeText+'</div>' +
+    '</details>';
+}
+
+function hiraCopy(){
+  const el = document.getElementById('hira-notice-text');
+  if(!el) return;
+  navigator.clipboard.writeText(el.innerText).then(()=>{
+    showToast('✅ 고지사항이 클립보드에 복사되었습니다');
+  });
+}
 
 function openClaimForm(){
   // claim_viewer.html을 같은 폴더에서 새 탭으로 열기
