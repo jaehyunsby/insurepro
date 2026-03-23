@@ -11637,180 +11637,106 @@ async function generateCoverageReport(){
   btn.textContent='🔄 AI 분석 중... (30초~1분 소요)';
   resultArea.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px;color:var(--muted)"><div style="width:48px;height:48px;border:3px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite"></div><div style="font-size:14px;font-weight:600">AI가 보장을 분석하고 있습니다...</div><div style="font-size:12px;color:var(--muted)">PDF 내용 파악 → 보장현황표 생성 → 개선안 작성</div></div>';
 
-  const prompt = `당신은 15년 이상 경력의 보험 전문 컨설턴트입니다.
-
-[고객 성함] ${clientName}
-[설계사 집중 포인트] ${points.length ? points.join(', ') : '전반적 보장 분석'}
-[추가 정보] ${extra || '없음'}
-${coveragePDFBase64 ? '[첨부] 보험증권 PDF - 보험사명, 상품명, 보장항목별 금액, 월보험료를 모두 추출하세요.' : '[첨부 없음] 고객 정보 기반으로 일반적인 분석을 진행하세요.'}
-
-반드시 아래 JSON 형식으로만 응답하세요. JSON 외 다른 텍스트는 절대 포함하지 마세요.
-
-{
-  "clientName": "${clientName}",
-  "contractCount": 계약건수(숫자),
-  "totalPremium": "월보험료합계(예:258,150원)",
-  "companies": [
-    {"name": "보험사명", "product": "상품명", "period": "보장기간", "premium": "월보험료"}
-  ],
-  "coverage": [
-    {"category": "사망", "item": "질병사망", "values": ["보험사1금액", "보험사2금액"], "total": "합계"},
-    {"category": "사망", "item": "상해사망", "values": ["", ""], "total": ""},
-    {"category": "암", "item": "일반암 진단비", "values": ["", ""], "total": ""},
-    {"category": "암", "item": "유사암 진단비", "values": ["", ""], "total": ""},
-    {"category": "뇌혈관", "item": "뇌혈관질환 진단비", "values": ["", ""], "total": ""},
-    {"category": "뇌혈관", "item": "뇌졸중 진단비", "values": ["", ""], "total": ""},
-    {"category": "심장", "item": "허혈성심장질환 진단비", "values": ["", ""], "total": ""},
-    {"category": "심장", "item": "급성심근경색 진단비", "values": ["", ""], "total": ""},
-    {"category": "수술비", "item": "암수술비", "values": ["", ""], "total": ""},
-    {"category": "수술비", "item": "질병수술비", "values": ["", ""], "total": ""},
-    {"category": "수술비", "item": "뇌혈관수술비", "values": ["", ""], "total": ""},
-    {"category": "입원", "item": "질병입원(일당)", "values": ["", ""], "total": ""},
-    {"category": "입원", "item": "질병입원비", "values": ["", ""], "total": ""},
-    {"category": "실손", "item": "실손의료비", "values": ["", ""], "total": ""},
-    {"category": "치료비", "item": "고액항암치료비", "values": ["", ""], "total": ""},
-    {"category": "기타", "item": "노후연금(월)", "values": ["", ""], "total": ""}
-  ],
-  "score": 점수(0-100 숫자),
-  "issues": [
-    {"rank": 1, "title": "문제제목", "risk": "위험설명", "detail": "수치포함 상세"},
-    {"rank": 2, "title": "", "risk": "", "detail": ""},
-    {"rank": 3, "title": "", "risk": "", "detail": ""}
-  ],
-  "suggestions": [
-    {"rank": 1, "action": "개선방법", "fee": "월 OO만원", "timing": "즉시/갱신시/OO월"},
-    {"rank": 2, "action": "", "fee": "", "timing": ""},
-    {"rank": 3, "action": "", "fee": "", "timing": ""}
-  ],
-  "scripts": {
-    "kakao": "카카오톡 메시지 (${clientName} 포함, 200자 이내)",
-    "phone": "전화 오프닝 멘트 (30초)"
-  },
-  "conclusion": {
-    "stars": "★★★☆☆",
-    "summary": "3줄 평가 텍스트",
-    "priorities": ["🔴 즉시: OOO (월 +OO만원)", "🟠 1개월: OOO", "🟡 3개월: OOO"],
-    "oneline": "한 줄 결론 메시지"
-  }
-}
-
-values 배열 길이는 companies 배열 길이와 동일하게 맞추세요.
-금액이 없으면 "0" 또는 "-"로 표기하고, 금액은 만원 단위로 표기하세요 (예: 5,000만, 3만/일).`;
-
   try {
-    // ── 0단계: PDF 텍스트 추출 ──
-    let pdfText = '';
-    if(coveragePDFBase64){
-      resultArea.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px;color:var(--muted)"><div style="width:40px;height:40px;border:3px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite"></div><div style="font-size:13px">PDF 텍스트 추출 중...</div></div>';
-      const resText = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
-        { method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            contents:[{ parts:[
-              { inlineData:{ mimeType:'application/pdf', data:coveragePDFBase64 }},
-              { text:'이 보험증권 PDF에서 모든 텍스트를 그대로 추출해주세요. 보험사명, 상품명, 보장항목, 금액, 보험료 등 모든 내용을 빠짐없이 텍스트로만 출력하세요. 분석이나 설명 없이 원문 텍스트만 출력하세요.' }
-            ]}],
-            generationConfig:{ maxOutputTokens:8000, temperature:0.0 }
-          })
-        }
-      );
-      const dText = await resText.json();
-      if(dText.error) throw new Error(dText.error.message);
-      pdfText = dText.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
-    }
+    // ── 1단계: PDF 직접 → 보장현황 JSON ──
+    // (별도 텍스트 추출 없이 PDF를 Gemini에 직접 전달 → 표 구조 보존)
+    resultArea.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px;color:var(--muted)"><div style="width:40px;height:40px;border:3px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite"></div><div style="font-size:13px">보장현황 분석 중... (PDF 직접 분석)</div></div>';
 
-    // ── 1단계: 보장현황 JSON (텍스트 기반) ──
-    resultArea.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px;color:var(--muted)"><div style="width:40px;height:40px;border:3px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite"></div><div style="font-size:13px">보장현황 분석 중...</div></div>';
+    const coverageItemList = `[
+    {"category":"사망",    "item":"질병사망"},
+    {"category":"사망",    "item":"상해사망"},
+    {"category":"후유장해","item":"질병후유 3%이상"},
+    {"category":"후유장해","item":"상해후유 3%이상"},
+    {"category":"암",      "item":"일반암 진단비"},
+    {"category":"암",      "item":"유사암 진단비"},
+    {"category":"암",      "item":"통합암 진단비"},
+    {"category":"암",      "item":"특정암 진단비"},
+    {"category":"뇌혈관",  "item":"뇌혈관 진단비"},
+    {"category":"뇌혈관",  "item":"뇌졸중 진단비"},
+    {"category":"뇌혈관",  "item":"뇌출혈 진단비"},
+    {"category":"뇌혈관",  "item":"뇌산정특례대상 진단비"},
+    {"category":"심장",    "item":"허혈성심장질환 진단비"},
+    {"category":"심장",    "item":"급성심근경색증 진단비"},
+    {"category":"심장",    "item":"심장산정특례대상 진단비"},
+    {"category":"치매",    "item":"중증치매진단"},
+    {"category":"치매",    "item":"경증치매진단"},
+    {"category":"입원",    "item":"질병입원"},
+    {"category":"입원",    "item":"질병통원"},
+    {"category":"입원",    "item":"상해입원"},
+    {"category":"입원",    "item":"상해통원"},
+    {"category":"수술비",  "item":"암수술비"},
+    {"category":"수술비",  "item":"뇌혈관수술비"},
+    {"category":"수술비",  "item":"허혈심장질환수술비"},
+    {"category":"수술비",  "item":"질병수술비"},
+    {"category":"수술비",  "item":"상해수술비"},
+    {"category":"수술비",  "item":"질병종수술"},
+    {"category":"수술비",  "item":"상해종수술"},
+    {"category":"입원일당","item":"질병일당"},
+    {"category":"입원일당","item":"상해일당"},
+    {"category":"입원일당","item":"질병 간병인지원 입원일당"},
+    {"category":"입원일당","item":"상해 간병인지원 입원일당"},
+    {"category":"입원일당","item":"질병 간병인사용 입원일당"},
+    {"category":"입원일당","item":"상해 간병인사용 입원일당"},
+    {"category":"입원일당","item":"1인실 입원일당"},
+    {"category":"치료비",  "item":"고액항암 치료비(표적)"},
+    {"category":"치료비",  "item":"중입자방사선치료비"},
+    {"category":"치료비",  "item":"암 주요치료비"},
+    {"category":"치료비",  "item":"2대질환 주요치료비"},
+    {"category":"운전자",  "item":"교통사고처리 지원금"},
+    {"category":"운전자",  "item":"변호사 선임비용"},
+    {"category":"운전자",  "item":"벌금"},
+    {"category":"운전자",  "item":"자동차사고 부상치료비"},
+    {"category":"법률",    "item":"일상생활 배상책임"},
+    {"category":"법률",    "item":"민사소송 법률비용"},
+    {"category":"법률",    "item":"화재벌금"},
+    {"category":"치아·화상","item":"치아보철 치료비"},
+    {"category":"치아·화상","item":"치아보존 치료비"},
+    {"category":"치아·화상","item":"화상 진단비"},
+    {"category":"치아·화상","item":"골절 진단비"}
+  ]`;
 
-    const prompt1 = `아래 보험증권 내용을 분석해서 JSON만 출력하세요. 다른 텍스트 없이 순수 JSON만.
-
-[보험증권 내용]
-${pdfText || '(PDF 없음 - 일반 보험 분석)'}
+    const prompt1 = `이 보험 PDF를 분석해서 JSON만 출력하세요. 다른 텍스트 없이 순수 JSON만.
 
 [고객명] ${clientName}
+${extra ? '[추가정보] '+extra : ''}
 
-=== 중요 규칙 ===
-1. companies 배열에 모든 보험사/상품을 발견된 순서대로 추가하세요.
-2. coverage 배열 각 항목의 "values" 배열 원소 수는 반드시 companies 배열 수와 동일해야 합니다.
-   예) companies가 4개이면 모든 coverage의 values도 반드시 4개 원소.
-   values[0] = companies[0]의 해당 보장금액
-   values[1] = companies[1]의 해당 보장금액
-   ... (companies 수만큼 반복)
-3. 해당 보험사에 해당 보장이 없으면 "0"으로 채우세요.
-4. 금액은 만원 단위로 표기 (예: 5000만, 1억, 3만/일). total은 모든 values의 합계.
-5. coverage 항목은 아래 목록을 모두 포함하세요 (없으면 values 전부 "0").
+=== 반드시 지켜야 할 규칙 ===
+1. PDF에서 보험사/상품을 모두 찾아 companies 배열에 순서대로 추가하세요.
+2. 각 coverage 행의 "values" 배열 길이 = companies 배열 길이 (반드시 일치).
+   - values[0] = companies[0] 의 해당 보장금액
+   - values[1] = companies[1] 의 해당 보장금액
+   - ... (보험사 수만큼 반드시 채울 것)
+3. 해당 보험사에 그 보장이 없으면 반드시 "0"으로 채우세요.
+4. 금액은 만원 단위 표기 (예: 7000만, 1억, 3만/일). total = values 합계.
+5. PDF에 표 형식으로 보험사별 금액이 나뉘어 있으면 각 열을 정확히 매핑하세요.
+6. 아래 coverage 목록의 모든 항목을 포함하세요 (없으면 values 전부 "0").
 
-JSON 구조:
+출력 JSON 구조:
 {
   "clientName": "${clientName}",
-  "contractCount": 계약건수(숫자),
-  "totalPremium": "월합계보험료",
+  "contractCount": 계약건수숫자,
+  "totalPremium": "월합계보험료(예:258,150원)",
   "companies": [
-    {"name": "보험사명1", "product": "상품명1", "period": "보장기간1", "premium": "월보험료1"},
-    {"name": "보험사명2", "product": "상품명2", "period": "보장기간2", "premium": "월보험료2"}
+    {"name":"보험사명1","product":"상품명1","period":"보장기간1","premium":"월보험료1"},
+    {"name":"보험사명2","product":"상품명2","period":"보장기간2","premium":"월보험료2"}
   ],
-  "coverage": [
-    {"category":"사망",    "item":"질병사망",              "values":["..."], "total":"합계"},
-    {"category":"사망",    "item":"상해사망",              "values":["..."], "total":"합계"},
-    {"category":"후유장해","item":"질병후유 3%이상",         "values":["..."], "total":"합계"},
-    {"category":"후유장해","item":"상해후유 3%이상",         "values":["..."], "total":"합계"},
-    {"category":"암",      "item":"일반암 진단비",          "values":["..."], "total":"합계"},
-    {"category":"암",      "item":"유사암 진단비",          "values":["..."], "total":"합계"},
-    {"category":"암",      "item":"통합암 진단비",          "values":["..."], "total":"합계"},
-    {"category":"암",      "item":"특정암 진단비",          "values":["..."], "total":"합계"},
-    {"category":"뇌혈관",  "item":"뇌혈관 진단비",          "values":["..."], "total":"합계"},
-    {"category":"뇌혈관",  "item":"뇌졸중 진단비",          "values":["..."], "total":"합계"},
-    {"category":"뇌혈관",  "item":"뇌출혈 진단비",          "values":["..."], "total":"합계"},
-    {"category":"뇌혈관",  "item":"뇌산정특례대상 진단비",   "values":["..."], "total":"합계"},
-    {"category":"심장",    "item":"허혈성심장질환 진단비",   "values":["..."], "total":"합계"},
-    {"category":"심장",    "item":"급성심근경색증 진단비",   "values":["..."], "total":"합계"},
-    {"category":"심장",    "item":"심장산정특례대상 진단비", "values":["..."], "total":"합계"},
-    {"category":"치매",    "item":"중증치매진단",            "values":["..."], "total":"합계"},
-    {"category":"치매",    "item":"경증치매진단",            "values":["..."], "total":"합계"},
-    {"category":"입원",    "item":"질병입원",                "values":["..."], "total":"합계"},
-    {"category":"입원",    "item":"질병통원",                "values":["..."], "total":"합계"},
-    {"category":"입원",    "item":"상해입원",                "values":["..."], "total":"합계"},
-    {"category":"입원",    "item":"상해통원",                "values":["..."], "total":"합계"},
-    {"category":"수술비",  "item":"암수술비",                "values":["..."], "total":"합계"},
-    {"category":"수술비",  "item":"뇌혈관수술비",            "values":["..."], "total":"합계"},
-    {"category":"수술비",  "item":"허혈심장질환수술비",      "values":["..."], "total":"합계"},
-    {"category":"수술비",  "item":"질병수술비",              "values":["..."], "total":"합계"},
-    {"category":"수술비",  "item":"상해수술비",              "values":["..."], "total":"합계"},
-    {"category":"수술비",  "item":"질병종수술",              "values":["..."], "total":"합계"},
-    {"category":"수술비",  "item":"상해종수술",              "values":["..."], "total":"합계"},
-    {"category":"입원일당","item":"질병일당",                "values":["..."], "total":"합계"},
-    {"category":"입원일당","item":"상해일당",                "values":["..."], "total":"합계"},
-    {"category":"입원일당","item":"질병 간병인지원 입원일당","values":["..."], "total":"합계"},
-    {"category":"입원일당","item":"상해 간병인지원 입원일당","values":["..."], "total":"합계"},
-    {"category":"입원일당","item":"질병 간병인사용 입원일당","values":["..."], "total":"합계"},
-    {"category":"입원일당","item":"상해 간병인사용 입원일당","values":["..."], "total":"합계"},
-    {"category":"입원일당","item":"1인실 입원일당",          "values":["..."], "total":"합계"},
-    {"category":"치료비",  "item":"고액항암 치료비(표적)",   "values":["..."], "total":"합계"},
-    {"category":"치료비",  "item":"중입자방사선치료비",      "values":["..."], "total":"합계"},
-    {"category":"치료비",  "item":"암 주요치료비",           "values":["..."], "total":"합계"},
-    {"category":"치료비",  "item":"2대질환 주요치료비",      "values":["..."], "total":"합계"},
-    {"category":"운전자",  "item":"교통사고처리 지원금",     "values":["..."], "total":"합계"},
-    {"category":"운전자",  "item":"변호사 선임비용",         "values":["..."], "total":"합계"},
-    {"category":"운전자",  "item":"벌금",                    "values":["..."], "total":"합계"},
-    {"category":"운전자",  "item":"자동차사고 부상치료비",   "values":["..."], "total":"합계"},
-    {"category":"법률",    "item":"일상생활 배상책임",       "values":["..."], "total":"합계"},
-    {"category":"법률",    "item":"민사소송 법률비용",       "values":["..."], "total":"합계"},
-    {"category":"법률",    "item":"화재벌금",                "values":["..."], "total":"합계"},
-    {"category":"치아·화상","item":"치아보철 치료비",        "values":["..."], "total":"합계"},
-    {"category":"치아·화상","item":"치아보존 치료비",        "values":["..."], "total":"합계"},
-    {"category":"치아·화상","item":"화상 진단비",            "values":["..."], "total":"합계"},
-    {"category":"치아·화상","item":"골절 진단비",            "values":["..."], "total":"합계"}
-  ]
+  "coverage": ${coverageItemList.replace(/\n    \{/g,'\n    {"values":["회사1금액","회사2금액"],"total":"합계",').replace(/\}/g,'}').replace(/,"values".*?"total":"합계"/g,',"values":["..."],"total":"합계"')}
 }
 
-다시 강조: values 배열의 원소 수 = companies 수. 절대 1개짜리 배열로 줄이지 마세요.`;
+⚠️ 중요: values 배열 원소 수 = companies 수. 절대 원소를 줄이거나 생략하지 마세요.
+⚠️ PDF 표에서 각 보험사 열의 금액을 정확한 순서로 읽으세요.`;
+
+    // PDF가 있으면 PDF를 직접 전달, 없으면 텍스트만
+    const parts1 = coveragePDFBase64
+      ? [{ inlineData:{ mimeType:'application/pdf', data:coveragePDFBase64 }}, { text: prompt1 }]
+      : [{ text: prompt1 }];
 
     const res1 = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
       { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          contents:[{ parts:[{ text: prompt1 }] }],
-          generationConfig:{ maxOutputTokens:8000, temperature:0.0 }
+          contents:[{ parts: parts1 }],
+          generationConfig:{ maxOutputTokens:8192, temperature:0.0 }
         })
       }
     );
