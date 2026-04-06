@@ -6071,13 +6071,17 @@ function switchClientTab(tab){
   if(tab==='org')        renderClientsOrg();
   if(tab==='stats')      renderClientStats();
   if(tab==='card')       renderCardPaymentMgmt();
-  if(tab==='bulk-reg')   initBulkGridInTab();
+  if(tab==='bulk-reg'){
+    // bulk-reg 탭: 독립 페이지로 이동
+    goPage('bulk-register', document.getElementById('ctab-bulk-reg'));
+    return;
+  }
   if(tab==='bulk-mgmt')  renderBulkMgmt();
 
   var sub = document.getElementById('clients-sub');
   if(sub){
     var labels = {'list':'내 고객 목록','org':'조직 전체 고객','stats':'사용자별 현황',
-                  'card':'카드납부 관리','bulk-reg':'엑셀 복붙으로 대량 등록','bulk-mgmt':'일괄 상태변경 · 삭제 · 내보내기'};
+                  'card':'카드납부 관리','bulk-mgmt':'일괄 상태변경 · 삭제 · 내보내기'};
     sub.textContent = labels[tab] || '';
   }
 }
@@ -10884,15 +10888,15 @@ function openBulkAddrSearch(rowIdx){
   }).open();
 }
 
-function initBulkGrid(){
+function initBulkGrid(gridId){
   if(bulkData.length === 0){
     bulkData = Array.from({length: BULK_INIT_ROWS}, () => ({}));
   }
-  renderBulkGrid();
+  renderBulkGrid(gridId);
 }
 
-function renderBulkGrid(){
-  const grid = document.getElementById('bulk-grid');
+function renderBulkGrid(gridId){
+  const grid = document.getElementById(gridId || 'bulk-grid');
   if(!grid) return;
 
   let html = '';
@@ -11100,7 +11104,8 @@ function clearBulkGrid(){
   if(!confirm('모든 입력 내용을 초기화하시겠습니까?')) return;
   bulkData = Array.from({length: BULK_INIT_ROWS}, () => ({}));
   renderBulkGrid();
-  document.getElementById('bulk-result').innerHTML = '';
+  var _bulkRes = document.getElementById('bulk-result') || document.getElementById('bulk-result-tab');
+  if(_bulkRes) _bulkRes.innerHTML = '';
 }
 
 async function saveBulkClients(){
@@ -26452,8 +26457,13 @@ function applyKakaoMsgNav(){
 var _bulkMgmtSelected = new Set();
 
 function renderBulkMgmt(){
+  // 첫 렌더 시 초기 히스토리 스냅샷
+  if(_bulkMgmtHistory.length === 0) bulkMgmtSaveHistory('초기 상태');
   var q = (document.getElementById('bulk-mgmt-search')?.value||'').toLowerCase();
-  var myClients = getMyClients();
+  // 관리자는 전체, 일반은 본인 고객
+  var myClients = (['superadmin','bureau_head','branch_head'].includes(currentUser?.role))
+    ? getOrgClients()
+    : getMyClients();
   var list = q ? myClients.filter(function(c){
     return (c.name||'').toLowerCase().includes(q) || (c.phone||'').includes(q);
   }) : myClients;
@@ -26513,6 +26523,7 @@ function bulkMgmtChangeStatus(){
   if(!status){ showToast('변경할 상태를 선택하세요'); return; }
   if(!_bulkMgmtSelected.size){ showToast('고객을 선택하세요'); return; }
   if(!confirm(_bulkMgmtSelected.size+'명의 상태를 "'+status+'"으로 변경할까요?')) return;
+  bulkMgmtSaveHistory('상태 변경 전');
   var changed = 0;
   CLIENTS.forEach(function(c){
     if(_bulkMgmtSelected.has(c.id)){
@@ -26536,6 +26547,7 @@ function bulkMgmtChangeStatus(){
 function bulkMgmtDelete(){
   if(!_bulkMgmtSelected.size){ showToast('삭제할 고객을 선택하세요'); return; }
   if(!confirm(_bulkMgmtSelected.size+'명의 고객을 삭제할까요?\n이 작업은 되돌릴 수 없습니다.')) return;
+  bulkMgmtSaveHistory('삭제 전');
   var ids = Array.from(_bulkMgmtSelected);
   window.CLIENTS = CLIENTS.filter(function(c){ return !ids.includes(c.id); });
   if(_supabase){
@@ -26567,33 +26579,20 @@ function bulkMgmtExport(){
   showToast('📊 '+(list.length)+'명 내보내기 완료');
 }
 
-// 탭 내 일괄등록 그리드 (bulk-grid-tab 사용)
+// 탭 내 일괄등록 그리드
+var _bulkTabInited = false;
 function initBulkGridInTab(){
-  if(!bulkData || bulkData.length === 0) initBulkGrid();
-  // bulk-grid-wrap 내용을 tab 영역에 복제 표시
-  var tabWrap = document.getElementById('bulk-grid-wrap-tab');
-  var tabGrid = document.getElementById('bulk-grid-tab');
-  if(!tabWrap || !tabGrid) return;
-  if(tabGrid.children.length > 0) return;
-  // 동일한 데이터 사용 - renderBulkGrid가 'bulk-grid'를 타깃으로 하므로
-  // tab에서는 그냥 page-bulk-register로 이동하는 링크 표시
-  tabGrid.innerHTML = '<div style="padding:20px;text-align:center">'
-    + '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">일괄 등록 그리드가 로드됩니다...</div>'
-    + '</div>';
-  // 실제로 동일한 그리드 데이터를 공유
-  initBulkGrid();
-  setTimeout(function(){
-    var src = document.getElementById('bulk-grid');
-    if(src && tabGrid){
-      tabGrid.innerHTML = '';
-      // 실제 그리드 DOM을 이동하지 않고 iframe 스타일로 참조
-      tabGrid.appendChild(src.cloneNode(true));
-      renderBulkGrid(); // 원본 렌더 유지
-    }
-    var res = document.getElementById('bulk-result');
-    var resTab = document.getElementById('bulk-result-tab');
-    if(res && resTab) resTab.innerHTML = res.innerHTML;
-  }, 100);
+  var container = document.getElementById('bulk-grid-tab');
+  if(!container) return;
+  if(_bulkTabInited && bulkData.length > 0){
+    renderBulkGrid('bulk-grid-tab');
+    return;
+  }
+  if(bulkData.length === 0){
+    bulkData = Array.from({length: 20}, function(){ return {}; });
+  }
+  _bulkTabInited = true;
+  renderBulkGrid('bulk-grid-tab');
 }
 
 
@@ -26652,18 +26651,7 @@ function bulkMgmtUpdateUndoRedo(){
     : '';
 }
 
-// 일괄관리 상태 변경 시 히스토리 저장
-var _origBulkMgmtChangeStatus = bulkMgmtChangeStatus;
-function bulkMgmtChangeStatus(){
-  bulkMgmtSaveHistory('상태 변경 전');
-  _origBulkMgmtChangeStatus();
-}
-
-var _origBulkMgmtDelete = bulkMgmtDelete;
-function bulkMgmtDelete(){
-  bulkMgmtSaveHistory('삭제 전');
-  _origBulkMgmtDelete();
-}
+// 히스토리는 bulkMgmtChangeStatus/bulkMgmtDelete 내부에서 직접 호출
 
 // ══════════════════════════════════════
 // ↩️ 일괄 고객등록 이전/앞으로 (입력 데이터)
@@ -26736,8 +26724,8 @@ function bulkRegUpdateUndoRedo(){
             <span style="color:var(--orange)">이름</span>과 <span style="color:var(--orange)">연락처</span>는 필수. 중복 연락처는 자동 건너뜁니다.
           </div>
         </div>
-        <div id="bulk-grid-wrap-tab" style="border:1px solid var(--border);border-radius:10px;overflow:auto;background:var(--surface);max-height:60vh;position:relative">
-          <div id="bulk-grid-tab"></div>
+        <div id="bulk-grid-tab-wrap" style="border:1px solid var(--border);border-radius:10px;overflow:auto;background:var(--surface);max-height:60vh;position:relative">
+          <div id="bulk-grid-tab" style="position:relative"></div>
         </div>
         <div id="bulk-result-tab" style="margin-top:12px"></div>
       </div>
