@@ -3950,6 +3950,10 @@ async function enterApp(user){
         }
       }
     } catch(e){ console.warn('JWT 재발급 실패:', e.message); }
+    // 재발급 실패 시 비밀번호 재입력 모달
+    if(_needNew && !getToken()){
+      showSessionExpiredModal();
+    }
   }
   // Record last login time
   const loginTime = new Date().toISOString();
@@ -10058,6 +10062,54 @@ function closeNotifPopup(id){
   setTimeout(() => el.remove(), 300);
 }
 
+
+// 세션 만료 시 비밀번호 재입력 모달
+function showSessionExpiredModal(){
+  if(document.getElementById('modal-session-expired')) return;
+  var email = currentUser?.email || (localStorage.getItem('insearch_user') ? JSON.parse(localStorage.getItem('insearch_user')).email : '');
+  var overlay = document.createElement('div');
+  overlay.id = 'modal-session-expired';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0009;z-index:99999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = [
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;width:340px;max-width:90vw;text-align:center">',
+    '<div style="font-size:36px;margin-bottom:12px">🔐</div>',
+    '<div style="font-size:18px;font-weight:700;margin-bottom:6px">세션이 만료됐습니다</div>',
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:20px">보안을 위해 비밀번호를 다시 입력해주세요</div>',
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:left">이메일</div>',
+    '<input id="session-email" type="email" value="'+email+'" readonly style="width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);font-family:inherit;box-sizing:border-box;margin-bottom:12px;opacity:0.7">',
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:left">비밀번호</div>',
+    '<input id="session-pw" type="password" placeholder="비밀번호 입력" style="width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);font-family:inherit;box-sizing:border-box;margin-bottom:20px" onkeydown="if(event.key==String.fromCharCode(13))confirmSessionPw()">',
+    '<button onclick="confirmSessionPw()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">🔑 다시 로그인</button>',
+    '</div>'
+  ].join('');
+  document.body.appendChild(overlay);
+  setTimeout(function(){ var pw=document.getElementById('session-pw'); if(pw) pw.focus(); }, 100);
+}
+
+async function confirmSessionPw(){
+  var email = document.getElementById('session-email')?.value || currentUser?.email || '';
+  var pw    = document.getElementById('session-pw')?.value || '';
+  if(!pw){ showToast('비밀번호를 입력해주세요'); return; }
+  try {
+    var r = await fetch(API_BASE+'/api/auth/login',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email, password:pw})
+    });
+    var d = await r.json();
+    if(d.token){
+      setToken(d.token);
+      // 비번 저장
+      localStorage.setItem('insearch_user', JSON.stringify({email, pw: btoa(pw)}));
+      var el = document.getElementById('modal-session-expired');
+      if(el) el.remove();
+      showToast('✅ 로그인 갱신 완료! 작업을 계속하세요.');
+    } else {
+      showToast('⚠️ ' + (d.error || '비밀번호가 틀렸습니다'));
+    }
+  } catch(e){
+    showToast('⚠️ 연결 오류: ' + e.message);
+  }
+}
 function showToast(msg){
   let t=document.getElementById('copy-toast-el');
   if(t)t.remove();
@@ -20931,20 +20983,10 @@ async function api(method, path, body){
         }
       } catch(e2){ console.warn('JWT 재발급 실패:', e2.message); }
 
-      // 재발급도 실패하면 토스트 안내
+      // 재발급도 실패하면 비밀번호 재입력 요청
       if(!refreshed && res.status === 401){
-        showToast('⚠️ 세션이 만료됐습니다. 잠시 후 자동 재연결합니다.');
         clearToken();
-        // Supabase 세션으로 재시도
-        if(window._supabase){
-          try {
-            var {data:{session}} = await _supabase.auth.getSession();
-            if(session?.user){
-              var u = USERS.find(function(x){ return x.email===session.user.email && x.status==='approved'; });
-              if(u){ await enterApp(u); }
-            }
-          } catch(e3){}
-        }
+        showSessionExpiredModal();
       }
     }
 
