@@ -3338,7 +3338,15 @@ kbd { font-family:JetBrains Mono,monospace; }
     <!-- 7행: 비고 -->
     <div class="field"><label>비고</label><textarea id="db-memo" placeholder="특이사항, 기타 메모..." style="min-height:60px"></textarea></div>
 
-    <!-- 8행: 계약여부 -->
+    <!-- 8행: 배분할 설계사 -->
+    <div class="field" id="db-assign-field">
+      <label>배분할 설계사 <span style="font-size:11px;color:var(--muted);font-weight:400">(선택사항 - 등록 후 바로 배분)</span></label>
+      <select id="db-assign-to" style="width:100%">
+        <option value="">배분 안 함 (나중에)</option>
+      </select>
+    </div>
+
+    <!-- 9행: 계약여부 -->
     <div class="field">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
         <input type="checkbox" id="db-contracted" style="width:16px;height:16px;accent-color:var(--accent)">
@@ -11621,6 +11629,21 @@ function openDbAddModal(){
   document.getElementById('db-source').value='인터넷';
   document.getElementById('db-modal-title').textContent='DB 고객 등록';
   window._editingDbId = null;
+
+  // 배분할 설계사 드롭다운 채우기 (관리자만)
+  var assignField = document.getElementById('db-assign-field');
+  var assignSel = document.getElementById('db-assign-to');
+  var isMgr = ['superadmin','bureau_head','branch_head'].includes(currentUser?.role);
+  if(assignField) assignField.style.display = isMgr ? 'block' : 'none';
+  if(assignSel && isMgr){
+    var visIds = getVisibleAgentIds(currentUser);
+    var visAgents = AGENTS.filter(function(a){ return visIds.includes(a.id); });
+    assignSel.innerHTML = '<option value="">배분 안 함 (나중에)</option>' +
+      visAgents.map(function(a){
+        return '<option value="'+a.id+'">'+a.name+' ('+( getTeamName(a.team)||a.team||'')+')</option>';
+      }).join('');
+  }
+
   openModal('modal-db-add');
 }
 async function saveDbClient(){
@@ -11681,11 +11704,33 @@ async function saveDbClient(){
     monthlyPremium:Number(document.getElementById('db-monthly').value)||null,
     source:document.getElementById('db-source').value,
     memo:document.getElementById('db-memo').value.trim(),
-    assignedTo: autoAssign ? myAgentId : null,
-    assignedName: autoAssign ? myAgent.name : null,
-    assignedTeam: autoAssign ? myAgent.team : null,
-    assignedDate: autoAssign ? today : null,
-    status: autoAssign ? 'assigned' : 'unassigned',
+    // 드롭다운에서 선택한 설계사 우선 사용
+    assignedTo: (function(){
+      var sel = document.getElementById('db-assign-to');
+      var selVal = sel ? Number(sel.value) : 0;
+      if(selVal) return selVal;
+      return autoAssign ? myAgentId : null;
+    })(),
+    assignedName: (function(){
+      var sel = document.getElementById('db-assign-to');
+      var selVal = sel ? Number(sel.value) : 0;
+      if(selVal){ var ag = AGENTS.find(function(a){ return a.id===selVal; }); return ag ? ag.name : null; }
+      return autoAssign ? myAgent.name : null;
+    })(),
+    assignedTeam: (function(){
+      var sel = document.getElementById('db-assign-to');
+      var selVal = sel ? Number(sel.value) : 0;
+      if(selVal){ var ag = AGENTS.find(function(a){ return a.id===selVal; }); return ag ? ag.team : null; }
+      return autoAssign ? myAgent.team : null;
+    })(),
+    assignedDate: (function(){
+      var sel = document.getElementById('db-assign-to');
+      return (sel && sel.value) || autoAssign ? today : null;
+    })(),
+    status: (function(){
+      var sel = document.getElementById('db-assign-to');
+      return (sel && sel.value) || autoAssign ? 'assigned' : 'unassigned';
+    })(),
     regDate:today, regMonth:today.slice(0,7),
     processStatus: contracted ? '계약완료' : '미처리',
     contractAmount:null, contractDate:null
