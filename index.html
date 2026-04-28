@@ -1813,23 +1813,33 @@ kbd { font-family:JetBrains Mono,monospace; }
         <button class="contract-tab active" id="dbt-personal" onclick="switchDbClientTab('personal',this)">📋 DB 고객</button>
         <button class="contract-tab" id="dbt-bulk" onclick="switchDbClientTab('bulk',this)">📥 일괄 등록</button>
         <button class="contract-tab" id="dbt-progress" onclick="switchDbClientTab('progress',this)">📊 DB 진행현황</button>
-        <button class="contract-tab" id="dbt-dist" onclick="switchDbClientTab('dist',this)" style="display:none">📊 배분 현황</button>
-        <button class="contract-tab" id="dbt-admin" onclick="switchDbClientTab('admin',this)" style="display:none">📤 DB 배분관리</button>
-        <button class="contract-tab" id="dbt-all" onclick="switchDbClientTab('all',this)" style="display:none">🏢 전체 DB</button>
       </div>
 
-      <!-- 탭: 내 DB 고객 (설계사 & 상위관리자 공통) -->
+      <!-- 탭: DB 고객 -->
       <div id="dbc-pane-personal">
+        <!-- 툴바 -->
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 0;flex-wrap:wrap">
+          <select id="db-month-filter" onchange="renderDbClients()" style="padding:7px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">
+            <option value="">전체 월</option>
+          </select>
+          <input id="db-personal-search" type="text" placeholder="🔍 이름·연락처 검색" oninput="renderDbClients()"
+            style="padding:7px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;width:180px">
+          <div id="db-personal-selected" style="font-size:13px;color:var(--muted)"></div>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <button id="db-assign-selected-btn" onclick="openDbAssignSelected()" style="display:none;padding:7px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📤 선택 배분</button>
+            <button onclick="openDbAddModal()" style="padding:7px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ DB 등록</button>
+          </div>
+        </div>
         <div id="db-clients-empty" style="display:none;text-align:center;padding:60px;color:var(--dim)">
           <div style="font-size:40px;margin-bottom:12px">📭</div>
           <div style="font-size:16px;font-weight:600;margin-bottom:6px">배분된 DB 고객이 없습니다</div>
-          <div style="font-size:13px">관리자가 DB 고객을 배분하면 여기에 표시됩니다</div>
+          <div style="font-size:13px">등록 후 배분하면 여기에 표시됩니다</div>
         </div>
         <div class="table-wrap" id="db-clients-table-wrap">
           <table>
             <thead><tr>
-              <th>담당자</th><th>이름</th><th>연락처</th><th>주소</th><th>직업</th>
-              <th>배분일</th><th>상태</th><th>메모</th><th>처리 / 월납보험료</th>
+              <th style="width:36px"><input type="checkbox" id="db-chk-all" onchange="toggleAllDbPersonal(this)" style="accent-color:var(--accent)"></th>
+              <th>이름</th><th>연락처</th><th>주소</th><th>배분일</th><th>상태</th><th>메모</th><th>처리상태</th>
             </tr></thead>
             <tbody id="db-clients-tbody"></tbody>
           </table>
@@ -1861,7 +1871,7 @@ kbd { font-family:JetBrains Mono,monospace; }
         <div id="dbc-bulk-grid-wrap"><div id="db-bulk-grid"></div></div>
       </div>
 
-      <!-- 탭: 배분 현황 (상위관리자 전용) -->
+      <!-- 탭: 배분 현황 (사용안함 - 진행현황에 통합) -->
       <div id="dbc-pane-dist" style="display:none">
         <!-- 요약 통계 -->
         <div class="stat-grid" id="db-dist-stats" style="margin-bottom:20px"></div>
@@ -1895,12 +1905,44 @@ kbd { font-family:JetBrains Mono,monospace; }
         </div>
       </div>
 
-      <!-- 탭: DB 진행현황 -->
+      <!-- 탭: DB 진행현황 (배분현황 통합 + 월별) -->
       <div id="dbc-pane-progress" style="display:none;padding-top:12px">
-        <div id="db-progress-content"></div>
+        <!-- 월별 탭 -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <div id="db-progress-month-tabs" style="display:flex;gap:4px;flex-wrap:wrap;flex:1"></div>
+          <button id="db-progress-add-month-btn" onclick="addProgressMonth()"
+            style="padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit">+ 월 추가</button>
+        </div>
+        <!-- 필터 -->
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+          <input id="db-progress-search" type="text" placeholder="🔍 이름·연락처·담당자"
+            oninput="renderDbProgress()"
+            style="padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;width:200px">
+          <select id="db-progress-agent" onchange="renderDbProgress()"
+            style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">
+            <option value="">전체 담당자</option>
+          </select>
+          <select id="db-progress-status" onchange="renderDbProgress()"
+            style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">
+            <option value="">전체 처리상태</option>
+            <option>미처리</option><option>연락중</option><option>상담완료</option><option>계약완료</option><option>거절</option>
+          </select>
+          <div style="margin-left:auto;font-size:13px;color:var(--muted)" id="db-progress-count"></div>
+        </div>
+        <!-- 담당자별 통계 카드 -->
+        <div id="db-progress-agent-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:20px"></div>
+        <!-- 상세 테이블 -->
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>담당자</th><th>이름</th><th>연락처</th><th>배분일</th><th>처리상태</th><th>월납(만원)</th><th>메모</th><th>관리</th>
+            </tr></thead>
+            <tbody id="db-progress-tbody"></tbody>
+          </table>
+        </div>
       </div>
 
-      <!-- 탭: DB 배분관리 (관리자 전용) -->
+      <!-- 탭: DB 배분관리 (사용안함) -->
       <div id="dbc-pane-admin" style="display:none;padding-top:8px">
         <!-- 월별 탭 -->
         <div id="db-month-tabs" style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:0;border-bottom:1px solid var(--border);padding-bottom:0"></div>
@@ -11166,10 +11208,7 @@ function switchDbClientTab(tab, el){
   if(addBtn)    addBtn.style.display    = ['personal','admin'].includes(tab) ? '' : 'none';
   if(exportBtn) exportBtn.style.display = (tab==='personal') ? 'flex' : 'none';
 
-  if(tab==='dist') renderDbDistTable();
-  else if(tab==='all') renderDbClientsAll();
-  else if(tab==='progress') renderDbProgress();
-  else if(tab==='admin'){ renderDbAdmin(); }
+  if(tab==='progress') renderDbProgressNew();
   else if(tab==='bulk'){
     var wrap = document.getElementById('dbc-bulk-grid-wrap');
     if(wrap && !wrap._bulkInit){ wrap._bulkInit = true; initDbBulkGrid(); }
@@ -11309,6 +11348,197 @@ function renderDbClients(){
   switchDbClientTab(dbClientTab, document.getElementById('dbt-'+dbClientTab));
 }
 
+// ── DB 고객 탭 전체선택 ──
+function toggleAllDbPersonal(chk){
+  document.querySelectorAll('#db-clients-tbody .db-row-chk').forEach(function(c){ c.checked = chk.checked; });
+  updateDbPersonalSelected();
+}
+function updateDbPersonalSelected(){
+  var checked = document.querySelectorAll('#db-clients-tbody .db-row-chk:checked').length;
+  var el = document.getElementById('db-personal-selected');
+  var btn = document.getElementById('db-assign-selected-btn');
+  if(el) el.textContent = checked ? checked+'건 선택됨' : '';
+  var isMgr = ['superadmin','bureau_head','branch_head'].includes(currentUser?.role);
+  if(btn) btn.style.display = (checked > 0 && isMgr) ? 'inline-flex' : 'none';
+}
+
+// ── 선택 배분 ──
+function openDbAssignSelected(){
+  var checked = Array.from(document.querySelectorAll('#db-clients-tbody .db-row-chk:checked'));
+  if(!checked.length){ showToast('배분할 DB를 선택해주세요'); return; }
+  var ids = checked.map(function(c){ return Number(c.dataset.id); });
+
+  var visIds = getVisibleAgentIds(currentUser);
+  var visAgents = AGENTS.filter(function(a){ return visIds.includes(a.id); });
+  var opts = visAgents.map(function(a){
+    return '<option value="'+a.id+'">'+a.name+' ('+(getTeamName(a.team)||a.team||'')+')</option>';
+  }).join('');
+
+  var old = document.getElementById('modal-db-assign-selected');
+  if(old) old.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'modal-db-assign-selected';
+  overlay.className = 'modal-overlay visible';
+  overlay.innerHTML =
+    '<div class="modal">'+
+    '<div class="modal-header"><div class="modal-title">📤 DB 배분 ('+ids.length+'건)</div>'+
+    '<button class="modal-close" onclick="document.getElementById(&quot;modal-db-assign-selected&quot;).remove()">✕</button></div>'+
+    '<div class="field"><label>배분할 설계사 선택 *</label>'+
+    '<select id="db-assign-sel-new" style="width:100%">'+opts+'</select></div>'+
+    '<div class="modal-footer">'+
+    '<button class="btn-action" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="document.getElementById(&quot;modal-db-assign-selected&quot;).remove()">취소</button>'+
+    '<button class="btn-action" style="background:var(--accent);color:#fff;border:none" onclick="confirmDbAssignSelected('+JSON.stringify(ids)+')">배분 완료</button>'+
+    '</div></div>';
+  document.body.appendChild(overlay);
+}
+async function confirmDbAssignSelected(ids){
+  var agId = Number(document.getElementById('db-assign-sel-new')?.value);
+  var ag = AGENTS.find(function(a){ return a.id===agId; });
+  if(!ag){ showToast('설계사를 선택해주세요'); return; }
+  var today = new Date().toISOString().slice(0,10);
+  var toSave = [];
+  ids.forEach(function(id){
+    var d = DB_CLIENTS.find(function(d){ return d.id===id; });
+    if(!d) return;
+    d.assignedTo = agId; d.assignedName = ag.name; d.assignedTeam = ag.team;
+    d.assignedDate = today; d.status = 'assigned'; d.processStatus = d.processStatus||'미처리';
+    toSave.push(d);
+  });
+  await Promise.all(toSave.map(function(d){ return saveDbClientToDb(d); }));
+  document.getElementById('modal-db-assign-selected')?.remove();
+  renderDbClientsPersonal();
+  showToast('✅ '+ids.length+'건이 '+ag.name+'님에게 배분되었습니다');
+}
+
+// ── DB 진행현황 (신규) ──
+var _dbProgressMonthSel = '';
+
+function renderDbProgressNew(){
+  // 월별 탭 생성
+  var months = {};
+  DB_CLIENTS.forEach(function(d){
+    var m = d.regMonth || (d.assignedDate||'').slice(0,7) || '';
+    if(m) months[m] = true;
+  });
+  var sortedMonths = Object.keys(months).sort().reverse();
+
+  var tabsEl = document.getElementById('db-progress-month-tabs');
+  if(tabsEl){
+    if(!_dbProgressMonthSel && sortedMonths.length) _dbProgressMonthSel = sortedMonths[0];
+    tabsEl.innerHTML =
+      '<button onclick="setDbProgressMonthNew(&quot;all&quot;)" '+
+      'style="padding:5px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;'+
+      (_dbProgressMonthSel==='all'?'background:var(--accent);color:#fff':'background:var(--surface2);color:var(--muted)')+'">전체</button>'+
+      sortedMonths.map(function(m){
+        var active = _dbProgressMonthSel===m;
+        return '<button onclick="setDbProgressMonthNew(&quot;'+m+'&quot;)" '+
+          'style="padding:5px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;'+
+          (active?'background:var(--accent);color:#fff':'background:var(--surface2);color:var(--muted)')+'">'+m+
+          ' <button onclick="event.stopPropagation();deleteProgressMonth(&quot;'+m+'&quot;)" style="background:none;border:none;color:inherit;cursor:pointer;font-size:11px">✕</button></button>';
+      }).join('');
+  }
+
+  // 담당자 필터 채우기
+  var agentSel = document.getElementById('db-progress-agent');
+  if(agentSel && agentSel.options.length <= 1){
+    var visIds = getVisibleAgentIds(currentUser);
+    var visAgents = AGENTS.filter(function(a){ return visIds.includes(a.id); });
+    visAgents.forEach(function(a){
+      var o = document.createElement('option');
+      o.value = a.id; o.textContent = a.name;
+      agentSel.appendChild(o);
+    });
+  }
+
+  renderDbProgress();
+}
+
+function setDbProgressMonthNew(m){
+  _dbProgressMonthSel = m;
+  renderDbProgressNew();
+}
+
+function addProgressMonth(){
+  var m = prompt('월을 입력해주세요 (예: 2026-05)');
+  if(!m || !/^\d{4}-\d{2}$/.test(m)){ showToast('형식: YYYY-MM'); return; }
+  _dbProgressMonthSel = m;
+  renderDbProgressNew();
+}
+
+function deleteProgressMonth(m){
+  if(!confirm(m+' 월 탭을 삭제하시겠습니까?\n(해당 월 데이터는 삭제되지 않습니다)')) return;
+  if(_dbProgressMonthSel === m) _dbProgressMonthSel = '';
+  renderDbProgressNew();
+}
+
+function renderDbProgress(){
+  var role = currentUser?.role;
+  var visIds = getVisibleAgentIds(currentUser).map(String);
+  var allDb = role==='superadmin' ? DB_CLIENTS
+    : DB_CLIENTS.filter(function(d){ return d.assignedTo && visIds.includes(String(d.assignedTo)); });
+
+  // 월 필터
+  if(_dbProgressMonthSel && _dbProgressMonthSel !== 'all'){
+    allDb = allDb.filter(function(d){
+      var m = d.regMonth || (d.assignedDate||'').slice(0,7) || '';
+      return m === _dbProgressMonthSel;
+    });
+  }
+
+  // 검색 필터
+  var q = (document.getElementById('db-progress-search')?.value||'').toLowerCase();
+  var agentF = document.getElementById('db-progress-agent')?.value || '';
+  var statusF = document.getElementById('db-progress-status')?.value || '';
+  if(q) allDb = allDb.filter(function(d){ return d.name?.toLowerCase().includes(q)||d.phone?.includes(q)||(d.assignedName||'').toLowerCase().includes(q); });
+  if(agentF) allDb = allDb.filter(function(d){ return String(d.assignedTo)===String(agentF); });
+  if(statusF) allDb = allDb.filter(function(d){ return d.processStatus===statusF; });
+
+  var countEl = document.getElementById('db-progress-count');
+  if(countEl) countEl.textContent = allDb.length+'건';
+
+  // 담당자별 통계 카드
+  var cardEl = document.getElementById('db-progress-agent-cards');
+  if(cardEl){
+    var agMap = {};
+    allDb.forEach(function(d){
+      var k = d.assignedName||'미배분';
+      if(!agMap[k]) agMap[k] = {total:0, done:0, contract:0};
+      agMap[k].total++;
+      if(d.processStatus==='계약완료') agMap[k].contract++;
+      else if(['연락중','상담완료'].includes(d.processStatus)) agMap[k].done++;
+    });
+    cardEl.innerHTML = Object.entries(agMap).map(function(e){
+      var name=e[0], s=e[1];
+      var rate = s.total ? Math.round(s.contract/s.total*100) : 0;
+      return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px">'+
+        '<div style="font-size:13px;font-weight:700;margin-bottom:6px">'+name+'</div>'+
+        '<div style="font-size:12px;color:var(--muted)">총 '+s.total+'건 · 계약 '+s.contract+'건</div>'+
+        '<div style="height:4px;background:var(--surface2);border-radius:2px;margin-top:6px">'+
+        '<div style="height:100%;background:var(--accent);border-radius:2px;width:'+rate+'%"></div></div>'+
+        '</div>';
+    }).join('');
+  }
+
+  // 테이블
+  var tbody = document.getElementById('db-progress-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = allDb.map(function(d){
+    var statusOpts = ['미처리','연락중','상담완료','계약완료','거절'].map(function(s){
+      return '<option'+(d.processStatus===s?' selected':'')+'>'+s+'</option>';
+    }).join('');
+    return '<tr>'+
+      '<td>'+(d.assignedName||'<span style="color:var(--muted)">미배분</span>')+'</td>'+
+      '<td>'+d.name+'</td>'+
+      '<td>'+(d.phone||'-')+'</td>'+
+      '<td>'+(d.assignedDate||'-')+'</td>'+
+      '<td><select onchange="updateDbProcessStatus('+d.id+',this.value)" style="padding:3px 6px;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;font-family:inherit">'+statusOpts+'</select></td>'+
+      '<td>'+(d.monthlyPremium||'-')+'</td>'+
+      '<td style="font-size:12px;color:var(--muted)">'+(d.memo||'')+'</td>'+
+      '<td><button onclick="openDbAssign('+d.id+')" class="btn-sm btn-blue">배분</button></td>'+
+      '</tr>';
+  }).join('');
+}
+
 function renderDbClientsPersonal(){
   if(!currentUser) return;
   const role = currentUser.role;
@@ -11340,6 +11570,15 @@ function renderDbClientsPersonal(){
   if(wrap) wrap.style.display='block';
 
   const pMap={'미처리':'#8B949E','연락중':'#388BFD','상담완료':'#2EA44F','계약완료':'#BC8CFF','거절':'#F78166'};
+  // 월별 필터 드롭다운 채우기
+  var monthSel = document.getElementById('db-month-filter');
+  if(monthSel){
+    var months = {};
+    DB_CLIENTS.forEach(function(d){ var m=d.regMonth||(d.assignedDate||'').slice(0,7); if(m) months[m]=true; });
+    var curVal = monthSel.value;
+    monthSel.innerHTML = '<option value="">전체 월</option>' +
+      Object.keys(months).sort().reverse().map(function(m){ return '<option value="'+m+'" '+(curVal===m?'selected':'')+'>'+m+'</option>'; }).join('');
+  }
   document.getElementById('db-clients-tbody').innerHTML = myDbsFiltered.map(d => {
     const ag = AGENTS.find(a=>a.id===d.assignedTo);
     const agName = ag ? ag.name : (d.assignedName||'-');
