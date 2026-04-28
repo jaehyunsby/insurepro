@@ -10,8 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Insearch">
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<!-- manifest: manifest.json -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4073adc2f6843dc33bbb1d0a6b12ba78&libraries=services"></script>
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" crossorigin="anonymous"></script>
@@ -926,10 +925,13 @@ kbd { font-family:JetBrains Mono,monospace; }
       <div class="login-title">로그인</div>
       <div class="login-desc">계정 정보를 입력해주세요</div>
       <div class="field"><label>이메일</label><input id="l-email" type="email" placeholder="이메일" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <div class="field"><label>비밀번호</label><input id="l-pw" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+      <div class="field"><label>비밀번호</label><input id="l-pw" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="check-row"><input type="checkbox" id="auto-login"><label for="auto-login">자동 로그인</label></div>
       <button class="btn-primary" style="background:#1d4ed8;margin-top:8px" onclick="doLogin()">로그인</button>
-
+      <button onclick="loginAsGuest()" style="width:100%;padding:11px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .15s"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+        👁 게스트로 입장하기
+      </button>
       <div id="login-msg" class="msg err"></div>
       <div class="auth-links">
         <button class="auth-link" onclick="showScreen('screen-find-id')">아이디 찾기</button><span class="auth-link-sep">|</span>
@@ -962,6 +964,7 @@ kbd { font-family:JetBrains Mono,monospace; }
         <option value="branch_head">지사장</option>
         <option value="bureau_head">본부장</option>
         <option value="staff">총무</option>
+        <option value="superadmin">전체관리자</option>
       </select>
     </div>
     <div id="signup-org-fields">
@@ -990,27 +993,9 @@ kbd { font-family:JetBrains Mono,monospace; }
     </div>
     <div class="field" id="signup-recruiter-field">
       <label>유치인(추천인) <span style="color:var(--dim);font-weight:400">선택사항</span></label>
-      <select id="s-recruiter" onchange="onSignupRecruiterChange()">
+      <select id="s-recruiter">
         <option value="">없음</option>
       </select>
-    </div>
-    <!-- 약관 동의 -->
-    <div style="margin-bottom:16px;padding:16px;background:var(--surface2);border-radius:12px;border:1px solid var(--border)">
-      <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:14px">
-        <b style="color:var(--text);font-size:13px">📋 이용약관 및 개인정보 처리방침</b><br><br>
-        본 서비스(Insearch)는 보험 설계사 업무 지원을 목적으로 운영됩니다.<br><br>
-        <b style="color:var(--text)">개인정보 수집·이용</b><br>
-        성명, 연락처, 이메일 등 개인정보를 서비스 운영 목적으로 수집·이용하며, 서비스 제공 외 목적으로 사용하지 않습니다.<br><br>
-        <b style="color:var(--text)">업무 데이터 책임</b><br>
-        플랫폼 내 고객 정보 입력·수정·삭제 등 데이터 관리에 대한 법적 책임은 이용자 본인에게 있으며, 개인정보보호법 등 관련 법령을 준수해야 합니다.<br><br>
-        <b style="color:var(--orange)">⚠️ 지식재산권 및 무단 사용 금지</b><br>
-        Insearch 플랫폼의 소스코드, 디자인, 기능 등 모든 콘텐츠는 저작권법에 의해 보호됩니다.
-        무단 복사·배포·수정·역설계 및 상업적 이용을 엄격히 금지하며, 위반 시 민·형사상 법적 책임을 물을 수 있습니다.
-      </div>
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-        <input type="checkbox" id="agree-all" style="accent-color:var(--accent);width:18px;height:18px;flex-shrink:0">
-        <span style="font-size:13px;font-weight:700;color:var(--text)">위 약관 및 개인정보 처리방침에 모두 동의합니다 <span style="color:var(--orange)">[필수]</span></span>
-      </label>
     </div>
     <button class="btn-primary" onclick="doSignup()">가입 신청하기</button>
     <div id="signup-msg" class="msg"></div>
@@ -1255,7 +1240,7 @@ kbd { font-family:JetBrains Mono,monospace; }
       <div id="ctab-panel-list">
         <div class="search-bar"><input type="text" id="client-search" placeholder="🔍 고객명, 상품, 주소로 검색..." oninput="renderClients()"></div>
         <div class="table-wrap"><table>
-          <thead><tr><th style="width:36px;text-align:center"><input type="checkbox" id="chk-all" onchange="toggleAllClientChk(this)" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer"></th><th>고객명</th><th>연락처</th><th>직업</th><th>상태</th><th>계약건</th><th>다음 연락일</th><th></th></tr></thead>
+          <thead><tr><th>고객명</th><th>연락처</th><th>직업</th><th>상태</th><th>계약건</th><th>다음 연락일</th><th></th></tr></thead>
           <tbody id="clients-tbody"></tbody>
         </table></div>
       </div>
@@ -1505,33 +1490,14 @@ kbd { font-family:JetBrains Mono,monospace; }
     <!-- ── BOARD ── -->
     <div class="page" id="page-board">
       <div class="page-header">
-        <div><div class="page-title">📢 공지사항</div><div class="page-sub" id="board-sub">공지 등록 · 열람 · 댓글 · 파일 첨부</div></div>
+        <div><div class="page-title">📢 공지사항</div><div class="page-sub">공지 등록 · 열람 · 댓글 · 파일 첨부</div></div>
         <div style="display:flex;gap:8px;align-items:center">
           <button id="notif-toggle-board" onclick="toggleNotifPermission(this)" class="btn-action" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:12px">🔔 알림 확인중...</button>
           <button id="btn-write-post" class="btn-action" style="background:var(--blue);color:#fff" onclick="openPostModal()">✏️ 글쓰기</button>
-          <button id="btn-write-strategy" class="btn-action" style="background:var(--accent);color:#fff;display:none" onclick="openStrategyModal()">📤 PDF 분석</button>
         </div>
       </div>
-      <!-- 탭 -->
-      <div style="display:flex;border-bottom:2px solid var(--border);margin-bottom:16px">
-        <button id="board-tab-posts" onclick="setBoardTab('posts')"
-          style="padding:10px 20px;border:none;border-bottom:3px solid var(--blue);margin-bottom:-2px;background:none;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
-          📢 공지사항
-        </button>
-        <button id="board-tab-strategy" onclick="setBoardTab('strategy')"
-          style="padding:10px 20px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:none;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
-          📊 이달의 판매전략
-        </button>
-      </div>
-      <!-- 공지사항 패널 -->
-      <div id="board-panel-posts">
-        <div id="board-list"></div>
-        <div id="board-detail" style="display:none"></div>
-      </div>
-      <!-- 판매전략 패널 -->
-      <div id="board-panel-strategy" style="display:none">
-        <div id="strategy-list"></div>
-      </div>
+      <div id="board-list"></div>
+      <div id="board-detail" style="display:none"></div>
     </div>
 
     <!-- ── ADMIN ── -->
@@ -3795,46 +3761,7 @@ function showScreen(id) {
     }
     updateSignupOrgFields();
     updateSignupBranch();
-
-    // Vercel 백엔드에서 승인된 사용자 로드 후 유치인 목록 업데이트
-    (async function(){
-      try {
-        const resp = await fetch('https://insearch-backend.vercel.app/api/db', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-API-Key': 'insearch-2024-secure-key' },
-          body: JSON.stringify({
-            table: 'users',
-            action: 'select',
-            select: 'id,name,role,team,bureau_id,branch_id',
-            filters: [
-              { op: 'eq', col: 'status', val: 'approved' }
-            ]
-          })
-        });
-        const json = await resp.json();
-        const data = json.data || [];
-        const filtered = data; // 전체 사용자 표시
-        if(filtered.length){
-          const sel = document.getElementById('s-recruiter');
-          if(sel){
-            sel.innerHTML = '<option value="">없음</option>' +
-              filtered.map(u => {
-                var teamName = '';
-                // 팀장/설계사만 팀 표시, 지사장/본부장은 팀 표시 안 함
-                if(u.team && ['agent','team_head'].includes(u.role)){
-                  var t = ORG.teams ? ORG.teams.find(function(t){ return t.id===u.team; }) : null;
-                  teamName = t ? t.name : '';
-                }
-                return '<option value="'+u.id+'">'+u.name+' ('+(ROLE_LABEL[u.role]||u.role)+(teamName?' · '+teamName:'')+')</option>';
-              }).join('');
-          }
-          window._signupUserCache = filtered.map(u=>({
-            id: u.id, name: u.name, role: u.role,
-            team: u.team||'', bureauId: u.bureau_id||null, branchId: u.branch_id||null
-          }));
-        }
-      } catch(e){ console.warn('유치인 로드 실패:', e.message); }
-    })();
+    updateSignupRecruiter();
   }
   ['login-msg','signup-msg','find-id-msg','find-pw-msg'].forEach(m=>{const e=document.getElementById(m);if(e)e.textContent='';});
   ['find-id-result','find-pw-result'].forEach(m=>{const e=document.getElementById(m);if(e)e.style.display='none';});
@@ -3843,24 +3770,9 @@ function showScreen(id) {
 window.onload=async ()=>{
   applyColorMode();
   updateLoginHints();
-
-  // 서버 워밍업 (콜드 스타트 방지)
-  setTimeout(function(){
-    fetch('https://insearch-backend.vercel.app/api/auth', { method: 'OPTIONS' }).catch(function(){});
-    fetch('https://tapxeethkhiiimiebuhw.supabase.co/functions/v1/gemini-proxy', {
-      method: 'OPTIONS',
-      headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhcHhlZXRoa2hpaWltaWVidWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NDUzOTcsImV4cCI6MjA4OTIyMTM5N30.fxAiL5ankkCneL9Xv0ly8cnPef67a712pozqXuXDwmE' }
-    }).catch(function(){});
-  }, 1000);
   if(new URLSearchParams(location.search).get('card')){ initSupabase(); await checkPublicCardPage(); return; }
 
-  // 토큰 없으면 로그인 화면만 표시 (DB 호출 스킵)
-  const _initToken = localStorage.getItem('insearch_jwt') || sessionStorage.getItem('insearch_jwt');
-  if(_initToken){
-    await syncWithSupabase();
-  } else {
-    initSupabase();
-  }
+  await syncWithSupabase();
 
   // JWT 자동 로그인 (새 auth 시스템)
   const jwt = getToken();
@@ -3950,85 +3862,47 @@ function setupUser(user){
   }
 }
 async function doLogin(){
-  var emailEl = document.getElementById('l-email');
-  var pwEl    = document.getElementById('l-pw');
-  var msg     = document.getElementById('login-msg');
-  if(!emailEl || !pwEl){ return; }
-  var email = emailEl.value.trim();
-  var pw    = pwEl.value.trim();
-  if(!email||!pw){ if(msg) msg.textContent='이메일과 비밀번호를 입력해주세요'; return; }
+  const email = document.getElementById('l-email').value.trim();
+  const pw    = document.getElementById('l-pw').value.trim();
+  const msg   = document.getElementById('login-msg');
+  if(!email||!pw){ msg.textContent='이메일과 비밀번호를 입력해주세요'; return; }
 
-  if(msg) msg.textContent = '로그인 중...';
-  var loginBtn = document.querySelector('#screen-login .btn-primary');
-  if(loginBtn){ loginBtn.disabled = true; loginBtn.textContent = '로그인 중...'; }
-
+  msg.textContent = '로그인 중...';
   try {
-    // 1단계: 백엔드 호출
-    if(msg) msg.textContent = '서버 연결 중...';
-    var resp = await fetch('https://insearch-backend.vercel.app/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-API-Key': 'insearch-2024-secure-key' },
-      body: JSON.stringify({ email: email, password: pw })
-    });
-    var result = await resp.json();
-
-    if(!result.token){
-      throw new Error(result.error || '로그인 실패');
-    }
-
-    // 2단계: 토큰 저장
-    if(msg) msg.textContent = '인증 중...';
+    // 백엔드 API 로그인
+    const result = await api('POST', '/api/auth/login', {email, password: pw});
     setToken(result.token);
 
-    // 3단계: Supabase 세션 (실패해도 무시)
-    try {
-      if(_supabase){
-        _supabase.auth.setSession({ access_token: result.token, refresh_token: result.token }).catch(function(){});
-      }
-    } catch(e){}
-
-    // 4단계: 데이터 로드
-    if(msg) msg.textContent = '데이터 로딩 중...';
+    // 로그인 성공 후 데이터 로드
     if(!_supabase) initSupabase();
     await loadAllData();
 
-    // 5단계: 사용자 찾기
-    var u = USERS.find(function(u){ return u.email===email && u.status==='approved'; });
+    // currentUser 설정
+    const u = USERS.find(u=>u.email===email && u.status==='approved');
     if(u){
-      try {
-        var autoLoginEl = document.getElementById('auto-login');
-        if(autoLoginEl && autoLoginEl.checked){
-          localStorage.setItem('insearch_user', JSON.stringify({email: u.email, pw: btoa(pw)}));
-        } else {
-          localStorage.removeItem('insearch_user');
-        }
-      } catch(e){}
-      if(msg) msg.textContent='';
+      localStorage.setItem('insearch_user', JSON.stringify({email: u.email, pw: btoa(pw)}));
+      const autoLoginEl = document.getElementById('auto-login');
+      if(!autoLoginEl || !autoLoginEl.checked) localStorage.removeItem('insearch_user');
+      msg.textContent='';
       await enterApp(u);
     } else {
-      if(msg) msg.textContent='사용자 정보를 찾을 수 없습니다 (승인 필요)';
+      msg.textContent='사용자 정보를 찾을 수 없습니다';
       clearToken();
     }
   } catch(e) {
-    var errMsg = e.message||'';
-    if(errMsg.includes('승인')) {
-      if(msg) msg.textContent='관리자 승인 대기 중입니다';
+    if(e.message.includes('승인')) {
+      msg.textContent='관리자 승인 대기 중입니다';
     } else {
-      if(msg) msg.textContent='오류: '+errMsg;
+      msg.textContent='이메일 또는 비밀번호가 틀렸습니다';
     }
     clearToken();
-  } finally {
-    try {
-      var loginBtn2 = document.querySelector('#screen-login .btn-primary');
-      if(loginBtn2){ loginBtn2.disabled = false; loginBtn2.textContent = '로그인'; }
-    } catch(e){}
   }
 }
 
 // 역할 레이블 (배분 드롭다운에서 구분용)
 function getMgrTeamLabel(u){
   if(u.role==='superadmin')  return '전체관리자';
-  if(u.role==='bureau_head') return (getBureauName(u.bureauId)||u.bureauId||'')+'본부장';
+  if(u.role==='bureau_head') return (u.bureauId||'')+'본부장';
   if(u.role==='branch_head') return (u.branchId||'')+'지사장';
   if(u.role==='team_head')   return (u.team||'')+'팀장';
   return '';
@@ -4059,41 +3933,20 @@ function syncAllMgrAgents(){
 }
 
 async function ensureAgentRecord(user){
-  // 1. users 테이블의 agent_id가 이미 있으면 그걸 우선 사용
-  if(user.agentId){
-    const existing = AGENTS.find(function(a){ return a.id===user.agentId; });
-    if(existing){
-      existing._userId = user.id;
-      currentUser.agentId = user.agentId;
-      return;
-    }
-  }
+  const mgrRoles = ['superadmin','bureau_head','branch_head','team_head'];
+  if(!mgrRoles.includes(user.role)) return;
 
-  // 2. AGENTS 배열에서 _userId로 찾기
-  const byUserId = AGENTS.find(function(a){ return a._userId===user.id && a.id > 0; });
-  if(byUserId){
-    user.agentId = byUserId.id;
-    currentUser.agentId = byUserId.id;
-    const u2 = USERS.find(function(u){ return u.id===user.id; });
-    if(u2) u2.agentId = byUserId.id;
-    // users 테이블 동기화
-    dbFrom('users').update({agent_id: byUserId.id}).eq('id', user.id).catch(function(){});
+  // 이미 DB에서 로드된 agent 레코드가 있으면 agentId 연결
+  const existing = AGENTS.find(a=>a._userId===user.id && a.id > 0);
+  if(existing){
+    user.agentId = existing.id;
+    currentUser.agentId = existing.id;
+    const u2 = USERS.find(u=>u.id===user.id);
+    if(u2) u2.agentId = existing.id;
     return;
   }
 
-  // 3. AGENTS에서 email로 찾기
-  const byEmail = AGENTS.find(function(a){ return a.email===user.email; });
-  if(byEmail){
-    user.agentId = byEmail.id;
-    byEmail._userId = user.id;
-    currentUser.agentId = byEmail.id;
-    const u2 = USERS.find(function(u){ return u.id===user.id; });
-    if(u2) u2.agentId = byEmail.id;
-    dbFrom('users').update({agent_id: byEmail.id}).eq('id', user.id).catch(function(){});
-    return;
-  }
-
-  // 4. 없으면 새로 생성 (신규 가입자)
+  // DB에 agent 레코드 없으면 생성
   try {
     const insertData = {
       user_id:   user.id,
@@ -4110,9 +3963,10 @@ async function ensureAgentRecord(user){
     const {error} = await dbFrom('agents').insert(insertData);
     if(error){ console.warn('agent 레코드 생성 오류:', error.message); return; }
 
+    // 생성된 레코드 조회
     const {data} = await dbFrom('agents').select('id').eq('user_id', user.id).maybeSingle();
     if(data){
-      const idx = AGENTS.findIndex(function(a){ return a._userId===user.id; });
+      const idx = AGENTS.findIndex(a=>a._userId===user.id);
       if(idx>=0) AGENTS[idx].id = data.id;
       else AGENTS.push({
         id: data.id, _userId: user.id, name: user.name,
@@ -4122,9 +3976,10 @@ async function ensureAgentRecord(user){
       });
       user.agentId = data.id;
       currentUser.agentId = data.id;
-      const u2 = USERS.find(function(u){ return u.id===user.id; });
+      const u2 = USERS.find(u=>u.id===user.id);
       if(u2) u2.agentId = data.id;
-      dbFrom('users').update({agent_id: data.id}).eq('id', user.id).catch(function(){});
+      // users 테이블도 agent_id 업데이트
+      dbFrom('users').update({agent_id: data.id}).eq('id', user.id);
       console.log('✅ agent 레코드 생성:', data.id);
     }
   } catch(e){ console.warn('agent 레코드 생성 오류:', e.message); }
@@ -4311,7 +4166,7 @@ async function enterApp(user){
       }
     } catch(e){ console.warn('JWT 갱신 실패:', e.message); }
     // 갱신 실패 시 비밀번호 재입력 모달
-    if(!getToken() && currentUser){ showSessionExpiredModal(); }
+    if(!getToken()){ showSessionExpiredModal(); }
   }
   // Record last login time
   const loginTime = new Date().toISOString();
@@ -4337,7 +4192,7 @@ async function enterApp(user){
   document.getElementById('sb-name').textContent=user.name;
 
   const roleLabel = ROLE_LABEL[user.role]||'설계사';
-  const teamPart = user.team ? ` · ${getTeamName(user.team)||user.team}` : (user.branchId ? ` · ${getBranchName(user.branchId)||user.branchId}` : '');
+  const teamPart = user.team ? ` · ${user.team}` : (user.branchId ? ` · ${user.branchId}` : '');
   document.getElementById('sb-role').textContent=`${roleLabel}${teamPart}`;
   document.getElementById('sb-avatar').textContent=user.name[0];
 
@@ -4361,17 +4216,7 @@ async function enterApp(user){
   }
 
   // Admin section: superadmin + bureau_head + branch_head
-  document.getElementById('nav-admin-section').style.display=isAdmin?'block':'none';
-  // 메뉴 숨기기 버튼: superadmin만 표시
-  var styleId = 'nav-toggle-style';
-  var existing = document.getElementById(styleId);
-  if(existing) existing.remove();
-  if(!isAdmin){
-    var st = document.createElement('style');
-    st.id = styleId;
-    st.textContent = '.nav-toggle { display:none !important; }';
-    document.head.appendChild(st);
-  }
+  document.getElementById('nav-admin-section').style.display=(isAdmin||isBureauHead||isBranchHead)?'block':'none';
   // 총무 메뉴
   const isStaffRole = user.role==='staff';
   const staffSection = document.getElementById('nav-staff-section');
@@ -4471,10 +4316,6 @@ function _getNavLabel(navItem){
 
 async function toggleNavItem(e, btn){
   e.stopPropagation();
-  if(!currentUser || currentUser.role !== 'superadmin'){
-    showToast('⚠️ 메뉴 숨기기는 전체관리자만 가능합니다');
-    return;
-  }
   const navItem = btn.closest('.nav-item');
   if(!navItem) return;
   const label = _getNavLabel(navItem);
@@ -4625,15 +4466,26 @@ function renderSystemSettings(){
       <!-- Gemini API 설정 -->
       <div class="card" style="padding:24px">
         <div style="font-size:16px;font-weight:700;margin-bottom:4px">🤖 Gemini API 설정</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:18px">언더라이팅(심평원 분석기) · 보장분석 AI에 사용됩니다</div>
-        <div style="background:var(--accent)11;border:1px solid var(--accent)33;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px">
-          <div style="font-size:22px">🔒</div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--accent)">백엔드에서 보안 관리 중</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">텍스트 AI → Vercel 환경변수 / PDF 분석 → Supabase Secrets</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:18px">언더라이팅(심평원 분석기) · 보장분석 AI에 사용됩니다<br>
+        <span style="color:var(--accent);font-weight:600">⚡ 전체관리자가 한 번 저장하면 모든 사용자가 공유합니다 (Supabase 저장)</span></div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Gemini API Key</label>
+          <div style="display:flex;gap:8px">
+            <input id="ss-gemini-key" type="password" value="${geminiKey}"
+              placeholder="AIzaSy..."
+              style="flex:1;padding:10px 12px;font-size:13px;font-family:JetBrains Mono,monospace">
+            <button onclick="document.getElementById('ss-gemini-key').type=document.getElementById('ss-gemini-key').type==='password'?'text':'password'"
+              style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px">👁</button>
           </div>
         </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.8">
+          <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--blue)">aistudio.google.com/apikey</a>에서 무료 발급
+        </div>
         <div style="display:flex;gap:8px">
+          <button onclick="saveGeminiKey()"
+            style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+            💾 저장
+          </button>
           <button onclick="testGeminiApi()"
             style="padding:10px 18px;background:var(--blue)22;color:var(--blue);border:1px solid var(--blue)44;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
             🔍 연결 테스트
@@ -5175,21 +5027,37 @@ async function markFeedbackApplied(id, btn){
 }
 
 async function saveGeminiKey(){
-  showToast('ℹ️ Gemini API 키는 Vercel/Supabase 백엔드에서 관리됩니다');
+  const key = document.getElementById('ss-gemini-key')?.value.trim();
+  const res = document.getElementById('ss-gemini-result');
+  if(!key){ if(res) res.innerHTML='<span style="color:var(--orange)">키를 입력해주세요</span>'; return; }
+  if(res) res.innerHTML='<span style="color:var(--muted)">저장 중...</span>';
+  try {
+    await saveAppSetting('gemini_api_key', key);
+    window.GEMINI_API_KEY = key;
+    // localStorage는 제거 (혹시 남아있으면 삭제)
+    localStorage.removeItem('gemini_api_key');
+    if(res) res.innerHTML='<span style="color:var(--accent)">✅ Supabase에 저장되었습니다 (전체 공유)</span>';
+    showToast('✅ Gemini API 키가 저장되었습니다');
+  } catch(e) {
+    if(res) res.innerHTML=`<span style="color:var(--orange)">❌ 저장 실패: ${e.message}</span>`;
+  }
 }
 
 async function testGeminiApi(){
+  const key = document.getElementById('ss-gemini-key')?.value.trim() || window.GEMINI_API_KEY || '';
   const res = document.getElementById('ss-gemini-result');
+  if(!key){ if(res) res.innerHTML='<span style="color:var(--orange)">키를 먼저 입력해주세요</span>'; return; }
   if(res) res.innerHTML='<span style="color:var(--muted)">테스트 중...</span>';
   try {
-    const result = await api('POST', '/api/ai/gemini', {
-      feature: 'test',
-      contents: [{ parts: [{text:'안녕'}] }]
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ contents:[{ parts:[{text:'안녕'}] }] })
     });
-    if(result?.candidates?.[0]?.content || result?.text){
+    const d = await r.json();
+    if(d.candidates?.[0]?.content){
       if(res) res.innerHTML='<span style="color:var(--accent)">✅ 연결 성공!</span>';
     } else {
-      throw new Error('응답 오류');
+      throw new Error(d.error?.message || '응답 오류');
     }
   } catch(e){
     if(res) res.innerHTML=`<span style="color:var(--orange)">❌ ${e.message}</span>`;
@@ -5509,25 +5377,18 @@ function viewClientHiraHistory(id){
 
 async function loadAllOrgClients(){
   try {
-    // _all:true 플래그로 역할 필터 없이 관할 전체 조회
+    var q = dbFrom('clients').select('*');
     var r = currentUser?.role || 'agent';
-    var extraFilters = [];
-    if(r === 'bureau_head'){
+    if(r === 'superadmin'){
+      q = q.limit(5000);
+    } else if(r === 'bureau_head'){
       var bIds = AGENTS.filter(a=>a.bureauId===currentUser.bureauId).map(a=>a.id);
-      if(currentUser.agentId && !bIds.includes(currentUser.agentId)) bIds.push(currentUser.agentId);
-      if(bIds.length) extraFilters.push({op:'in', col:'agent_id', val:bIds});
-    } else if(r === 'branch_head'){
+      if(bIds.length) q = q.in('agent_id', bIds);
+    } else {
       var bIds2 = getVisibleAgentIds(currentUser);
-      if(bIds2.length) extraFilters.push({op:'in', col:'agent_id', val:bIds2});
+      if(bIds2.length) q = q.in('agent_id', bIds2);
     }
-    var body = { table:'clients', action:'select', select:'*', _all:true, filters:extraFilters, _limit:5000 };
-    var resp = await fetch('https://insearch-backend.vercel.app/api/db', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken(),'X-API-Key':'insearch-2024-secure-key'},
-      body: JSON.stringify(body)
-    });
-    var json = await resp.json();
-    const data = json.data;
+    const {data} = await q;
     if(!data) return;
     // 기존 CLIENTS에 없는 것만 추가
     var existIds = new Set(CLIENTS.map(c=>c.id));
@@ -5790,7 +5651,6 @@ async function doSignup(){
   if(!name||!phone||!email||!pw){msg.className='msg err';msg.textContent='모든 항목을 입력해주세요';return;}
   if(pw.length<6){msg.className='msg err';msg.textContent='비밀번호 6자 이상';return;}
   if(pw!==pw2){msg.className='msg err';msg.textContent='비밀번호 불일치';return;}
-  if(!document.getElementById('agree-all')?.checked){msg.className='msg err';msg.textContent='이용약관에 동의해주세요';return;}
   if([...USERS,...PENDING_USERS].find(u=>u.email===email)){msg.className='msg err';msg.textContent='이미 사용 중인 이메일';return;}
   const recruiterId=document.getElementById('s-recruiter')?.value||null;
   const recruiterName=recruiterId?USERS.find(u=>u.id===Number(recruiterId))?.name||null:null;
@@ -7265,7 +7125,7 @@ function renderClientStats(){
           var avg = stat.count ? (stat.contracts/stat.count).toFixed(1) : '0';
           var pct = totalClients ? Math.round(stat.count/totalClients*100) : 0;
           var barColor = stat.count===0?'#30363D':stat.count>20?'var(--accent)':stat.count>10?'var(--blue)':'var(--orange)';
-          return '<tr>'            +'<td style="text-align:center;font-weight:700;color:var(--muted);font-size:13px">'+((i+1)+'')+'</td>'            +'<td>'              +'<div style="display:flex;align-items:center;gap:8px">'                +'<div style="width:32px;height:32px;border-radius:50%;background:var(--accent)22;display:grid;place-items:center;font-size:13px;font-weight:700;flex-shrink:0;color:var(--accent)">'+((a.name||'?').charAt(0))+'</div>'                +'<div>'                  +'<div style="font-weight:700;font-size:13px">'+( a.name||'-')+'</div>'                  +'<div style="font-size:11px;color:var(--muted)">'+( a.email||'')+'</div>'                +'</div>'              +'</div>'            +'</td>'            +'<td><span style="padding:2px 8px;background:var(--surface2);border-radius:20px;font-size:11px">'+(getTeamName(a.team)||a.team||'-')+'</span></td>'            +'<td>'              +'<div style="display:flex;align-items:center;gap:8px">'                +'<div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;min-width:60px">'                  +'<div style="height:6px;border-radius:3px;background:'+barColor+';width:'+Math.min(100,pct*2)+'%"></div>'                +'</div>'                +'<span style="font-weight:700;font-size:13px;min-width:28px;text-align:right">'+stat.count+'</span>'                +'<span style="font-size:11px;color:var(--muted)">('+pct+'%)</span>'              +'</div>'            +'</td>'            +'<td style="text-align:center;font-weight:700">'+stat.contracts+'건</td>'            +'<td style="text-align:center;color:var(--muted)">'+avg+'건</td>'            +'<td style="text-align:center">'+( stat.nextContacts?'<span style="color:var(--accent);font-weight:700">'+stat.nextContacts+'건</span>':'-')+'</td>'            +'<td style="text-align:center">'              +(stat.count>0                ?'<span style="padding:2px 8px;background:var(--accent)15;color:var(--accent);border-radius:20px;font-size:11px;font-weight:700">활성</span>'                :'<span style="padding:2px 8px;background:var(--surface2);color:var(--dim);border-radius:20px;font-size:11px">없음</span>'              )            +'</td>'            +'</tr>';
+          return '<tr>'            +'<td style="text-align:center;font-weight:700;color:var(--muted);font-size:13px">'+((i+1)+'')+'</td>'            +'<td>'              +'<div style="display:flex;align-items:center;gap:8px">'                +'<div style="width:32px;height:32px;border-radius:50%;background:var(--accent)22;display:grid;place-items:center;font-size:13px;font-weight:700;flex-shrink:0;color:var(--accent)">'+((a.name||'?').charAt(0))+'</div>'                +'<div>'                  +'<div style="font-weight:700;font-size:13px">'+( a.name||'-')+'</div>'                  +'<div style="font-size:11px;color:var(--muted)">'+( a.email||'')+'</div>'                +'</div>'              +'</div>'            +'</td>'            +'<td><span style="padding:2px 8px;background:var(--surface2);border-radius:20px;font-size:11px">'+( a.team||'-')+'</span></td>'            +'<td>'              +'<div style="display:flex;align-items:center;gap:8px">'                +'<div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;min-width:60px">'                  +'<div style="height:6px;border-radius:3px;background:'+barColor+';width:'+Math.min(100,pct*2)+'%"></div>'                +'</div>'                +'<span style="font-weight:700;font-size:13px;min-width:28px;text-align:right">'+stat.count+'</span>'                +'<span style="font-size:11px;color:var(--muted)">('+pct+'%)</span>'              +'</div>'            +'</td>'            +'<td style="text-align:center;font-weight:700">'+stat.contracts+'건</td>'            +'<td style="text-align:center;color:var(--muted)">'+avg+'건</td>'            +'<td style="text-align:center">'+( stat.nextContacts?'<span style="color:var(--accent);font-weight:700">'+stat.nextContacts+'건</span>':'-')+'</td>'            +'<td style="text-align:center">'              +(stat.count>0                ?'<span style="padding:2px 8px;background:var(--accent)15;color:var(--accent);border-radius:20px;font-size:11px;font-weight:700">활성</span>'                :'<span style="padding:2px 8px;background:var(--surface2);color:var(--dim);border-radius:20px;font-size:11px">없음</span>'              )            +'</td>'            +'</tr>';
         }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:24px">설계사 없음</td></tr>';
       }())    +'</tbody></table></div>';
 }
@@ -7442,13 +7302,13 @@ async function saveClient(){
         showToast('ℹ️ 동일 주민번호 고객이 있어 정보를 업데이트했습니다.');
       } else {
         data.id=clientNextId++;
-        data.agentId = currentUser.agentId || AGENTS.find(function(a){ return a._userId===currentUser.id||a.email===currentUser.email; })?.id || null;
+        data.agentId=currentUser.agentId||1;
         CLIENTS.push(data);
         const ag=AGENTS.find(a=>a.id===data.agentId);if(ag)ag.clients++;
       }
     } else {
       data.id=clientNextId++;
-      data.agentId = currentUser.agentId || AGENTS.find(function(a){ return a._userId===currentUser.id||a.email===currentUser.email; })?.id || null;
+      data.agentId=currentUser.agentId||1;
       CLIENTS.push(data);
       const ag=AGENTS.find(a=>a.id===data.agentId);if(ag)ag.clients++;
     }
@@ -9180,7 +9040,7 @@ function renderDashTeamSummary(){
           const ap=pct(ag.achieved,ag.target); const ac=ap>=100?'#2EA44F':ap>=70?'#388BFD':'#E3B341';
           return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
             <span style="font-size:12px;min-width:20px">${['🥇','🥈','🥉'][i]||`#${i+1}`}</span>
-            <div style="flex:1"><div style="font-size:13px;font-weight:600">${ag.name} <span style="font-size:11px;color:var(--muted)">${getTeamName(ag.team)||ag.team}</span></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600">${ag.name} <span style="font-size:11px;color:var(--muted)">${ag.team}</span></div>
             <div class="progress-wrap" style="height:3px;margin:3px 0 0"><div class="progress-bar" style="width:${ap}%;background:${ac}"></div></div></div>
             <span style="font-size:12px;font-family:JetBrains Mono,monospace;color:${ac}">${ap}%</span>
           </div>`;
@@ -9451,7 +9311,7 @@ async function saveSchedule(){
     const s=scheduleData.find(s=>s.id===editingSchedId);
     if(s){s.clientName=client;s.type=type;s.date=date;s.time=time;s.location=location;s.memo=memo;}
   } else {
-    scheduleData.push({id:schedNextId++,agentId:currentUser.agentId||currentUser.id||null,clientName:client,type,date,time,location,memo,done:false});
+    scheduleData.push({id:schedNextId++,agentId:currentUser.agentId||1,clientName:client,type,date,time,location,memo,done:false});
   }
   // 값 저장 후 모달 닫기
   const notifMsg = `${client} · ${date} ${time}`;
@@ -9463,7 +9323,7 @@ async function saveSchedule(){
   // 모달 닫은 후 알림 (setTimeout으로 DOM 안정화)
   setTimeout(()=>{
     pushNotifPopup(notifTitle, notifMsg, 'info', 3000);
-    // 일정은 개인 일정이므로 전체 푸시 알림 제외
+    sendPushNotification(notifTitle, notifMsg);
   }, 100);
   // 백엔드 API 저장
   try {
@@ -9565,173 +9425,7 @@ function deleteChatMsg(roomId, msgId){
 }
 
 // ════ BOARD ════
-function renderBoard(){ setBoardTab('posts'); }
-
-function setBoardTab(tab){
-  // 탭 버튼 스타일
-  ['posts','strategy'].forEach(function(t){
-    var btn = document.getElementById('board-tab-'+t);
-    var panel = document.getElementById('board-panel-'+t);
-    if(btn){
-      btn.style.borderBottomColor = t===tab ? 'var(--blue)' : 'transparent';
-      btn.style.color = t===tab ? 'var(--blue)' : 'var(--muted)';
-    }
-    if(panel) panel.style.display = t===tab ? 'block' : 'none';
-  });
-  var writePost = document.getElementById('btn-write-post');
-  var writeStrategy = document.getElementById('btn-write-strategy');
-  const isAdmin = ['superadmin','bureau_head'].includes(currentUser?.role);
-  if(writePost) writePost.style.display = (tab==='posts' && isAdmin) ? '' : 'none';
-  if(writeStrategy) writeStrategy.style.display = (tab==='strategy' && isAdmin) ? '' : 'none';
-
-  if(tab==='posts') showBoardList();
-  else renderStrategyList();
-}
-
-// ── 판매전략 ──
-var _strategies = [];
-
-async function loadStrategies(){
-  try {
-    var res = await dbFrom('board_posts').select('*').eq('category','strategy').order('created_at',{ascending:false});
-    _strategies = (res.data||[]).map(function(p){
-      return { id:p.id, title:p.title, author:p.author_name||'', date:(p.created_at||'').slice(0,10),
-        summary: p.content||'', points: [], description: '' };
-    });
-  } catch(e){ _strategies = []; }
-}
-
-function renderStrategyList(){
-  loadStrategies().then(function(){
-    var el = document.getElementById('strategy-list');
-    if(!el) return;
-    if(!_strategies.length){
-      el.innerHTML = '<div style="text-align:center;padding:60px;color:var(--dim)"><div style="font-size:40px;margin-bottom:12px">📊</div><div style="font-size:15px;font-weight:600">등록된 판매전략이 없습니다</div><div style="font-size:13px;margin-top:6px">PDF를 업로드해 이달의 판매전략을 분석해보세요</div></div>';
-      return;
-    }
-    el.innerHTML = _strategies.map(function(s){
-      return '<div class="post-card" onclick="showStrategy('+s.id+')" style="cursor:pointer">'+
-        '<div class="post-title">'+s.title+'</div>'+
-        '<div class="post-meta"><span>✍️ '+s.author+'</span><span>📅 '+s.date+'</span></div>'+
-        '<div class="post-preview">'+s.summary.slice(0,100)+'...</div>'+
-      '</div>';
-    }).join('');
-  });
-}
-
-function showStrategy(id){
-  var s = _strategies.find(function(x){ return x.id===id; });
-  if(!s) return;
-  var el = document.getElementById('strategy-list');
-  if(!el) return;
-
-  try { s._parsed = JSON.parse(s.summary); } catch(e){ s._parsed = null; }
-  var parsed = s._parsed;
-  var summaryHtml = parsed ? parsed.summary : s.summary;
-  var pointsHtml = parsed && parsed.points ? parsed.points.map(function(p,i){
-    return '<div style="display:flex;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:8px;margin-bottom:6px">'+
-      '<div style="width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(i+1)+'</div>'+
-      '<div style="font-size:13px;line-height:1.6">'+p+'</div></div>';
-  }).join('') : '';
-  var descHtml = parsed && parsed.description ?
-    '<div style="font-size:13px;color:var(--muted);line-height:1.8;margin-top:4px">'+parsed.description+'</div>' : '';
-
-  el.innerHTML =
-    '<button onclick="renderStrategyList()" style="padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:16px">← 목록으로</button>'+
-    '<div class="card" style="padding:24px">'+
-      '<div style="font-size:18px;font-weight:800;margin-bottom:4px">'+s.title+'</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-bottom:20px">'+s.author+' · '+s.date+'</div>'+
-      '<div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px;padding:6px 10px;background:var(--accent)11;border-left:3px solid var(--accent);border-radius:0 6px 6px 0">📝 요약</div>'+
-      '<div style="font-size:13px;line-height:1.8;margin-bottom:20px;color:var(--text)">'+summaryHtml+'</div>'+
-      (pointsHtml ? '<div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:10px;padding:6px 10px;background:var(--blue)11;border-left:3px solid var(--blue);border-radius:0 6px 6px 0">🎯 전략 포인트</div>'+pointsHtml : '')+
-      (descHtml ? '<div style="font-size:13px;font-weight:700;color:var(--muted);margin:16px 0 8px">📌 상세 설명</div>'+descHtml : '')+
-    '</div>';
-}
-
-async function openStrategyModal(){
-  var old = document.getElementById('modal-strategy');
-  if(old) old.remove();
-  var overlay = document.createElement('div');
-  overlay.id = 'modal-strategy';
-  overlay.className = 'modal-overlay visible';
-  overlay.innerHTML = '<div class="modal" style="width:500px">'+
-    '<div class="modal-header"><div class="modal-title">📊 이달의 판매전략 PDF 분석</div>'+
-    '<button class="modal-close" onclick="document.getElementById(&quot;modal-strategy&quot;).remove()">✕</button></div>'+
-    '<div style="display:flex;flex-direction:column;gap:14px;padding:4px 0">'+
-      '<div class="field"><label>제목</label><input id="strategy-title" type="text" placeholder="예: 2026년 4월 판매전략" style="padding:10px 12px;font-size:13px"></div>'+
-      '<div class="field"><label>PDF 파일</label>'+
-        '<div id="strategy-drop-zone" onclick="document.getElementById(&quot;strategy-file-input&quot;).click()" '+
-          'style="border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px">'+
-          '📄 PDF 파일을 클릭하거나 드래그해서 업로드<br><span style="font-size:11px">최대 10MB</span>'+
-        '</div>'+
-        '<input type="file" id="strategy-file-input" accept=".pdf" style="display:none" onchange="onStrategyFileSelect(this.files[0])">'+
-        '<div id="strategy-file-name" style="font-size:12px;color:var(--accent);margin-top:6px"></div>'+
-      '</div>'+
-    '</div>'+
-    '<div class="modal-footer">'+
-      '<button class="btn-action" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="document.getElementById(&quot;modal-strategy&quot;).remove()">취소</button>'+
-      '<button id="strategy-analyze-btn" class="btn-action" style="background:var(--accent);color:#fff" onclick="analyzeStrategyPDF()">🤖 AI 분석 시작</button>'+
-    '</div>'+
-  '</div>';
-  document.body.appendChild(overlay);
-}
-
-var _strategyPDFBase64 = null;
-
-function onStrategyFileSelect(file){
-  if(!file) return;
-  document.getElementById('strategy-file-name').textContent = '📎 '+file.name+' ('+Math.round(file.size/1024)+'KB)';
-  var reader = new FileReader();
-  reader.onload = function(e){ _strategyPDFBase64 = e.target.result.split(',')[1]; };
-  reader.readAsDataURL(file);
-}
-
-async function analyzeStrategyPDF(){
-  var title = document.getElementById('strategy-title')?.value.trim();
-  if(!title){ showToast('제목을 입력해주세요'); return; }
-  if(!_strategyPDFBase64){ showToast('PDF 파일을 업로드해주세요'); return; }
-
-  var btn = document.getElementById('strategy-analyze-btn');
-  if(btn){ btn.disabled=true; btn.textContent='⏳ AI 분석 중...'; }
-
-  try {
-    var systemPrompt = '당신은 보험 영업 전략 전문가입니다. 업로드된 판매전략 PDF를 분석하여 아래 JSON 형식으로 정확하게 반환하세요.\n\n반드시 아래 JSON만 반환하세요 (설명 없이):\n{"summary":"전체 내용 요약 (3-5문장)","points":["핵심 전략 포인트 1","핵심 전략 포인트 2","핵심 전략 포인트 3","핵심 전략 포인트 4","핵심 전략 포인트 5"],"description":"상세 설명 및 활용 방법 (2-3단락)"}';
-
-    var result = await callGeminiAPI('strategy_analyze', [{
-      parts: [
-        { inlineData: { mimeType: 'application/pdf', data: _strategyPDFBase64 } },
-        { text: '위 PDF를 분석해서 보험 설계사들이 이달에 활용할 수 있는 판매전략을 요약해주세요.' }
-      ]
-    }], { parts: [{ text: systemPrompt }] }, { maxOutputTokens: 4096, temperature: 0.2 });
-
-    var text = result?.candidates?.[0]?.content?.parts?.map(function(p){ return p.text||''; }).join('')||'';
-    text = text.replace(/```json[\n]?/g,'').replace(/```[\n]?/g,'').trim();
-    var m = text.match(/\{[\s\S]*\}/);
-    if(m) text = m[0];
-
-    var parsed = JSON.parse(text);
-
-    // board_posts에 저장
-    await dbFrom('board_posts').insert([{
-      title: title,
-      content: JSON.stringify(parsed),
-      author_name: currentUser?.name || '',
-      author_id: currentUser?.id || null,
-      category: 'strategy',
-      created_at: new Date().toISOString()
-    }]);
-
-    document.getElementById('modal-strategy')?.remove();
-    _strategyPDFBase64 = null;
-    showToast('✅ 판매전략 분석이 완료됐습니다!');
-    setBoardTab('strategy');
-
-  } catch(e) {
-    showToast('⚠️ 분석 실패: '+e.message);
-    if(btn){ btn.disabled=false; btn.textContent='🤖 AI 분석 시작'; }
-  }
-}
-
+function renderBoard(){showBoardList();}
 function showBoardList(){
   document.getElementById('board-list').style.display='block';
   document.getElementById('board-detail').style.display='none';
@@ -10316,9 +10010,9 @@ function renderUserMgmt(){
         const rc = ROLE_COLOR[u.role]||'#8B949E';
         const rl = ROLE_LABEL[u.role]||u.role;
         const org = [
-          getBureauName(u.bureauId),
-          getBranchName(u.branchId),
-          getTeamName(u.team)
+          ORG.bureaus.find(b=>b.id===u.bureauId)?.name,
+          ORG.branches.find(b=>b.id===u.branchId)?.name,
+          ORG.teams.find(t=>t.id===u.team)?.name || u.team
         ].filter(Boolean).join(' › ');
         const ll = u.lastLogin
           ? new Date(u.lastLogin).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})
@@ -10358,13 +10052,7 @@ function renderUserMgmt(){
               <button class="btn-sm btn-blue" onclick="openUserEditModal(${u.id},'${isPending?'pending':'approved'}')">✏️ 수정</button>
               ${isPending?`<button class="btn-sm btn-approve" onclick="approveUser(${u.id})">승인</button><button class="btn-sm btn-reject" onclick="rejectUser(${u.id})">거절</button>`:''}
               ${!isPending&&u.id!==currentUser.id?`<button class="btn-sm ${ag?.status==='active'?'btn-reject':'btn-approve'}" onclick="toggleUserActive(${u.id})">${ag?.status==='active'?'비활성화':'활성화'}</button>`:''}
-              ${(()=>{
-                if(isPending||u.id===currentUser.id) return '';
-                var opts = USERS.filter(function(x){ return x.id!==u.id&&x.status==='approved'; })
-                  .map(function(x){ return '<option value="'+x.id+'">'+x.name+'</option>'; }).join('');
-                return '<select id="transfer-sel-'+u.id+'" style="padding:3px 6px;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;max-width:100px"><option value="">이관없이삭제</option>'+opts+'</select>'
-                  +'<button class="btn-sm btn-reject" onclick="deleteUserWithTransfer('+u.id+')">삭제</button>';
-              })()}
+              ${!isPending&&u.id!==currentUser.id?`<button class="btn-sm btn-reject" onclick="deleteUserMgmt(${u.id})">삭제</button>`:''}
             </div>
           </td>
         </tr>`;
@@ -10412,7 +10100,6 @@ function showUserEditModal(u){
         </div>
         <div class="field">
           <label>역할 *</label>
-          ${currentUser?.role==='superadmin' ? `
           <select id="um-role">
             <option value="superadmin" ${u?.role==='superadmin'?'selected':''}>전체관리자</option>
             <option value="bureau_head" ${u?.role==='bureau_head'?'selected':''}>본부장</option>
@@ -10420,30 +10107,27 @@ function showUserEditModal(u){
             <option value="team_head" ${u?.role==='team_head'?'selected':''}>팀장</option>
             <option value="agent" ${!u||u?.role==='agent'?'selected':''}>설계사</option>
             <option value="staff" ${u?.role==='staff'?'selected':''}>총무</option>
-          </select>` : `
-          <input id="um-role" type="text" value="${ROLE_LABEL[u?.role]||u?.role||''}" readonly
-            style="background:var(--surface2);color:var(--muted);cursor:not-allowed">
-          <input type="hidden" id="um-role-hidden" value="${u?.role||'agent'}">`}
+          </select>
         </div>
       </div>
-      <div class="field-row" style="${currentUser?.role==='superadmin'?'':'opacity:.6;pointer-events:none'}">
+      <div class="field-row">
         <div class="field">
-          <label>본부 ${currentUser?.role!=='superadmin'?'<span style="color:var(--orange);font-size:10px">(전체관리자만 수정)</span>':''}</label>
-          <select id="um-bureau" onchange="updateUserModalBranch()" ${currentUser?.role!=='superadmin'?'disabled':''}>
+          <label>본부</label>
+          <select id="um-bureau" onchange="updateUserModalBranch()">
             <option value="">없음</option>
             ${ORG.bureaus.map(b=>`<option value="${b.id}" ${u?.bureauId===b.id?'selected':''}>${b.name}</option>`).join('')}
           </select>
         </div>
         <div class="field">
           <label>지사</label>
-          <select id="um-branch" onchange="updateUserModalTeam()" ${currentUser?.role!=='superadmin'?'disabled':''}>
+          <select id="um-branch" onchange="updateUserModalTeam()">
             <option value="">없음</option>
             ${ORG.branches.filter(b=>!u?.bureauId||b.bureauId===u?.bureauId).map(b=>`<option value="${b.id}" ${u?.branchId===b.id?'selected':''}>${b.name}</option>`).join('')}
           </select>
         </div>
         <div class="field">
           <label>팀</label>
-          <select id="um-team" ${currentUser?.role!=='superadmin'?'disabled':''}>
+          <select id="um-team">
             <option value="">없음</option>
             ${ORG.teams.filter(t=>!u?.branchId||t.branchId===u?.branchId).map(t=>`<option value="${t.id}" ${u?.team===t.id||u?.team===t.name?'selected':''}>${t.name}</option>`).join('')}
           </select>
@@ -10485,7 +10169,7 @@ async function saveUserMgmt(){
   const phone   = document.getElementById('um-phone')?.value.trim()||'';
   const email   = document.getElementById('um-email')?.value.trim();
   const pw      = document.getElementById('um-pw')?.value.trim();
-  const role    = document.getElementById('um-role-hidden')?.value || document.getElementById('um-role')?.value;
+  const role    = document.getElementById('um-role')?.value;
   const bureauId= document.getElementById('um-bureau')?.value||null;
   const branchId= document.getElementById('um-branch')?.value||null;
   const team    = document.getElementById('um-team')?.value||'';
@@ -10645,138 +10329,16 @@ function quickEditTarget(agentId){
 }
 
 async function deleteUserMgmt(id){
-  console.log('deleteUserMgmt 호출 id:', id, typeof id, '| role:', currentUser?.role);
   if(currentUser?.role !== 'superadmin'){ showToast('⚠️ 전체관리자만 삭제 가능합니다'); return; }
-  // id 타입 통일 (숫자/문자열 모두 처리)
-  const u = USERS.find(u=>String(u.id)===String(id)) || PENDING_USERS.find(u=>String(u.id)===String(id));
-  console.log('찾은 사용자:', u?.name, '| USERS 수:', USERS.length);
-  if(!u){ showToast('⚠️ 사용자를 찾을 수 없습니다 (id:'+id+')'); return; }
-  if(String(u.id)===String(currentUser.id)){ showToast('⚠️ 본인 계정은 삭제할 수 없습니다'); return; }
-
-  const agentId = u.agentId;
-  console.log('agentId:', agentId, '| CLIENTS:', CLIENTS.length, '| DB_CLIENTS:', DB_CLIENTS.length);
-  var hasData = false;
-  try {
-    hasData = agentId && (
-      CLIENTS.some(function(c){ return c.agentId===agentId; }) ||
-      DB_CLIENTS.some(function(c){ return c.assignedTo===agentId; })
-    );
-  } catch(e){ console.error('hasData 오류:', e.message); }
-  console.log('hasData:', hasData);
-
-  console.log('모달 생성 시작 | hasData:', hasData, '| u.agentId:', u.agentId);
-  var oldModal = document.getElementById('modal-delete-user');
-  if(oldModal) oldModal.remove();
-  var overlay = document.createElement('div');
-  overlay.id = 'modal-delete-user';
-  overlay.className = 'modal-overlay visible';
-
-  var candidates = USERS.filter(function(x){ return x.id !== id && x.status === 'approved' && x.agentId; });
-  var clientCount = agentId ? CLIENTS.filter(c=>c.agentId===agentId).length : 0;
-  var dbCount = agentId ? DB_CLIENTS.filter(c=>c.assignedTo===agentId).length : 0;
-
-  var html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;width:440px;max-width:92vw">';
-  html += '<div style="font-size:18px;font-weight:800;margin-bottom:6px">🗑️ 사용자 삭제</div>';
-  html += '<div style="font-size:13px;color:var(--muted);margin-bottom:20px"><b style="color:var(--text)">' + u.name + '</b>님 계정을 삭제합니다.</div>';
-  if(hasData){
-    html += '<div style="background:var(--orange)11;border:1px solid var(--orange)33;border-radius:10px;padding:12px 14px;margin-bottom:16px">';
-    html += '<div style="font-size:13px;font-weight:700;color:var(--orange);margin-bottom:8px">⚠️ 이 사용자의 데이터가 있습니다</div>';
-    html += '<div style="font-size:12px;color:var(--muted)">고객 ' + clientCount + '명 · DB 고객 ' + dbCount + '건</div></div>';
-    html += '<div style="margin-bottom:16px">';
-    html += '<label style="font-size:13px;font-weight:600;display:block;margin-bottom:8px">데이터 이관 받을 사용자 <span style="color:var(--dim);font-weight:400">(선택사항)</span></label>';
-    html += '<select id="transfer-target" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">';
-    html += '<option value="">이관 없이 데이터 삭제</option>';
-    candidates.forEach(function(c){ html += '<option value="' + c.id + '">' + c.name + ' (' + (ROLE_LABEL[c.role]||c.role) + ')</option>'; });
-    html += '</select>';
-    html += '<div style="font-size:11px;color:var(--muted);margin-top:6px">이관 선택 시 고객·DB고객이 해당 사용자에게 이전됩니다</div></div>';
-  }
-  html += '<div style="display:flex;gap:10px;margin-top:8px">';
-  html += '<button onclick="document.getElementById(&quot;modal-delete-user&quot;).remove()" style="flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit;color:var(--muted)">취소</button>';
-  html += '<button onclick="confirmDeleteUser(' + id + ')" style="flex:1;padding:11px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">🗑️ 삭제</button>';
-  html += '</div></div>';
-  overlay.innerHTML = html;
-  document.body.appendChild(overlay);
-  console.log('모달 추가 완료 | overlay:', document.getElementById('modal-delete-user')?.style.cssText);
-}
-async function deleteUserWithTransfer(id){
-  if(currentUser?.role !== 'superadmin'){ showToast('⚠️ 전체관리자만 삭제 가능합니다'); return; }
-  const u = USERS.find(function(x){ return String(x.id)===String(id); }) || PENDING_USERS.find(function(x){ return String(x.id)===String(id); });
-  if(!u){ showToast('⚠️ 사용자를 찾을 수 없습니다'); return; }
-  if(String(u.id)===String(currentUser.id)){ showToast('⚠️ 본인 계정은 삭제할 수 없습니다'); return; }
-
-  var transferSelEl = document.getElementById('transfer-sel-'+id);
-  var transferTargetId = transferSelEl ? transferSelEl.value : '';
-  var transferTarget = transferTargetId ? USERS.find(function(x){ return String(x.id)===String(transferTargetId); }) : null;
-
-  var confirmMsg = transferTarget
-    ? u.name+'님을 삭제하고 데이터를 '+transferTarget.name+'님에게 이관하시겠습니까?'
-    : u.name+'님 계정을 삭제하시겠습니까? (데이터도 함께 삭제)';
-  if(!confirm(confirmMsg)) return;
-
-  // 이관 처리
-  if(transferTarget){
-    var fromAgentId = u.agentId || AGENTS.find(function(a){ return a._userId===u.id||a.email===u.email; })?.id;
-    var toAgentId   = transferTarget.agentId || AGENTS.find(function(a){ return a._userId===transferTarget.id||a.email===transferTarget.email; })?.id;
-    if(fromAgentId && toAgentId){
-      try {
-        await api('PATCH', '/api/users/'+String(u.id), { action:'transfer', from_agent_id:fromAgentId, to_agent_id:toAgentId });
-        CLIENTS.forEach(function(c){ if(String(c.agentId)===String(fromAgentId)) c.agentId=toAgentId; });
-        DB_CLIENTS.forEach(function(c){ if(String(c.assignedTo)===String(fromAgentId)) c.assignedTo=toAgentId; });
-        showToast('✅ '+transferTarget.name+'님에게 이관 완료');
-      } catch(e){ showToast('⚠️ 이관 오류: '+e.message); }
-    }
-  }
-
-  // 사용자 삭제
-  var pidx = PENDING_USERS.findIndex(function(x){ return String(x.id)===String(id); });
-  var uidx = USERS.findIndex(function(x){ return String(x.id)===String(id); });
-  if(pidx>=0) PENDING_USERS.splice(pidx,1);
-  if(uidx>=0) USERS.splice(uidx,1);
-  await api('DELETE', '/api/users/'+String(id)).catch(function(e){ console.error(e.message); });
-  renderUserMgmt();
-  showToast('🗑️ '+u.name+'님 계정이 삭제되었습니다');
-}
-
-async function confirmDeleteUser(id){
-  const u = USERS.find(u=>String(u.id)===String(id)) || PENDING_USERS.find(u=>String(u.id)===String(id));
+  const u = USERS.find(u=>u.id===id);
   if(!u) return;
-  const transferTargetId = document.getElementById('transfer-target')?.value || '';
-  const transferTarget = transferTargetId ? USERS.find(x=>String(x.id)===String(transferTargetId)) : null;
-
-  document.getElementById('modal-delete-user')?.remove();
-
-  // 이관 처리
-  if(transferTarget){
-    const fromAgentId = u.agentId || AGENTS.find(function(a){ return a._userId===u.id||a.email===u.email; })?.id;
-    const toAgentId   = transferTarget.agentId || AGENTS.find(function(a){ return a._userId===transferTarget.id||a.email===transferTarget.email; })?.id;
-    if(fromAgentId && toAgentId){
-      try {
-        // 백엔드 통해 이관 (권한 우회)
-        await api('PATCH', '/api/users/' + String(u.id), {
-          action: 'transfer',
-          from_agent_id: fromAgentId,
-          to_agent_id: toAgentId
-        }).catch(async function(){
-          // 폴백: Supabase 직접
-          if(_supabase){
-            await _supabase.from('clients').update({agent_id: toAgentId}).eq('agent_id', fromAgentId);
-            await _supabase.from('db_clients').update({assigned_to: toAgentId}).eq('assigned_to', fromAgentId);
-          }
-        });
-        // 로컬 업데이트
-        CLIENTS.forEach(function(c){ if(String(c.agentId)===String(fromAgentId)) c.agentId=toAgentId; });
-        DB_CLIENTS.forEach(function(c){ if(String(c.assignedTo)===String(fromAgentId)) c.assignedTo=toAgentId; });
-        showToast('✅ ' + transferTarget.name + '님에게 이관되었습니다');
-      } catch(e){ showToast('⚠️ 이관 중 오류: ' + e.message); }
-    }
-  }
-
-  // 사용자 삭제
-  USERS.splice(USERS.findIndex(x=>x.id===id), 1);
+  if(u.id===currentUser.id){ alert('본인 계정은 삭제할 수 없습니다'); return; }
+  if(!confirm(`${u.name}님 계정을 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`)) return;
+  USERS.splice(USERS.findIndex(x=>x.id===id),1);
   if(!_supabase) initSupabase();
-  await api('DELETE', '/api/users/' + String(id)).catch(e=>console.error(e.message));
+  await api('DELETE', '/api/users/' + id).catch(e=>console.error(e.message));
   renderUserMgmt();
-  pushNotifPopup('🗑️ 사용자 삭제', u.name+'님 계정이 삭제되었습니다.', 'warning', 3000);
+  pushNotifPopup('🗑️ 사용자 삭제', `${u.name}님 계정이 삭제되었습니다.`, 'warning', 3000);
 }
 
 function renderAgentMgmt(){
@@ -11058,9 +10620,6 @@ async function loadOnlineUsers(){
 
 function subscribePresence(){
   if(!_supabase) return;
-  // 중복 구독 방지
-  if(window._presenceSubscribed) return;
-  window._presenceSubscribed = true;
   // users INSERT 감지 (신규 가입 실시간 알림)
   _supabase.channel('users_signup_watch')
     .on('postgres_changes', {event:'INSERT', schema:'public', table:'users'}, function(payload){
@@ -11315,12 +10874,6 @@ function closeNotifPopup(id){
 
 // 세션 만료 시 비밀번호 재입력 모달
 function showSessionExpiredModal(){
-  // 로그인 안 된 상태면 모달 대신 로그인 화면으로
-  if(!currentUser){
-    clearToken();
-    showScreen('screen-login');
-    return;
-  }
   if(document.getElementById('modal-session-expired')) return;
   // 이메일 여러 곳에서 가져오기
   var email = '';
@@ -11377,8 +10930,6 @@ async function confirmSessionPw(){
     var d = await r.json();
     if(d.token){
       setToken(d.token);
-      // Supabase 세션 설정
-      if(_supabase) await _supabase.auth.setSession({ access_token: d.token, refresh_token: d.token }).catch(function(){});
       // 비번 저장
       localStorage.setItem('insearch_user', JSON.stringify({email, pw: btoa(pw)}));
       var el = document.getElementById('modal-session-expired');
@@ -11513,7 +11064,7 @@ function syncAlarmToSchedule(c, alarm){
   if(!exists){
     const newSched = {
       id: schedNextId++,
-      agentId: currentUser?.agentId||c.agentId||null,
+      agentId: currentUser?.agentId||c.agentId||1,
       clientName: c.name,
       type: '고객알람',
       date: alarm.date,
@@ -11784,7 +11335,7 @@ function renderDbClientsPersonal(){
   document.getElementById('db-clients-tbody').innerHTML = myDbsFiltered.map(d => {
     const ag = AGENTS.find(a=>a.id===d.assignedTo);
     const agName = ag ? ag.name : (d.assignedName||'-');
-    const agTeam = ag ? (getTeamName(ag.team)||ag.team) : (getTeamName(d.assignedTeam)||d.assignedTeam||'');
+    const agTeam = ag ? ag.team : (d.assignedTeam||'');
     const sc = pMap[d.processStatus]||'#8B949E';
     return `<tr>
       <td>
@@ -11826,7 +11377,7 @@ function renderDbDistTable(){
   if(agSel && agSel.options.length<=1){
     visAgents.forEach(ag=>{
       const o=document.createElement('option');
-      o.value=ag.id; o.textContent=`${ag.name} (${getTeamName(ag.team)||ag.team})`;
+      o.value=ag.id; o.textContent=`${ag.name} (${ag.team})`;
       agSel.appendChild(o);
     });
   }
@@ -12174,7 +11725,7 @@ function openDbAssign(id){
   const visIds = getVisibleAgentIds(currentUser);
   const visAgents = AGENTS.filter(a=>visIds.includes(a.id));
   sel.innerHTML=visAgents.map(a=>{
-    const label = a.isMgr ? `[${getTeamName(a.team)||a.team}]` : `(${getTeamName(a.team)||a.team})`;
+    const label = a.isMgr ? `[${a.team}]` : `(${a.team})`;
     const self  = a._userId===currentUser.id ? ' ★본인' : '';
     return `<option value="${a.id}" ${a._userId===currentUser.id?'selected':''}>${a.name} ${label}${self}</option>`;
   }).join('');
@@ -12190,11 +11741,11 @@ async function confirmDbAssign(){
   const ag=AGENTS.find(a=>a.id===agId);if(!ag)return;
   d.assignedTo=agId;d.assignedName=ag.name;d.assignedTeam=ag.team;
   d.assignedDate=new Date().toISOString().slice(0,10);d.status='assigned';d.processStatus='미처리';
-  addNotification('📤 DB 배분',`${d.name} → ${ag.name} (${getTeamName(ag.team)||ag.team})`);
+  addNotification('📤 DB 배분',`${d.name} → ${ag.name} (${ag.team})await `);
   await saveDbClientToDb(d);
   closeModal('modal-db-assign');
   logUsage('db_assign', {clientName: d?.name||''});renderDbAdmin();renderDbClients();updateDbBadge();
-  pushNotifPopup('📤 DB 배분 완료', `${d.name}님 → ${ag.name} (${getTeamName(ag.team)||ag.team})`, 'db', 4000);
+  pushNotifPopup('📤 DB 배분 완료', `${d.name}님 → ${ag.name} (${ag.team})`, 'db', 4000);
 }
 
 function openBulkAssignModal(){
@@ -12204,7 +11755,7 @@ function openBulkAssignModal(){
   const visIds2 = getVisibleAgentIds(currentUser);
   const visAgents2 = AGENTS.filter(a=>visIds2.includes(a.id));
   sel.innerHTML=visAgents2.map(a=>{
-    const label = a.isMgr ? `[${getTeamName(a.team)||a.team}]` : `(${getTeamName(a.team)||a.team})`;
+    const label = a.isMgr ? `[${a.team}]` : `(${a.team})`;
     const self  = a._userId===currentUser.id ? ' ★본인' : '';
     return `<option value="${a.id}" ${a._userId===currentUser.id?'selected':''}>${a.name} ${label}${self}</option>`;
   }).join('');
@@ -12222,7 +11773,7 @@ async function confirmBulkAssign(){
     toSave.push(d);
   });
   await Promise.all(toSave.map(d=>saveDbClientToDb(d)));
-  addNotification('📤 일괄 배분',`${selectedDbIds.size}건 → ${ag.name} (${getTeamName(ag.team)||ag.team})`);
+  addNotification('📤 일괄 배분',`${selectedDbIds.size}건 → ${ag.name} (${ag.team})`);
   selectedDbIds.clear();
   closeModal('modal-bulk-assign');renderDbAdmin();renderDbClients();updateDbBadge();
   showToast(`✅ 선택된 DB가 ${ag.name} 설계사에게 배분되었습니다`);
@@ -12282,27 +11833,7 @@ function updateSignupBranch(){
   branchSel.innerHTML = '<option value="">지사 선택</option>' +
     branches.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
   updateSignupTeam();
-  updateSignupRecruiterFiltered();
-}
-
-function updateSignupRecruiterFiltered(){
-  const bureauId = document.getElementById('s-bureau')?.value || '';
-  const sel = document.getElementById('s-recruiter');
-  if(!sel || !window._signupUserCache) return;
-  var list = window._signupUserCache;
-  // 본부 선택 시 해당 본부 소속만 필터
-  if(bureauId){
-    list = list.filter(function(u){ return u.bureauId === bureauId; });
-  }
-  sel.innerHTML = '<option value="">없음</option>' +
-    list.map(function(u){
-      var teamName = '';
-      if(u.team && ['agent','team_head'].includes(u.role)){
-        var t = ORG.teams ? ORG.teams.find(function(t){ return t.id===u.team; }) : null;
-        teamName = t ? t.name : '';
-      }
-      return '<option value="'+u.id+'">'+u.name+' ('+(ROLE_LABEL[u.role]||u.role)+(teamName?' · '+teamName:'')+')</option>';
-    }).join('');
+  updateSignupRecruiter();
 }
 
 function updateSignupTeam(){
@@ -12322,49 +11853,43 @@ function updateSignupRecruiter(){
   const sel = document.getElementById('s-recruiter');
   if(!sel) return;
 
-  // 유치인: 본인 제외 전체 승인 사용자
-  const members = USERS.filter(u =>
-    u.status === 'approved' &&
-    u.role !== 'superadmin' &&
-    u.id !== (currentUser?.id)
-  );
+  // 역할 레벨 정의 (숫자가 높을수록 상위)
+  const roleLevel = { agent:1, team_head:2, branch_head:3, bureau_head:4, superadmin:5 };
+  const myLevel = roleLevel[role] || 1;
+
+  // 유치인 조건:
+  // 1) 가입자보다 직급이 높아야 함
+  // 2) 조직 범위 내에 있어야 함
+  let members = USERS.filter(u => {
+    if(u.status !== 'approved') return false;
+    const theirLevel = roleLevel[u.role] || 1;
+    // 유치인은 나보다 직급이 높거나 같은 직속 상위자
+    if(theirLevel <= myLevel) return false;
+    return true;
+  });
+
+  // 조직 범위 필터 (같은 조직 내 상위자만)
+  if(role === 'agent' || role === 'team_head') {
+    // 팀장: 같은 팀 또는 상위 조직
+    if(team) members = members.filter(u => u.team===team || u.branchId===branchId || u.bureauId===bureauId);
+    else if(branchId) members = members.filter(u => u.branchId===branchId || u.bureauId===bureauId);
+    else if(bureauId) members = members.filter(u => u.bureauId===bureauId);
+  } else if(role === 'branch_head') {
+    // 지사장: 본부 내 본부장/전체관리자만
+    if(bureauId) members = members.filter(u => u.bureauId===bureauId || u.role==='superadmin');
+    else members = members.filter(u => u.role==='bureau_head'||u.role==='superadmin');
+  } else if(role === 'bureau_head') {
+    // 본부장: 전체관리자만
+    members = members.filter(u => u.role==='superadmin');
+  }
 
   if(members.length === 0) {
-    sel.innerHTML = '<option value="">없음</option>';
+    sel.innerHTML = '<option value="">없음 (해당 조직 내 상위 직급자 없음)</option>';
     return;
   }
 
   sel.innerHTML = '<option value="">없음</option>' +
-    members.map(u=>`<option value="${u.id}">${u.name} (${ROLE_LABEL[u.role]||u.role}${u.team?' · '+(getTeamName(u.team)||u.team):''})</option>`).join('');
-}
-
-function onSignupRecruiterChange(){
-  const sel = document.getElementById('s-recruiter');
-  const recruiterId = sel?.value;
-  if(!recruiterId) return;
-
-  const recruiter = (window._signupUserCache || USERS).find(u => String(u.id) === String(recruiterId));
-  if(!recruiter) return;
-
-  // 유치인 소속으로 자동 설정
-  const bureauSel = document.getElementById('s-bureau');
-  const branchSel = document.getElementById('s-branch');
-  const teamSel   = document.getElementById('s-team');
-
-  if(recruiter.bureauId && bureauSel){
-    bureauSel.value = recruiter.bureauId;
-    updateSignupBranch();
-  }
-  if(recruiter.branchId && branchSel){
-    setTimeout(function(){
-      branchSel.value = recruiter.branchId;
-      updateSignupTeam();
-      if(recruiter.team && teamSel){
-        setTimeout(function(){ teamSel.value = recruiter.team; }, 50);
-      }
-    }, 50);
-  }
-  showToast('📌 ' + recruiter.name + '님 소속으로 자동 설정되었습니다');
+    members.map(u=>`<option value="${u.id}">${u.name} (${ROLE_LABEL[u.role]||u.role}${u.team?' · '+u.team:''})</option>`).join('');
 }
 
 // ════ LOGIN HINTS - update with new accounts ════
@@ -13243,7 +12768,7 @@ async function saveBulkClients(){
   toAdd.forEach(c => CLIENTS.push(c));
 
   // Update agent client count
-  const ag = AGENTS.find(a=>a.id===currentUser.agentId||a.email===currentUser.email);
+  const ag = AGENTS.find(a=>a.id===(currentUser.agentId||1));
   if(ag) ag.clients += toAdd.length;
 
   // Show result
@@ -13825,7 +13350,7 @@ function renderContracts(){
     const visAgents = AGENTS.filter(a=>visIds.includes(a.id));
     visAgents.forEach(ag=>{
       const opt = document.createElement('option');
-      opt.value = ag.id; opt.textContent = `${ag.name} (${getTeamName(ag.team)||ag.team})`;
+      opt.value = ag.id; opt.textContent = `${ag.name} (${ag.team})`;
       agentSel.appendChild(opt);
     });
   }
@@ -15958,7 +15483,7 @@ function switchPerfMainTab(tab){
         agents.forEach(function(u){
           var opt = document.createElement('option');
           opt.value = String(u.agentId||u.id);
-          opt.textContent = u.name + (u.team ? ' ('+(getTeamName(u.team)||u.team)+')' : '');
+          opt.textContent = u.name + (u.team ? ' ('+u.team+')' : '');
           agentSel.appendChild(opt);
         });
       }
@@ -17758,16 +17283,37 @@ function renderToolCoverage(){
             </div>
           </div>
 
-          <!-- 체크포인트 -->
+          <!-- 핵심 문제점 -->
           <div class="card" style="margin-bottom:16px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-              <div style="font-size:13px;font-weight:700;color:var(--accent)">③ 체크포인트</div>
-              <button onclick="addCovCheckpoint()" style="padding:3px 10px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">+ 추가</button>
+            <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px">③ 핵심 문제점 <span style="font-size:11px;font-weight:400;color:var(--muted)">(AI 집중 분석)</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:12px;font-weight:700;color:var(--accent);min-width:20px">1.</span>
+                <input type="text" id="coverage-issue-1" placeholder="예: 일반암 진단비 부족 (현재 7천만, 권장 1.5억)" oninput="updateCovIssuePreview()" style="flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:12px;font-weight:700;color:var(--accent);min-width:20px">2.</span>
+                <input type="text" id="coverage-issue-2" placeholder="예: 뇌혈관·심장 진단비 전반 부족" oninput="updateCovIssuePreview()" style="flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:12px;font-weight:700;color:var(--accent);min-width:20px">3.</span>
+                <input type="text" id="coverage-issue-3" placeholder="예: 운전자보험 미가입" oninput="updateCovIssuePreview()" style="flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+              </div>
             </div>
-            <div id="cov-checkpoint-list" style="display:flex;flex-direction:column;gap:6px"></div>
             <div style="display:flex;gap:6px;margin-top:10px">
-              <button onclick="saveCovCheckpoints()" style="flex:1;padding:5px 0;background:var(--accent)15;border:1px solid var(--accent)44;border-radius:6px;color:var(--accent);font-size:11px;cursor:pointer;font-family:inherit">⭐ 기본값 저장</button>
-              <button onclick="loadCovCheckpoints()" style="flex:1;padding:5px 0;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit">🔄 불러오기</button>
+              <button onclick="saveCovTemplate()" style="flex:1;padding:5px 0;background:var(--accent)15;border:1px solid var(--accent)44;border-radius:6px;color:var(--accent);font-size:11px;cursor:pointer;font-family:inherit">⭐ 내 기본값 저장</button>
+              <button onclick="applyCovTemplate()" style="flex:1;padding:5px 0;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit">🔄 기본값 불러오기</button>
+            </div>
+          </div>
+
+          <!-- 추가 메모 -->
+          <div class="card" style="margin-bottom:16px">
+            <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px">④ 개선 방향 제안 <span style="font-size:11px;font-weight:400;color:var(--muted)">(선택)</span></div>
+            <textarea id="coverage-extra" placeholder="예: 자녀 2명. 현재 월 보험료 부담이 크다고 함. 갱신형 위주로 가입되어 있음..." oninput="updateCovIssuePreview()"
+              style="width:100%;min-height:70px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box"></textarea>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button onclick="saveCovExtraTemplate()" style="flex:1;padding:5px 0;background:var(--accent)15;border:1px solid var(--accent)44;border-radius:6px;color:var(--accent);font-size:11px;cursor:pointer;font-family:inherit">⭐ 이 메모 기본값 저장</button>
+              <button onclick="applyCovExtraTemplate()" style="flex:1;padding:5px 0;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit">🔄 기본값 불러오기</button>
             </div>
           </div>
 
@@ -17857,8 +17403,11 @@ function updateCovIssuePreview(){
   if(window._currentCoverageReport){
     var panel = document.getElementById('cov-user-points-panel');
     if(!panel) return;
-    var pts = (window._covCheckpoints||[]).map(function(cp){return (cp.text||'').trim();}).filter(Boolean);
-    var ex = '';
+    var i1 = (document.getElementById('coverage-issue-1')||{}).value||'';
+    var i2 = (document.getElementById('coverage-issue-2')||{}).value||'';
+    var i3 = (document.getElementById('coverage-issue-3')||{}).value||'';
+    var ex = (document.getElementById('coverage-extra')||{}).value||'';
+    var pts = [i1,i2,i3].filter(Boolean);
     if(!pts.length && !ex){ panel.innerHTML=''; return; }
     var html = '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">📌 분석 집중 포인트</div>';
     pts.forEach(function(pt,i){ html+='<div style="font-size:11px;margin-bottom:3px;display:flex;gap:5px"><span style="color:var(--accent);font-weight:700">'+(i+1)+'.</span><span>'+pt+'</span></div>'; });
@@ -17868,7 +17417,9 @@ function updateCovIssuePreview(){
     return;
   }
 
-  var i1=''; var i2=''; var i3='';
+  var i1 = (document.getElementById('coverage-issue-1')||{}).value||'';
+  var i2 = (document.getElementById('coverage-issue-2')||{}).value||'';
+  var i3 = (document.getElementById('coverage-issue-3')||{}).value||'';
   var points = [i1,i2,i3].filter(function(v){ return v.trim(); });
 
   var extra0 = (document.getElementById('coverage-extra')||{}).value||'';
@@ -17912,8 +17463,11 @@ async function generateCoverageReport(){
   const clientAge  = document.getElementById('coverage-age')?.value || '';
   const clientGender = document.getElementById('coverage-gender')?.value || '';
   const clientJob  = document.getElementById('coverage-job')?.value || '';
-  const extra = '';
-  const points = (window._covCheckpoints||[]).map(function(cp){return (cp.text||'').trim();}).filter(Boolean);
+  const extra = document.getElementById('coverage-extra')?.value||'';
+  const issue1 = document.getElementById('coverage-issue-1')?.value.trim()||'';
+  const issue2 = document.getElementById('coverage-issue-2')?.value.trim()||'';
+  const issue3 = document.getElementById('coverage-issue-3')?.value.trim()||'';
+  const points = [issue1,issue2,issue3].filter(Boolean);
 
   if(!coveragePDFBase64 && !extra){
     showToast('⚠️ PDF를 업로드하거나 고객 정보를 입력해주세요');
@@ -18065,18 +17619,7 @@ JSON 형식 (이것만 출력):
     try {
       const report2 = JSON.parse(t2);
       Object.assign(report, report2);
-    } catch(e){
-      try {
-        const t2clean = t2.replace(/[\u0000-\u001F\u007F]/g, function(c){
-          if(c==='\n') return '\\n';
-          if(c==='\r') return '\\r';
-          if(c==='\t') return '\\t';
-          return '';
-        });
-        const report2 = JSON.parse(t2clean);
-        Object.assign(report, report2);
-      } catch(e2){ console.warn('2단계 파싱 실패:', e2.message); }
-    }
+    } catch(e){ console.warn('2단계 파싱 실패:', e.message); }
 
     // 토큰 합산
     const totalIn  = (tokens1.promptTokenCount||0) + (tokens2.promptTokenCount||0);
@@ -18129,15 +17672,9 @@ function renderCoverageReport(r, resultArea){
   tbl += '<th style="padding:5px 8px;background:#1C2333;border:1px solid var(--border);color:var(--muted);text-align:left;font-size:10px;word-break:keep-all">보장 항목</th>';
   companies.forEach(function(c,i){
     var col = colColors[i%colColors.length];
-    tbl += '<th style="padding:5px 8px;background:'+col+'33;border:1px solid var(--border);color:'+col+';text-align:center;font-size:10px;word-break:keep-all;position:relative">'
-      +'('+( i+1)+') '+c.name+'<br><span style="font-size:9px;font-weight:400;opacity:.8">'+c.product+'</span>'
-      +'<button onclick="deleteCovCompany('+i+')" title="상품 삭제" style="position:absolute;top:2px;right:2px;width:14px;height:14px;background:#dc262688;color:#fff;border:none;border-radius:50%;font-size:9px;cursor:pointer;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">✕</button>'
-      +'</th>';
+    tbl += '<th style="padding:5px 8px;background:'+col+'33;border:1px solid var(--border);color:'+col+';text-align:center;font-size:10px;word-break:keep-all">('+( i+1)+') '+c.name+'<br><span style="font-size:9px;font-weight:400;opacity:.8">'+c.product+'</span></th>';
   });
-  tbl += '<th style="padding:5px 8px;background:#BC8CFF33;border:1px solid var(--border);color:#BC8CFF;text-align:center;font-size:10px">합계</th>'
-      +'<th style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border);text-align:center;font-size:10px">'
-      +'<button onclick="addCovCompany()" style="padding:3px 8px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;white-space:nowrap">+ 상품 추가</button>'
-      +'</th></tr>';
+  tbl += '<th style="padding:5px 8px;background:#BC8CFF33;border:1px solid var(--border);color:#BC8CFF;text-align:center;font-size:10px">합계</th></tr>';
   // 보장기간행
   tbl += '<tr><td style="padding:4px 8px;border:1px solid var(--border);font-size:10px;font-weight:600;word-break:keep-all">보장기간</td>';
   companies.forEach(function(c){ tbl += '<td style="padding:4px 8px;border:1px solid var(--border);text-align:center;font-size:10px;word-break:keep-all">'+( c.period||'-')+'</td>'; });
@@ -18230,8 +17767,9 @@ function renderCoverageReport(r, resultArea){
 
   // 사용자 입력 포인트 섹션 (실시간 업데이트)
   var _uIssues = [
-    ...(window._covCheckpoints||[]).map(function(cp){return cp.text||'';}),
-    ''
+    (document.getElementById('coverage-issue-1')||{}).value||'',
+    (document.getElementById('coverage-issue-2')||{}).value||'',
+    (document.getElementById('coverage-issue-3')||{}).value||''
   ].filter(Boolean);
   var _uExtra = (document.getElementById('coverage-extra')||{}).value||'';
   var userPointsHtml = '';
@@ -18247,9 +17785,13 @@ function renderCoverageReport(r, resultArea){
     userPointsHtml = '<div id="cov-user-points-panel"></div>';
   }
 
-  // 오른쪽 패널: 종합의견만
+  // 오른쪽 패널: 문제점 + 개선제안 + 종합의견
   var rightPanelHtml =
     userPointsHtml+
+    '<div style="font-size:13px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:var(--orange)11;border-left:3px solid var(--orange);border-radius:0 6px 6px 0">⚠️ 핵심 문제점</div>'+
+    issuesHtml+
+    '<div style="font-size:13px;font-weight:700;margin:12px 0 8px;padding:6px 10px;background:#2EA44F11;border-left:3px solid #2EA44F;border-radius:0 6px 6px 0">✅ 맞춤 개선 제안</div>'+
+    suggestHtml+
     +(r.companyReview&&r.companyReview.length?
       '<div style="font-size:13px;font-weight:700;margin:16px 0 8px;padding:8px 12px;background:#7c3aed11;border-left:3px solid #7c3aed;border-radius:0 6px 6px 0">🏢 보험사별 평가</div>'+
       '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">'+
@@ -18264,20 +17806,16 @@ function renderCoverageReport(r, resultArea){
       '</div>'
     :'')+
     '<div style="font-size:13px;font-weight:700;margin:16px 0 8px;padding:8px 12px;background:var(--blue)11;border-left:3px solid var(--blue);border-radius:0 6px 6px 0">📌 종합 의견</div>'+
-    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">'+
-    '<div style="margin-bottom:10px">'+
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">별점</div>'+
-      '<div id="cov-star-rating" style="display:flex;gap:4px;font-size:24px;cursor:pointer">'+
-        [1,2,3,4,5].map(function(n){
-          var filled = n <= (window._covStarRating||3);
-          return '<span onclick="setCovStar('+n+')" onmouseover="hoverCovStar('+n+')" onmouseout="resetCovStar()" style="color:'+(filled?'#f59e0b':'var(--border)')+';transition:color .1s" data-star="'+n+'">★</span>';
-        }).join('')+
-      '</div>'+
-    '</div>'+
-    '<div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">종합 의견 작성</div>'+
-      '<textarea id="cov-conclusion-text" placeholder="종합 의견을 작성해주세요..." style="width:100%;min-height:100px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box">'+( conclusion.summary||'')+'</textarea>'+
-    '</div>'+
+    '<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;border-radius:10px;padding:14px 16px;">'+
+    '<div style="font-size:18px;margin-bottom:4px">'+( conclusion.stars||'★★★☆☆')+'</div>'+
+    '<div style="font-size:12px;color:#1e3a8a;line-height:1.8;margin-bottom:10px">'+( conclusion.summary||'')+'</div>'+
+    prioHtml+
+    '<div style="background:#1d4ed8;color:#fff;border-radius:7px;padding:8px 12px;font-size:12px;font-weight:700;margin-top:8px">💬 '+( conclusion.oneline||'')+'</div>'+
+    (function(){
+      if(!conclusion.shareText) return '';
+      window._covShareText = conclusion.shareText;
+      return '<div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.7"><b style="color:var(--text)">📤 고객 공유 메시지</b><br>'+conclusion.shareText+'<button onclick="navigator.clipboard.writeText(window._covShareText).then(function(){showToast(\'✅ 복사됐습니다\')})" style="margin-left:8px;padding:2px 8px;background:var(--surface);border:1px solid var(--border);border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit">복사</button></div>';
+    })()+
     '</div>';
 
   // 가로형 레이아웃: 왼쪽(계약요약+보장현황테이블) / 오른쪽(문제점+제안+종합)
@@ -18387,117 +17925,64 @@ function _covTemplateKey(suffix){
   return 'covTemplate_' + uid + (suffix||'');
 }
 
-// ── 체크포인트 관리 ──
-window._covCheckpoints = [];
-
-function renderCovCheckpoints(){
-  var list = document.getElementById('cov-checkpoint-list');
-  if(!list) return;
-  list.innerHTML = '';
-  if(window._covCheckpoints.length === 0){
-    window._covCheckpoints = [{checked:false, text:''}];
-  }
-  window._covCheckpoints.forEach(function(cp, i){
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:6px';
-    row.innerHTML =
-      '<input type="checkbox" '+(cp.checked?'checked':'')+' onchange="window._covCheckpoints['+i+'].checked=this.checked" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent);flex-shrink:0">'+
-      '<input type="text" value="'+cp.text.replace(/"/g,'&quot;')+'" placeholder="체크포인트 입력..." oninput="window._covCheckpoints['+i+'].text=this.value" style="flex:1;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:inherit">'+
-      '<button onclick="deleteCovCheckpoint('+i+')" style="width:22px;height:22px;background:#dc262622;color:#dc2626;border:1px solid #dc262644;border-radius:5px;font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">✕</button>';
-    list.appendChild(row);
-  });
+function saveCovTemplate(){
+  var data = {
+    issue1: (document.getElementById('coverage-issue-1')||{}).value||'',
+    issue2: (document.getElementById('coverage-issue-2')||{}).value||'',
+    issue3: (document.getElementById('coverage-issue-3')||{}).value||'',
+  };
+  localStorage.setItem(_covTemplateKey('_issues'), JSON.stringify(data));
+  showToast('⭐ 핵심 문제점 기본값이 저장되었습니다');
 }
 
-function addCovCheckpoint(){
-  window._covCheckpoints.push({checked:false, text:''});
-  renderCovCheckpoints();
-  var inputs = document.querySelectorAll('#cov-checkpoint-list input[type=text]');
-  if(inputs.length) inputs[inputs.length-1].focus();
-}
-
-function deleteCovCheckpoint(i){
-  window._covCheckpoints.splice(i, 1);
-  if(window._covCheckpoints.length === 0) window._covCheckpoints = [{checked:false, text:''}];
-  renderCovCheckpoints();
-}
-
-function saveCovCheckpoints(){
-  localStorage.setItem(_covTemplateKey('_checkpoints'), JSON.stringify(window._covCheckpoints));
-  showToast('⭐ 체크포인트 기본값이 저장되었습니다');
-}
-
-function loadCovCheckpoints(){
-  var raw = localStorage.getItem(_covTemplateKey('_checkpoints'));
+function applyCovTemplate(){
+  var raw = localStorage.getItem(_covTemplateKey('_issues'));
   if(!raw){ showToast('저장된 기본값이 없습니다', 'warn'); return; }
   try {
-    window._covCheckpoints = JSON.parse(raw);
-    renderCovCheckpoints();
+    var data = JSON.parse(raw);
+    var i1=document.getElementById('coverage-issue-1');
+    var i2=document.getElementById('coverage-issue-2');
+    var i3=document.getElementById('coverage-issue-3');
+    if(i1) i1.value = data.issue1||'';
+    if(i2) i2.value = data.issue2||'';
+    if(i3) i3.value = data.issue3||'';
     showToast('🔄 기본값을 불러왔습니다');
   } catch(e){ showToast('불러오기 실패', 'error'); }
 }
 
-// 하위 호환 (기존 코드에서 호출 시 무시)
-function saveCovTemplate(){ saveCovCheckpoints(); }
-function applyCovTemplate(){ loadCovCheckpoints(); }
-function saveCovExtraTemplate(){}
-function applyCovExtraTemplate(){}
-
-// ── 별점 관리 ──
-window._covStarRating = 3;
-
-function setCovStar(n){
-  window._covStarRating = n;
-  updateCovStarUI(n);
-}
-function hoverCovStar(n){ updateCovStarUI(n); }
-function resetCovStar(){ updateCovStarUI(window._covStarRating); }
-function updateCovStarUI(n){
-  var stars = document.querySelectorAll('#cov-star-rating span');
-  stars.forEach(function(s,i){
-    s.style.color = i < n ? '#f59e0b' : 'var(--border)';
-  });
+function saveCovExtraTemplate(){
+  var val = (document.getElementById('coverage-extra')||{}).value||'';
+  localStorage.setItem(_covTemplateKey('_extra'), val);
+  showToast('⭐ 개선 방향 기본값이 저장되었습니다');
 }
 
-// ── 상품 추가/삭제 ──
-function deleteCovCompany(idx){
-  if(!window._currentCoverageReport) return;
-  var r = window._currentCoverageReport;
-  if((r.companies||[]).length <= 1){ showToast('최소 1개 상품은 필요합니다', 'warn'); return; }
-  r.companies.splice(idx, 1);
-  if(r.coverage) r.coverage.forEach(function(row){
-    if(row.values) row.values.splice(idx, 1);
-  });
-  renderCoverageReport(r, document.getElementById('coverage-result-area'));
-  showToast('상품이 삭제되었습니다');
-}
-
-function addCovCompany(){
-  if(!window._currentCoverageReport) return;
-  var r = window._currentCoverageReport;
-  var name = prompt('보험사명을 입력해주세요:');
-  if(!name) return;
-  var product = prompt('상품명을 입력해주세요:') || '';
-  var premium = prompt('월 보험료를 입력해주세요 (예: 50,000원):') || '-';
-  r.companies = r.companies || [];
-  r.companies.push({ name: name, product: product, premium: premium, period: '-' });
-  if(r.coverage) r.coverage.forEach(function(row){
-    if(row.values) row.values.push('-');
-  });
-  renderCoverageReport(r, document.getElementById('coverage-result-area'));
-  showToast('✅ 상품이 추가되었습니다');
+function applyCovExtraTemplate(){
+  var val = localStorage.getItem(_covTemplateKey('_extra'));
+  if(val == null){ showToast('저장된 기본값이 없습니다', 'warn'); return; }
+  var el = document.getElementById('coverage-extra');
+  if(el) el.value = val;
+  showToast('🔄 기본값을 불러왔습니다');
 }
 
 // 보장분석 폼 열릴 때 자동으로 사용자 기본값 채우기
 function autoFillCovTemplate(){
-  // 체크포인트 초기화
-  var raw = localStorage.getItem(_covTemplateKey('_checkpoints'));
-  if(raw){
-    try { window._covCheckpoints = JSON.parse(raw); } catch(e){}
+  var issueRaw = localStorage.getItem(_covTemplateKey('_issues'));
+  if(issueRaw){
+    try {
+      var d = JSON.parse(issueRaw);
+      var i1=document.getElementById('coverage-issue-1');
+      var i2=document.getElementById('coverage-issue-2');
+      var i3=document.getElementById('coverage-issue-3');
+      if(i1 && !i1.value) i1.value = d.issue1||'';
+      if(i2 && !i2.value) i2.value = d.issue2||'';
+      if(i3 && !i3.value) i3.value = d.issue3||'';
+    } catch(e){}
   }
-  if(!window._covCheckpoints || !window._covCheckpoints.length){
-    window._covCheckpoints = [{checked:false, text:''}];
+  var extraVal = localStorage.getItem(_covTemplateKey('_extra'));
+  if(extraVal){
+    var ex = document.getElementById('coverage-extra');
+    if(ex && !ex.value) ex.value = extraVal;
   }
-  renderCovCheckpoints();
 }
 
 // ── 보장분석 항목 설정 ──
@@ -19281,16 +18766,7 @@ function addCovResizeHandles(){
       var startH = tr.offsetHeight;
       handle.querySelector('div').style.opacity = '1';
 
-      function onMove(e){
-        var newH = Math.max(24, startH + e.clientY - startY);
-        tr.style.height = newH + 'px';
-      }
-      function onUp(){
-        handle.querySelector('div').style.opacity = '.4';
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-        _saveCovCellSizes();
-      }
+
 
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
@@ -21483,7 +20959,7 @@ function renderDiseaseTab(){
 // ── 공공 API 키 설정 ──
 // 공공데이터포털(data.go.kr) 에서 "건강보험심사평가원_질병코드 목록 조회" 신청 후 발급
 window.KCD_API_KEY = localStorage.getItem('kcd_api_key') || 'f0160aab3661b0aee88c4d425e35e1d31473da8df0d0d55d17a106841c74dd52';
-window.GEMINI_API_KEY = true; // 백엔드에서 관리
+window.GEMINI_API_KEY = window.GEMINI_API_KEY || '';
 window._notionToken = ''; // Supabase에서 로드됨
 
 // ── 앱 공통 설정 저장/로드 (Supabase app_settings 테이블) ──
@@ -21502,6 +20978,7 @@ async function loadAppSettings(){
   const { data } = await dbFrom('app_settings').select('key, value');
   if(data) data.forEach(row => {
     if(row.key === 'notion_token') window._notionToken = row.value || '';
+    if(row.key === 'gemini_api_key') window.GEMINI_API_KEY = row.value || '';
     if(row.key === 'cpm_ins_list'){
       try{
         const list = JSON.parse(row.value);
@@ -22344,7 +21821,7 @@ function renderContractAgent(){
     const bar = Math.min(achPct,100);
     return `<tr>
       <td style="font-weight:700">${ag.name}</td>
-      <td><span class="badge" style="background:#388BFD22;color:#388BFD;border:1px solid #388BFD44">${getTeamName(ag.team)||ag.team}</span></td>
+      <td><span class="badge" style="background:#388BFD22;color:#388BFD;border:1px solid #388BFD44">${ag.team}</span></td>
       <td style="text-align:center;font-family:JetBrains Mono,monospace">${ag.count}건</td>
       <td style="font-family:JetBrains Mono,monospace;color:var(--accent);font-weight:700">${fmt(ag.premium)}만원</td>
       <td style="font-family:JetBrains Mono,monospace;color:var(--muted)">${fmt(ag.target)}만원</td>
@@ -22518,22 +21995,14 @@ function getToken(){ return localStorage.getItem('insearch_jwt') || sessionStora
 function setToken(t){
   const autoLogin = document.getElementById('auto-login');
   if(autoLogin && !autoLogin.checked){
-    sessionStorage.setItem('insearch_jwt', t);
+    sessionStorage.setItem('insearch_jwt', t); // 자동로그인 미체크: 탭 닫으면 삭제
     localStorage.removeItem('insearch_jwt');
   } else {
-    localStorage.setItem('insearch_jwt', t);
+    localStorage.setItem('insearch_jwt', t); // 자동로그인 체크: 영구 저장
     sessionStorage.removeItem('insearch_jwt');
   }
-  // Supabase 클라이언트에 토큰 주입 (RLS 적용)
-  if(t && _supabase){
-    try { _supabase.auth.setSession({ access_token: t, refresh_token: t }).catch(function(){}); } catch(e){}
-  }
 }
-function clearToken(){
-  localStorage.removeItem('insearch_jwt');
-  sessionStorage.removeItem('insearch_jwt');
-  if(_supabase) _supabase.auth.signOut().catch(function(){});
-}
+function clearToken(){ localStorage.removeItem('insearch_jwt'); sessionStorage.removeItem('insearch_jwt'); }
 
 // ── DB 프록시 (Supabase.from() 대체) ──────────────────────────
 function dbFrom(table) {
@@ -22655,12 +22124,10 @@ async function api(method, path, body){
         } catch(e3){ console.warn('커스텀 JWT 갱신 실패:', e3.message); }
       }
 
-      // 모든 갱신 실패 시 모달 (로그인된 상태에서만)
-      if(!refreshed && res.status === 401 && currentUser){
+      // 모든 갱신 실패 시 모달
+      if(!refreshed && res.status === 401){
         clearToken();
         showSessionExpiredModal();
-      } else if(!refreshed && res.status === 401){
-        clearToken();
       }
     }
 
@@ -22674,41 +22141,31 @@ async function api(method, path, body){
 }
 
 // Supabase는 실시간/파일 등 일부 기능에만 유지
-// Gemini API - PDF는 Supabase Edge Function, 텍스트는 Vercel 백엔드
+// Gemini API - 백엔드 프록시 사용 (키 보호)
 async function callGeminiAPI(feature, contents, systemInstruction, generationConfig){
-  // PDF 포함 여부 감지
-  const hasPDF = (contents||[]).some(function(c){
-    return (c.parts||[]).some(function(p){
-      return p.inlineData?.mimeType === 'application/pdf' ||
-             p.document?.mimeType === 'application/pdf';
-    });
-  });
-
-  if(hasPDF){
-    // PDF → Supabase Edge Function (용량 제한 없음)
-    const edgeUrl = SUPABASE_URL + '/functions/v1/gemini-proxy';
-    const body = { contents };
-    if(systemInstruction) body.systemInstruction = systemInstruction;
-    if(generationConfig) body.generationConfig = generationConfig;
-    const r = await fetch(edgeUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY
-      },
-      body: JSON.stringify(body)
-    });
-    if(!r.ok) throw new Error('Gemini PDF 분석 오류: ' + r.status);
-    return await r.json();
-  } else {
-    // 텍스트 → Vercel 백엔드 (API 키 완전 보호)
-    return await api('POST', '/api/ai/gemini', {
+  try {
+    const result = await api('POST', '/api/ai/gemini', {
       feature: feature || 'ai',
       contents,
       systemInstruction,
       generationConfig
     });
+    return result;
+  } catch(e){
+    // 백엔드 실패 시 직접 호출 폴백 (개발환경용)
+    const key = window.GEMINI_API_KEY || window._geminiKey || '';
+    if(!key) throw new Error('Gemini API 키가 설정되지 않았습니다');
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+    const body = { contents };
+    if(systemInstruction) body.systemInstruction = systemInstruction;
+    if(generationConfig) body.generationConfig = generationConfig;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    if(!r.ok) throw new Error('Gemini 오류: ' + r.status);
+    return await r.json();
   }
 }
 
@@ -22764,11 +22221,6 @@ var _supabase = null;
 function initSupabase(){
   if(window.supabase && SUPABASE_URL.startsWith('https')){
     _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    // 저장된 토큰으로 Supabase 세션 복원 (RLS 적용)
-    var savedToken = getToken();
-    if(savedToken){
-      try { _supabase.auth.setSession({ access_token: savedToken, refresh_token: savedToken }).catch(function(){}); } catch(e){}
-    }
     console.log('✅ Supabase 연결됨');
     return true;
   }
@@ -23089,8 +22541,7 @@ async function saveClientToDb(client){
       driving: client.driving||null, monthlyPremium: client.monthlyPremium||null,
       status: client.status||'active', nextContact: client.nextContact||null,
       memo: client.memo||'', alarms: client.alarms||[],
-      agentId: client.agentId || currentUser?.agentId || AGENTS.find(function(a){ return a._userId===currentUser?.id||a.email===currentUser?.email; })?.id || null,
-      agent_id: client.agentId || currentUser?.agentId || AGENTS.find(function(a){ return a._userId===currentUser?.id||a.email===currentUser?.email; })?.id || null
+      agentId: client.agentId || currentUser?.agentId || AGENTS.find(function(a){ return a._userId===currentUser?.id; })?.id || null
     };
     if(client.id && client.id > 0 && client._saved){
       await api('PUT', '/api/clients/' + client.id, body);
@@ -23098,7 +22549,7 @@ async function saveClientToDb(client){
       const result = await api('POST', '/api/clients', body);
       if(result?.id){ client.id = result.id; client._saved = true; }
     }
-    console.log('✅ 고객 저장 완료:', client.name, '| agent_id:', body.agent_id||body.agentId);
+    console.log('✅ 고객 저장 완료:', client.name);
   } catch(e){
     console.error('고객 저장 오류:', e.message);
     showToast('⚠️ 저장 오류: ' + e.message);
@@ -23199,7 +22650,12 @@ async function saveDbClientToDb(d){
       name: d.name, phone: d.phone||null, ssn: d.ssn||'',
       addr: d.addr||'', job: d.job||'', body: d.body||null,
       driving: d.driving||null, monthlyPremium: d.monthlyPremium||null,
-      source: d.source||'기타', memo: d.memo||''
+      source: d.source||'기타', memo: d.memo||'',
+      assigned_to: d.assignedTo||null,
+      assigned_name: d.assignedName||null,
+      assigned_date: d.assignedDate||null,
+      status: d.status||'unassigned',
+      process_status: d.processStatus||null,
     });
   } catch(e){ console.error('DB고객 저장 오류:', e.message); }
 }
@@ -27594,19 +27050,10 @@ async function checkPublicCardPage(){
   var cardUserId=params.get('card');
   if(!cardUserId) return;
   document.body.innerHTML='<div id="pub-card-wrap" style="max-width:480px;margin:0 auto;min-height:100vh;background:#fff"></div>';
+  if(!_supabase) initSupabase();
   var uid=isNaN(cardUserId)?cardUserId:parseInt(cardUserId);
-  // 명함 공개 페이지는 Supabase 직접 호출 (로그인 불필요)
-  var data=null;
-  try {
-    var _sbUrl='https://tapxeethkhiiimiebuhw.supabase.co';
-    var _sbKey='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhcHhlZXRoa2hpaWltaWVidWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NDUzOTcsImV4cCI6MjA4OTIyMTM5N30.fxAiL5ankkCneL9Xv0ly8cnPef67a712pozqXuXDwmE';
-    var resp = await fetch(_sbUrl+'/rest/v1/agent_profiles?user_id=eq.'+uid+'&select=*', {
-      headers: { 'apikey': _sbKey, 'Authorization': 'Bearer '+_sbKey }
-    });
-    var arr = await resp.json();
-    data = Array.isArray(arr) ? arr[0] : null;
-  } catch(e) { console.warn('명함 로드 오류:', e.message); }
-  if(!data){ document.getElementById('pub-card-wrap').innerHTML='<div style="text-align:center;padding:60px 20px;color:#64748b"><div style="font-size:48px;margin-bottom:16px">🔍</div><div>페이지를 찾을 수 없습니다</div></div>'; return; }
+  var {data,error}=await dbFrom('agent_profiles').select('*').eq('user_id',uid).maybeSingle();
+  if(!data||error){ document.getElementById('pub-card-wrap').innerHTML='<div style="text-align:center;padding:60px 20px;color:#64748b"><div style="font-size:48px;margin-bottom:16px">🔍</div><div>페이지를 찾을 수 없습니다</div></div>'; return; }
   var reviews=[]; try{ var _r=data.reviews; reviews=Array.isArray(_r)?_r:(typeof _r==='string'?JSON.parse(_r||'[]'):[]); }catch(e){}
   document.getElementById('pub-card-wrap').innerHTML=buildCardHtml({
     name:data.name,title:data.title,company:data.company,
