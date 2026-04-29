@@ -11459,9 +11459,29 @@ function setDbProgressMonthNew(m){
 }
 
 function addProgressMonth(){
-  var m = prompt('월을 입력해주세요 (예: 2026-05)');
-  if(!m || !/^\d{4}-\d{2}$/.test(m)){ showToast('형식: YYYY-MM'); return; }
-  _dbProgressMonthSel = m;
+  // 현재 월 기본값
+  var now = new Date();
+  var defaultM = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  var old = document.getElementById('db-add-month-input-wrap');
+  if(old){ old.remove(); return; }
+
+  var tabsEl = document.getElementById('db-progress-month-tabs');
+  if(!tabsEl) return;
+  var wrap = document.createElement('div');
+  wrap.id = 'db-add-month-input-wrap';
+  wrap.style.cssText = 'display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap';
+  wrap.innerHTML =
+    '<input id="db-add-month-val" type="month" value="'+defaultM+'" style="padding:5px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:inherit">'+
+    '<button onclick="confirmAddMonth()" style="padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">추가</button>'+
+    '<button onclick="document.getElementById(&quot;db-add-month-input-wrap&quot;).remove()" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted)">취소</button>';
+  tabsEl.parentNode.insertBefore(wrap, tabsEl.nextSibling);
+}
+
+function confirmAddMonth(){
+  var val = document.getElementById('db-add-month-val')?.value;
+  if(!val){ showToast('월을 선택해주세요'); return; }
+  document.getElementById('db-add-month-input-wrap')?.remove();
+  _dbProgressMonthSel = val;
   renderDbProgressNew();
 }
 
