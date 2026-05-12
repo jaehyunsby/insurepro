@@ -6030,30 +6030,59 @@ async function renderBizDashboard() {
   else kl.innerHTML = kakaoLog.map(l => `<div class="biz-list-item"><div class="biz-licon" style="background:#FFF9C4;color:#5C3B1E;">💬</div><div class="biz-lmain"><div class="biz-lname">${l.cmd}</div><div class="biz-lsub">${l.time}</div></div><span class="biz-badge bb-green">완료</span></div>`).join('');
 }
 
-// ========== 업무모드 API 헬퍼 ==========
+// ========== 업무모드 API 헬퍼 (Supabase 직접 호출) ==========
 const BIZ_API = 'https://insearch-backend.vercel.app/api/db';
 const BIZ_API_KEY = 'insearch-2024-secure-key';
 
 async function bizApiCall(table, action, opts = {}) {
+  // Supabase 직접 호출
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    const token = session?.access_token || '';
-    const resp = await fetch(BIZ_API, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': BIZ_API_KEY,
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ table, action, ...opts })
-    });
-    if (!resp.ok) throw new Error(`API 오류 ${resp.status}`);
-    return await resp.json();
+    let query;
+    const { select: selectCols = '*', filters = [], orders = [], data, _limit } = opts;
+
+    if (action === 'select') {
+      query = sb.from(table).select(selectCols);
+      for (const f of filters) {
+        if (f.op === 'eq') query = query.eq(f.col, f.val);
+        else if (f.op === 'in') query = query.in(f.col, f.val);
+        else if (f.op === 'ilike') query = query.ilike(f.col, f.val);
+      }
+      for (const o of orders) query = query.order(o.col, { ascending: o.ascending !== false });
+      if (_limit) query = query.limit(_limit);
+    } else if (action === 'insert') {
+      query = sb.from(table).insert(data).select();
+    } else if (action === 'update') {
+      query = sb.from(table).update(data);
+      for (const f of filters) {
+        if (f.op === 'eq') query = query.eq(f.col, f.val);
+      }
+      query = query.select();
+    } else if (action === 'delete') {
+      query = sb.from(table).delete();
+      for (const f of filters) {
+        if (f.op === 'eq') query = query.eq(f.col, f.val);
+      }
+    } else {
+      return { error: '알 수 없는 action' };
+    }
+
+    const { data: result, error } = await query;
+    if (error) throw new Error(error.message);
+    return { data: result };
   } catch(e) {
     console.error('bizApiCall 오류:', e.message);
     return { error: e.message };
   }
 }
+
+// ========== AI/카카오 로컬 스토리지 ==========
+const BIZ_AI_KEY = 'insearch_biz_ai';
+const BIZ_KAKAO_LOG_KEY = 'insearch_kakao_log';
+
+function getBizAiHistory() { try { return JSON.parse(localStorage.getItem(BIZ_AI_KEY)||'[]'); } catch(e) { return []; } }
+function saveBizAiHistory(arr) { localStorage.setItem(BIZ_AI_KEY, JSON.stringify(arr)); }
+function getBizKakaoLog() { try { return JSON.parse(localStorage.getItem(BIZ_KAKAO_LOG_KEY)||'[]'); } catch(e) { return []; } }
+function saveBizKakaoLog(arr) { localStorage.setItem(BIZ_KAKAO_LOG_KEY, JSON.stringify(arr)); }
 
 // ========== 고객 관리 (Supabase 연동) ==========
 const BIZ_CLIENTS_KEY = 'insearch_biz_clients_cache';
