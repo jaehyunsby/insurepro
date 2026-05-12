@@ -6094,7 +6094,7 @@ function cacheBizClients(arr) { localStorage.setItem(BIZ_CLIENTS_KEY, JSON.strin
 
 async function loadBizClients() {
   const res = await bizApiCall('clients', 'select', {
-    select: 'id,name,phone,insurance_type,renew_date,memo,status,type,agent_id,created_at',
+    select: 'id,name,phone,body,driving,monthly_premium,memo,status,agent_id,created_at,next_contact',
     orders: [{ col: 'created_at', ascending: false }]
   });
   if (res.data) {
@@ -6102,10 +6102,10 @@ async function loadBizClients() {
       id: String(c.id),
       name: c.name || '',
       phone: c.phone || '',
-      insurance: c.insurance_type || '',
-      renewDate: c.renew_date || '',
+      insurance: c.body ? `체중${c.body}kg` : (c.driving ? '운전자' : ''),
+      renewDate: c.next_contact || '',
       memo: c.memo || '',
-      type: c.type || c.status || 'normal',
+      type: c.status || 'normal',
       updatedAt: c.created_at || ''
     }));
     cacheBizClients(mapped);
@@ -6119,12 +6119,12 @@ async function saveBizClient() {
   if (!name) { alert('이름을 입력하세요'); return; }
   const payload = {
     name,
-    phone: document.getElementById('cm-phone').value.trim(),
-    insurance_type: document.getElementById('cm-insurance').value.trim(),
-    renew_date: document.getElementById('cm-renew').value || null,
+    phone: document.getElementById('cm-phone').value.trim() || null,
     memo: document.getElementById('cm-memo').value.trim(),
-    type: bizClientTypeSelected,
-    status: bizClientTypeSelected
+    next_contact: document.getElementById('cm-renew').value || null,
+    status: bizClientTypeSelected,
+    body: null,
+    driving: null
   };
 
   let res;
