@@ -350,55 +350,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 .note-view-title-input::placeholder{color:var(--text-placeholder)}
 .note-view-content-input{width:100%;font-size:16px;line-height:1.8;color:var(--text);background:transparent;border:none;outline:none;resize:none;min-height:60vh;padding:8px 0 20px;font-family:inherit;display:block;}
 </style>
-</head>
-<body>
-<!-- LOGIN OVERLAY -->
-<div class="login-overlay" id="login-overlay">
-  <div class="login-logo">💰</div>
-  <div class="login-title" id="login-title">로그인</div>
-  <div class="login-sub" id="login-sub">클라우드 동기화로 어디서든 이어서 쓸 수 있어요</div>
-  <div class="login-form">
-    <div class="login-msg" id="login-msg"></div>
-    <input type="email" class="form-input" id="login-email" placeholder="이메일" autocomplete="email">
-    <input type="password" class="form-input" id="login-password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password">
-    <button class="btn-primary" id="login-submit" onclick="handleLoginSubmit()">로그인</button>
-    <div class="login-switch">
-      <span id="login-switch-text">계정이 없으신가요?</span>
-      <button onclick="toggleLoginMode()" id="login-switch-btn">회원가입</button>
-    </div>
-    <div style="text-align:center;margin-top:8px;">
-      <button onclick="handleForgotPassword()" style="background:none;border:none;color:var(--text-sub);font-size:13px;text-decoration:underline;cursor:pointer;">비밀번호를 잊으셨나요?</button>
-    </div>
-    <div style="text-align:center;"><div style="font-size:12px;color:var(--text-placeholder);margin-top:12px;">회원가입 후 모든 기능을 사용할 수 있어요</div></div>
-  </div>
-</div>
-<!-- PASSWORD RESET OVERLAY -->
-<div class="login-overlay" id="reset-overlay">
-  <div class="login-logo">🔐</div>
-  <div class="login-title">새 비밀번호 설정</div>
-  <div class="login-sub">새로운 비밀번호를 입력해주세요</div>
-  <div class="login-form">
-    <div class="login-msg" id="reset-msg"></div>
-    <input type="password" class="form-input" id="reset-password" placeholder="새 비밀번호 (6자 이상)" style="margin-bottom:10px;">
-    <input type="password" class="form-input" id="reset-password-confirm" placeholder="비밀번호 확인" style="margin-bottom:10px;">
-    <button class="btn-primary" onclick="handlePasswordReset()">비밀번호 변경</button>
-  </div>
-</div>
-<div class="pin-overlay" id="pin-overlay">
-  <div class="pin-logo">🔒</div>
-  <div class="pin-title" id="pin-title">PIN 입력</div>
-  <div class="pin-sub" id="pin-sub">4자리 숫자를 입력해주세요</div>
-  <div class="pin-dots" id="pin-dots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>
-  <div class="pin-keypad">
-    <button onclick="pinPress(1)">1</button><button onclick="pinPress(2)">2</button><button onclick="pinPress(3)">3</button>
-    <button onclick="pinPress(4)">4</button><button onclick="pinPress(5)">5</button><button onclick="pinPress(6)">6</button>
-    <button onclick="pinPress(7)">7</button><button onclick="pinPress(8)">8</button><button onclick="pinPress(9)">9</button>
-    <button class="pin-empty"></button><button onclick="pinPress(0)">0</button><button class="pin-del" onclick="pinPress('del')">⌫</button>
-  </div>
-  <div class="pin-error-msg" id="pin-error"></div>
-</div>
-
-
+<style>
 /* ========== 모드 선택 화면 ========== */
 .mode-select-overlay{position:fixed;inset:0;background:#fff;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
 .mode-select-overlay.hidden{display:none;}
@@ -480,8 +432,54 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 .kk-avatar{width:26px;height:26px;border-radius:50%;background:#391B1B;color:#FAE100;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .kk-time{font-size:10px;color:#B0B8C1;}
 @keyframes biz-spin{to{transform:rotate(360deg);}}
-
-
+</style>
+</head>
+<body>
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-logo">💰</div>
+  <div class="login-title" id="login-title">로그인</div>
+  <div class="login-sub" id="login-sub">클라우드 동기화로 어디서든 이어서 쓸 수 있어요</div>
+  <div class="login-form">
+    <div class="login-msg" id="login-msg"></div>
+    <input type="email" class="form-input" id="login-email" placeholder="이메일" autocomplete="email">
+    <input type="password" class="form-input" id="login-password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password">
+    <button class="btn-primary" id="login-submit" onclick="handleLoginSubmit()">로그인</button>
+    <div class="login-switch">
+      <span id="login-switch-text">계정이 없으신가요?</span>
+      <button onclick="toggleLoginMode()" id="login-switch-btn">회원가입</button>
+    </div>
+    <div style="text-align:center;margin-top:8px;">
+      <button onclick="handleForgotPassword()" style="background:none;border:none;color:var(--text-sub);font-size:13px;text-decoration:underline;cursor:pointer;">비밀번호를 잊으셨나요?</button>
+    </div>
+    <div style="text-align:center;"><div style="font-size:12px;color:var(--text-placeholder);margin-top:12px;">회원가입 후 모든 기능을 사용할 수 있어요</div></div>
+  </div>
+</div>
+<!-- PASSWORD RESET OVERLAY -->
+<div class="login-overlay" id="reset-overlay">
+  <div class="login-logo">🔐</div>
+  <div class="login-title">새 비밀번호 설정</div>
+  <div class="login-sub">새로운 비밀번호를 입력해주세요</div>
+  <div class="login-form">
+    <div class="login-msg" id="reset-msg"></div>
+    <input type="password" class="form-input" id="reset-password" placeholder="새 비밀번호 (6자 이상)" style="margin-bottom:10px;">
+    <input type="password" class="form-input" id="reset-password-confirm" placeholder="비밀번호 확인" style="margin-bottom:10px;">
+    <button class="btn-primary" onclick="handlePasswordReset()">비밀번호 변경</button>
+  </div>
+</div>
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-logo">🔒</div>
+  <div class="pin-title" id="pin-title">PIN 입력</div>
+  <div class="pin-sub" id="pin-sub">4자리 숫자를 입력해주세요</div>
+  <div class="pin-dots" id="pin-dots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>
+  <div class="pin-keypad">
+    <button onclick="pinPress(1)">1</button><button onclick="pinPress(2)">2</button><button onclick="pinPress(3)">3</button>
+    <button onclick="pinPress(4)">4</button><button onclick="pinPress(5)">5</button><button onclick="pinPress(6)">6</button>
+    <button onclick="pinPress(7)">7</button><button onclick="pinPress(8)">8</button><button onclick="pinPress(9)">9</button>
+    <button class="pin-empty"></button><button onclick="pinPress(0)">0</button><button class="pin-del" onclick="pinPress('del')">⌫</button>
+  </div>
+  <div class="pin-error-msg" id="pin-error"></div>
+</div>
 <!-- PASSWORD RESET OVERLAY -->
 <div class="login-overlay" id="reset-overlay">
   <div class="login-logo">🔐</div>
