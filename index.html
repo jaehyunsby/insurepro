@@ -6397,8 +6397,7 @@ async function handleAiPdfUpload(input) {
 function renderBizAgents() {
   const el = document.getElementById('biz-agents-list');
   if (!el) return;
-  // profiles 테이블 사용 (RLS 없음)
-  sb.from('profiles').select('name, role, team, grade').order('created_at', {ascending: false}).limit(20)
+  sb.from('profiles').select('name, role, team, status').order('created_at', {ascending: false}).limit(20)
     .then(({data, error}) => {
       if (error || !data || !data.length) {
         el.innerHTML = '<div style="color:#B0B8C1;font-size:13px;padding:4px 0;">설계사 데이터 없음</div>';
@@ -6407,7 +6406,7 @@ function renderBizAgents() {
       el.innerHTML = data.map(u => `<div class="biz-list-item">
         <div style="width:30px;height:30px;border-radius:50%;background:#EEEDFE;color:#3C3489;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${(u.name||'?').slice(0,1)}</div>
         <div class="biz-lmain"><div class="biz-lname">${u.name||'이름없음'}</div><div class="biz-lsub">${u.team||''} · ${u.role||''}</div></div>
-        <span class="biz-badge bb-purple">${u.grade||''}</span>
+        <span class="biz-badge bb-${u.status==='approved'?'green':'amber'}">${u.status||''}</span>
       </div>`).join('');
     });
 }
