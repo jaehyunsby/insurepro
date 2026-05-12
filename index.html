@@ -3598,17 +3598,7 @@ function applyAssetTypeFields() {
   if (info.kind === 'debt') { label.textContent = '부채 금액'; hint.textContent = '갚아야 할 금액을 양수로 입력'; hint.style.color = 'var(--danger)'; }
   else { label.textContent = '금액'; hint.textContent = '등록 시점 잔액. 이후 거래로 자동 증감.'; hint.style.color = 'var(--text-sub)'; }
 }
-function calcInsTotal() {
-  const m = +document.getElementById('asset-ins-monthly').value || 0;
-  const c = +document.getElementById('asset-ins-count').value || 0;
-  const e = +document.getElementById('asset-ins-extra').value || 0;
-  const tEl = document.getElementById('asset-ins-total');
-  const s = +document.getElementById('asset-ins-surrender').value || 0;
-  const rEl = document.getElementById('asset-ins-rate');
-  if (m && c) tEl.value = m * c + e;
-  const tv = +tEl.value || 0;
-  if (tv > 0 && s >= 0) rEl.value = ((s / tv) * 100).toFixed(1);
-}
+
 function wireInsuranceAutoCalc() {
   // 더 이상 oninput을 덮어쓰지 않음 - HTML의 oninput="calcInsTotal()" 사용
   const tEl = document.getElementById('asset-ins-total');
@@ -6009,9 +5999,8 @@ async function initBizMode() {
 
 // ========== 대시보드 ==========
 async function renderBizDashboard() {
-  // 로컬 스토리지에서 간단한 통계 표시
-  const clients = getBizClients();
-  const dbs = getBizDbs();
+  const clients = await loadBizClients();
+  const dbs = await loadBizDbs();
   const today = new Date().toISOString().slice(0,10);
 
   document.getElementById('bd-income').textContent = '—';
@@ -6019,8 +6008,7 @@ async function renderBizDashboard() {
   document.getElementById('bd-db').textContent = dbs.length;
   document.getElementById('bd-analysis').textContent = getBizAiHistory().length;
 
-  // 최근 고객
-  const recentClients = clients.slice(-5).reverse();
+  const recentClients = clients.slice(0, 5);
   const cl = document.getElementById('bd-clients-list');
   if (!recentClients.length) { cl.innerHTML = '<div style="color:#B0B8C1;font-size:13px;padding:4px 0;">등록된 고객 없음</div>'; }
   else cl.innerHTML = recentClients.map(c => {
@@ -6031,44 +6019,118 @@ async function renderBizDashboard() {
     return `<div class="biz-list-item"><div class="biz-licon" style="background:#E8F3FF;color:#1B64DA;">👤</div><div class="biz-lmain"><div class="biz-lname">${c.name}</div><div class="biz-lsub">${c.insurance||'보험 미입력'}</div></div>${badge}</div>`;
   }).join('');
 
-  // 오늘 일정 (마이서치 todos에서)
-  const todayTodos = (state.todos||[]).filter(t => !t.done && t.dueDate === today).slice(0,3);
+  const todayTodos = (state?.todos||[]).filter(t => !t.done && t.dueDate === today).slice(0,3);
   const sl = document.getElementById('bd-schedule-list');
   if (!todayTodos.length) sl.innerHTML = '<div style="color:#B0B8C1;font-size:13px;padding:4px 0;">오늘 일정 없음</div>';
   else sl.innerHTML = todayTodos.map(t => `<div class="biz-list-item"><div class="biz-licon" style="background:#EEEDFE;color:#3C3489;">📅</div><div class="biz-lmain"><div class="biz-lname">${t.title}</div></div></div>`).join('');
 
-  // 카카오봇 최근 활동
   const kakaoLog = getBizKakaoLog().slice(-3).reverse();
   const kl = document.getElementById('bd-kakao-list');
   if (!kakaoLog.length) kl.innerHTML = '<div style="color:#B0B8C1;font-size:13px;padding:4px 0;">활동 없음</div>';
   else kl.innerHTML = kakaoLog.map(l => `<div class="biz-list-item"><div class="biz-licon" style="background:#FFF9C4;color:#5C3B1E;">💬</div><div class="biz-lmain"><div class="biz-lname">${l.cmd}</div><div class="biz-lsub">${l.time}</div></div><span class="biz-badge bb-green">완료</span></div>`).join('');
 }
 
-// ========== 고객 로컬 스토리지 ==========
-const BIZ_CLIENTS_KEY = 'insearch_biz_clients';
-const BIZ_DB_KEY = 'insearch_biz_db';
-const BIZ_AI_KEY = 'insearch_biz_ai';
-const BIZ_KAKAO_LOG_KEY = 'insearch_kakao_log';
+// ========== 업무모드 API 헬퍼 ==========
+const BIZ_API = 'https://insearch-backend.vercel.app/api/db';
+const BIZ_API_KEY = 'insearch-2024-secure-key';
 
-function getBizClients() { try { return JSON.parse(localStorage.getItem(BIZ_CLIENTS_KEY)||'[]'); } catch(e) { return []; } }
-function saveBizClients(arr) { localStorage.setItem(BIZ_CLIENTS_KEY, JSON.stringify(arr)); }
-function getBizDbs() { try { return JSON.parse(localStorage.getItem(BIZ_DB_KEY)||'[]'); } catch(e) { return []; } }
-function saveBizDbs(arr) { localStorage.setItem(BIZ_DB_KEY, JSON.stringify(arr)); }
-function getBizAiHistory() { try { return JSON.parse(localStorage.getItem(BIZ_AI_KEY)||'[]'); } catch(e) { return []; } }
-function saveBizAiHistory(arr) { localStorage.setItem(BIZ_AI_KEY, JSON.stringify(arr)); }
-function getBizKakaoLog() { try { return JSON.parse(localStorage.getItem(BIZ_KAKAO_LOG_KEY)||'[]'); } catch(e) { return []; } }
-function saveBizKakaoLog(arr) { localStorage.setItem(BIZ_KAKAO_LOG_KEY, JSON.stringify(arr)); }
-
-// ========== 고객 관리 ==========
-function setBizClientFilter(f, btn) {
-  bizClientFilter = f;
-  document.querySelectorAll('#client-filter-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  renderBizClients();
+async function bizApiCall(table, action, opts = {}) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const token = session?.access_token || '';
+    const resp = await fetch(BIZ_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': BIZ_API_KEY,
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ table, action, ...opts })
+    });
+    if (!resp.ok) throw new Error(`API 오류 ${resp.status}`);
+    return await resp.json();
+  } catch(e) {
+    console.error('bizApiCall 오류:', e.message);
+    return { error: e.message };
+  }
 }
 
-function renderBizClients() {
-  const clients = getBizClients();
+// ========== 고객 관리 (Supabase 연동) ==========
+const BIZ_CLIENTS_KEY = 'insearch_biz_clients_cache';
+
+function getBizClients() {
+  try { return JSON.parse(localStorage.getItem(BIZ_CLIENTS_KEY)||'[]'); } catch(e) { return []; }
+}
+function cacheBizClients(arr) { localStorage.setItem(BIZ_CLIENTS_KEY, JSON.stringify(arr)); }
+
+async function loadBizClients() {
+  const res = await bizApiCall('clients', 'select', {
+    select: 'id,name,phone,insurance_type,renew_date,memo,status,type,agent_id,created_at',
+    orders: [{ col: 'created_at', ascending: false }]
+  });
+  if (res.data) {
+    const mapped = res.data.map(c => ({
+      id: String(c.id),
+      name: c.name || '',
+      phone: c.phone || '',
+      insurance: c.insurance_type || '',
+      renewDate: c.renew_date || '',
+      memo: c.memo || '',
+      type: c.type || c.status || 'normal',
+      updatedAt: c.created_at || ''
+    }));
+    cacheBizClients(mapped);
+    return mapped;
+  }
+  return getBizClients();
+}
+
+async function saveBizClient() {
+  const name = document.getElementById('cm-name').value.trim();
+  if (!name) { alert('이름을 입력하세요'); return; }
+  const payload = {
+    name,
+    phone: document.getElementById('cm-phone').value.trim(),
+    insurance_type: document.getElementById('cm-insurance').value.trim(),
+    renew_date: document.getElementById('cm-renew').value || null,
+    memo: document.getElementById('cm-memo').value.trim(),
+    type: bizClientTypeSelected,
+    status: bizClientTypeSelected
+  };
+
+  let res;
+  if (bizEditingClientId) {
+    res = await bizApiCall('clients', 'update', {
+      data: payload,
+      filters: [{ col: 'id', op: 'eq', val: bizEditingClientId }]
+    });
+  } else {
+    res = await bizApiCall('clients', 'insert', { data: payload });
+  }
+
+  if (res.error) { showBizToast('❌ 저장 실패: ' + res.error); return; }
+  closeBizModal('biz-client-modal');
+  showBizToast('✅ 저장됐어요');
+  await renderBizClients();
+  await renderBizDashboard();
+}
+
+async function deleteBizClient() {
+  if (!confirm('삭제할까요?')) return;
+  const res = await bizApiCall('clients', 'delete', {
+    filters: [{ col: 'id', op: 'eq', val: bizEditingClientId }]
+  });
+  if (res.error) { showBizToast('❌ 삭제 실패'); return; }
+  closeBizModal('biz-client-modal');
+  showBizToast('✅ 삭제됐어요');
+  await renderBizClients();
+  await renderBizDashboard();
+}
+
+async function renderBizClients() {
+  const el = document.getElementById('biz-clients-list');
+  if (el) el.innerHTML = '<div style="text-align:center;padding:30px;color:#B0B8C1;font-size:13px;">불러오는 중...</div>';
+  const clients = await loadBizClients();
   const search = (document.getElementById('client-search')?.value||'').toLowerCase();
   const today = new Date();
   let filtered = clients.filter(c => {
@@ -6079,9 +6141,9 @@ function renderBizClients() {
     if (bizClientFilter === 'db') return matchSearch && c.type === 'db';
     return matchSearch;
   });
-  const el = document.getElementById('biz-clients-list');
+  if (!el) return;
   if (!filtered.length) { el.innerHTML = '<div style="text-align:center;padding:40px 0;color:#B0B8C1;font-size:13px;">등록된 고객이 없어요<br>+ 버튼으로 추가하세요</div>'; return; }
-  el.innerHTML = filtered.reverse().map(c => {
+  el.innerHTML = filtered.map(c => {
     const daysLeft = c.renewDate ? Math.ceil((new Date(c.renewDate) - today) / 86400000) : null;
     const badge = daysLeft !== null && daysLeft <= 14 ? `<span class="biz-badge bb-red">D-${daysLeft}</span>` :
                   daysLeft !== null && daysLeft <= 30 ? `<span class="biz-badge bb-amber">D-${daysLeft}</span>` :
@@ -6101,6 +6163,93 @@ function renderBizClients() {
     </div>`;
   }).join('');
 }
+
+// ========== DB 수집 (Supabase 연동) ==========
+const BIZ_DB_KEY = 'insearch_biz_db_cache';
+
+function getBizDbs() {
+  try { return JSON.parse(localStorage.getItem(BIZ_DB_KEY)||'[]'); } catch(e) { return []; }
+}
+function cacheBizDbs(arr) { localStorage.setItem(BIZ_DB_KEY, JSON.stringify(arr)); }
+
+async function loadBizDbs() {
+  const res = await bizApiCall('db_clients', 'select', {
+    select: 'id,name,phone,source,status,memo,created_at',
+    orders: [{ col: 'created_at', ascending: false }]
+  });
+  if (res.data) {
+    const mapped = res.data.map(d => ({
+      id: String(d.id),
+      name: d.name || '',
+      phone: d.phone || '',
+      source: d.source || '직접입력',
+      status: d.status === 'unassigned' ? '미배분' : d.status === 'assigned' ? '배분완료' : (d.status || '미배분'),
+      memo: d.memo || '',
+      createdAt: d.created_at || ''
+    }));
+    cacheBizDbs(mapped);
+    return mapped;
+  }
+  return getBizDbs();
+}
+
+async function saveBizDb() {
+  const name = document.getElementById('dm-name').value.trim();
+  if (!name) { alert('이름을 입력하세요'); return; }
+  const payload = {
+    name,
+    phone: document.getElementById('dm-phone').value.trim(),
+    source: document.getElementById('dm-source').value,
+    memo: document.getElementById('dm-memo').value.trim(),
+    status: 'unassigned',
+    process_status: '미처리',
+    reg_date: new Date().toISOString().slice(0,10),
+    reg_month: new Date().toISOString().slice(0,7),
+  };
+
+  const res = await bizApiCall('db_clients', 'insert', { data: payload });
+  if (res.error) { showBizToast('❌ 저장 실패: ' + res.error); return; }
+  closeBizModal('biz-db-modal');
+  showBizToast('✅ DB 등록됐어요');
+  await renderBizDb();
+  await renderBizDashboard();
+}
+
+async function renderBizDb() {
+  const el = document.getElementById('biz-db-list');
+  if (el) el.innerHTML = '<div style="text-align:center;padding:30px;color:#B0B8C1;font-size:13px;">불러오는 중...</div>';
+  const dbs = await loadBizDbs();
+  const totalEl = document.getElementById('db-total');
+  const unEl = document.getElementById('db-unassigned');
+  if (totalEl) totalEl.textContent = dbs.length;
+  if (unEl) unEl.textContent = dbs.filter(d => d.status === '미배분').length;
+  if (!el) return;
+  if (!dbs.length) { el.innerHTML = '<div style="text-align:center;padding:40px 0;color:#B0B8C1;font-size:13px;">등록된 DB가 없어요</div>'; return; }
+  el.innerHTML = dbs.map(d => {
+    const badgeClass = d.status === '배분완료' ? 'bb-green' : d.status === '상담중' ? 'bb-blue' : 'bb-amber';
+    return `<div class="biz-card" style="margin-bottom:8px;padding:12px 14px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:50%;background:#E8F3FF;color:#1B64DA;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${d.name.slice(0,1)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;color:#191F28;">${d.name}</div>
+          <div style="font-size:11px;color:#6B7684;">${d.phone||''} · ${d.source||'직접입력'}</div>
+          ${d.memo ? `<div style="font-size:11px;color:#B0B8C1;margin-top:2px;">${d.memo}</div>` : ''}
+        </div>
+        <span class="biz-badge ${badgeClass}">${d.status||'미배분'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ========== 고객 관리 ==========
+function setBizClientFilter(f, btn) {
+  bizClientFilter = f;
+  document.querySelectorAll('#client-filter-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderBizClients();
+}
+
+
 
 function openBizClientModal(id) {
   bizEditingClientId = id || null;
@@ -6139,62 +6288,12 @@ function setBizClientType(type, btn, silent) {
   }
 }
 
-function saveBizClient() {
-  const name = document.getElementById('cm-name').value.trim();
-  if (!name) { alert('이름을 입력하세요'); return; }
-  const clients = getBizClients();
-  const data = {
-    id: bizEditingClientId || Date.now().toString(),
-    name, phone: document.getElementById('cm-phone').value.trim(),
-    insurance: document.getElementById('cm-insurance').value.trim(),
-    renewDate: document.getElementById('cm-renew').value,
-    memo: document.getElementById('cm-memo').value.trim(),
-    type: bizClientTypeSelected,
-    updatedAt: new Date().toISOString()
-  };
-  if (bizEditingClientId) {
-    const idx = clients.findIndex(x => x.id === bizEditingClientId);
-    if (idx >= 0) clients[idx] = data; else clients.push(data);
-  } else { clients.push(data); }
-  saveBizClients(clients);
-  closeBizModal('biz-client-modal');
-  renderBizClients();
-  renderBizDashboard();
-  showBizToast('고객이 저장됐어요');
-}
 
-function deleteBizClient() {
-  if (!confirm('삭제할까요?')) return;
-  const clients = getBizClients().filter(c => c.id !== bizEditingClientId);
-  saveBizClients(clients);
-  closeBizModal('biz-client-modal');
-  renderBizClients();
-  renderBizDashboard();
-  showBizToast('삭제됐어요');
-}
+
+
 
 // ========== DB 수집 ==========
-function renderBizDb() {
-  const dbs = getBizDbs();
-  document.getElementById('db-total').textContent = dbs.length;
-  document.getElementById('db-unassigned').textContent = dbs.filter(d => d.status === '미배분').length;
-  const el = document.getElementById('biz-db-list');
-  if (!dbs.length) { el.innerHTML = '<div style="text-align:center;padding:40px 0;color:#B0B8C1;font-size:13px;">등록된 DB가 없어요</div>'; return; }
-  el.innerHTML = dbs.slice().reverse().map(d => {
-    const badgeClass = d.status === '배분완료' ? 'bb-green' : d.status === '상담중' ? 'bb-blue' : 'bb-amber';
-    return `<div class="biz-card" style="margin-bottom:8px;padding:12px 14px;cursor:pointer;" onclick="openBizDbModal('${d.id}')">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:34px;height:34px;border-radius:50%;background:#E8F3FF;color:#1B64DA;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${d.name.slice(0,1)}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:14px;font-weight:700;color:#191F28;">${d.name}</div>
-          <div style="font-size:11px;color:#6B7684;">${d.phone||''} · ${d.source||'직접입력'}</div>
-          ${d.memo ? `<div style="font-size:11px;color:#B0B8C1;margin-top:2px;">${d.memo}</div>` : ''}
-        </div>
-        <span class="biz-badge ${badgeClass}">${d.status||'미배분'}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
+
 
 function openBizDbModal(id) {
   bizEditingDbId = id || null;
@@ -6213,27 +6312,7 @@ function openBizDbModal(id) {
   openBizModal('biz-db-modal');
 }
 
-function saveBizDb() {
-  const name = document.getElementById('dm-name').value.trim();
-  if (!name) { alert('이름을 입력하세요'); return; }
-  const dbs = getBizDbs();
-  const data = {
-    id: bizEditingDbId || Date.now().toString(),
-    name, phone: document.getElementById('dm-phone').value.trim(),
-    source: document.getElementById('dm-source').value,
-    memo: document.getElementById('dm-memo').value.trim(),
-    status: '미배분', createdAt: new Date().toISOString()
-  };
-  if (bizEditingDbId) {
-    const idx = dbs.findIndex(x => x.id === bizEditingDbId);
-    if (idx >= 0) dbs[idx] = {...dbs[idx], ...data}; else dbs.push(data);
-  } else { dbs.push(data); }
-  saveBizDbs(dbs);
-  closeBizModal('biz-db-modal');
-  renderBizDb();
-  renderBizDashboard();
-  showBizToast('DB가 등록됐어요');
-}
+
 
 // ========== AI 보장분석 ==========
 function renderBizAiHistory() {
