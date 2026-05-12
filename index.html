@@ -374,15 +374,15 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 .mode-switch-btn:active{background:#F2F4F6;}
 
 /* ========== 업무 모드 (인서치) ========== */
-.biz-wrap{display:none;flex-direction:column;height:100vh;background:#F7F8FA;max-width:480px;margin:0 auto;position:relative;}
+.biz-wrap{display:none;flex-direction:column;height:100vh;background:#F7F8FA;width:100%;position:relative;}
 .biz-wrap.active{display:flex;}
-.biz-topbar{height:50px;background:#fff;border-bottom:1px solid #E5E8EB;display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;margin-top:calc(40px + env(safe-area-inset-top));}
+.biz-topbar{height:50px;background:#fff;border-bottom:1px solid #E5E8EB;display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;margin-top:calc(40px + env(safe-area-inset-top));}
 .biz-title{font-size:15px;font-weight:700;color:#191F28;flex:1;}
 .biz-icon-btn{width:34px;height:34px;border-radius:8px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6B7684;font-size:18px;position:relative;}
 .biz-icon-btn:active{background:#F2F4F6;}
 .biz-ndot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:#F04452;border:1.5px solid #fff;}
-.biz-content{flex:1;overflow-y:auto;padding:14px 14px 80px;}
-.biz-bottom-nav{position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-top:1px solid #E5E8EB;display:flex;padding:6px 0 calc(6px + env(safe-area-inset-bottom));}
+.biz-content{flex:1;overflow-y:auto;padding:14px 20px 80px;}
+.biz-bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-top:1px solid #E5E8EB;display:flex;padding:6px 0 calc(6px + env(safe-area-inset-bottom));}
 .biz-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;background:none;border:none;color:#B0B8C1;font-size:10px;font-weight:500;cursor:pointer;}
 .biz-nav-item span{font-size:20px;line-height:1;}
 .biz-nav-item.active{color:#534AB7;}
@@ -6194,6 +6194,13 @@ function handleBizFab() {
 
 // ========== 업무 모드 초기화 ==========
 async function initBizMode() {
+  // biz-page-dashboard 강제 active
+  document.querySelectorAll('.biz-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('biz-page-dashboard').classList.add('active');
+  document.querySelectorAll('.biz-nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('biz-nav-dashboard').classList.add('active');
+  document.getElementById('biz-page-title').textContent = '대시보드';
+  document.getElementById('biz-fab').style.display = 'none';
   renderBizDashboard();
   renderBizClients();
   renderBizDb();
