@@ -1871,6 +1871,10 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
           <div class="biz-lmain"><div class="biz-lname">카카오봇 설정</div><div class="biz-lsub">@포스트보험 채널 연결</div></div>
           <span style="color:#B0B8C1;font-size:16px;">›</span>
         </div>
+        <div class="biz-list-item" onclick="openSheetsSettings()">
+          <div class="biz-lmain"><div class="biz-lname">구글 스프레드시트 연동</div><div class="biz-lsub" id="sheets-status-sub">스프레드시트 ID 설정 필요</div></div>
+          <span style="color:#B0B8C1;font-size:16px;">›</span>
+        </div>
         <div class="biz-list-item" onclick="bizLogout()">
           <div class="biz-lmain"><div class="biz-lname" style="color:#F04452;">로그아웃</div></div>
           <span style="color:#F04452;font-size:16px;">›</span>
@@ -1944,6 +1948,45 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
   <!-- FAB (업무모드) -->
   <button class="biz-fab" id="biz-fab" onclick="handleBizFab()">+</button>
+
+  <!-- 구글 스프레드시트 설정 모달 -->
+  <div class="biz-modal-backdrop" id="biz-sheets-modal" onclick="if(event.target===this)closeBizModal('biz-sheets-modal')">
+    <div class="biz-modal">
+      <div class="biz-modal-handle"></div>
+      <div class="biz-modal-header">
+        <div class="biz-modal-title">📊 구글 스프레드시트 연동</div>
+        <button onclick="closeBizModal('biz-sheets-modal')" style="background:none;border:none;font-size:22px;color:#6B7684;cursor:pointer;">×</button>
+      </div>
+      <div class="biz-modal-body">
+        <div class="biz-form-group">
+          <label class="biz-form-label">스프레드시트 ID</label>
+          <input class="biz-input" id="sheets-id-input" placeholder="URL에서 /d/ 뒤 ID 붙여넣기">
+          <div style="font-size:11px;color:#B0B8C1;margin-top:4px;">예: docs.google.com/spreadsheets/d/<b>여기가ID</b>/edit</div>
+        </div>
+        <button class="biz-btn-primary" onclick="saveSheetsId()" style="margin-bottom:10px;">저장</button>
+        <div style="border-top:1px solid #F2F4F6;padding-top:12px;margin-top:4px;">
+          <div style="font-size:13px;font-weight:700;color:#191F28;margin-bottom:10px;">데이터 동기화</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button onclick="syncToSheets('clients')" style="padding:10px;background:#E8F3FF;border:1px solid #1B64DA;color:#1B64DA;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">👥 고객관리<br><span style="font-size:10px;font-weight:400;">→ 시트 업로드</span></button>
+            <button onclick="syncToSheets('db')" style="padding:10px;background:#EEEDFE;border:1px solid #534AB7;color:#534AB7;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">🗄️ DB수집<br><span style="font-size:10px;font-weight:400;">→ 시트 업로드</span></button>
+            <button onclick="syncToSheets('todos')" style="padding:10px;background:#EAF3DE;border:1px solid #639922;color:#27500A;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">✅ 할일<br><span style="font-size:10px;font-weight:400;">→ 시트 업로드</span></button>
+            <button onclick="syncToSheets('schedules')" style="padding:10px;background:#FFF4E0;border:1px solid #B25A00;color:#B25A00;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">📅 일정관리<br><span style="font-size:10px;font-weight:400;">→ 시트 업로드</span></button>
+          </div>
+          <button onclick="syncAllToSheets()" style="width:100%;margin-top:10px;padding:12px;background:#191F28;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;">⚡ 전체 동기화</button>
+          <div id="sheets-sync-status" style="text-align:center;font-size:12px;color:#6B7684;margin-top:8px;"></div>
+        </div>
+        <div style="border-top:1px solid #F2F4F6;padding-top:12px;margin-top:8px;">
+          <div style="font-size:11px;color:#B0B8C1;line-height:1.7;">
+            <b>설정 방법</b><br>
+            1. 구글 스프레드시트 새로 만들기<br>
+            2. 시트 이름을 <b>고객관리 / DB수집 / 할일 / 일정관리</b>로 생성<br>
+            3. Vercel 환경변수에 <b>GOOGLE_SERVICE_ACCOUNT_JSON</b>, <b>GOOGLE_SPREADSHEET_ID</b> 추가<br>
+            4. 서비스 계정 이메일을 스프레드시트 편집자로 공유
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -6288,7 +6331,7 @@ function initKakaoPage() {
   }
 
   // 카카오 채널 상태 확인
-  fetch(`${INSEARCH_BACKEND}/api/kakao-status`).then(r => r.json()).then(d => {
+  fetch(`${INSEARCH_BACKEND}/api/kakao`).then(r => r.json()).then(d => {
     document.getElementById('kakao-status-badge').textContent = d.connected ? '● 연결됨' : '● 연결 필요';
     document.getElementById('kakao-status-badge').style.color = d.connected ? '#00A05C' : '#F04452';
   }).catch(() => {
@@ -6322,7 +6365,7 @@ function sendKakaoMsg() {
   appendKkMsg('user', val);
 
   // 백엔드 전송 시도
-  fetch(`${INSEARCH_BACKEND}/api/kakao-send`, {
+  fetch(`${INSEARCH_BACKEND}/api/kakao`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({message: val, userId: authUser?.id || 'guest'})
@@ -6369,6 +6412,91 @@ function showBizToast(msg, duration = 2000) {
 
 function bizSearch() { showBizToast('통합검색 (준비 중)'); }
 function showBizKakaoSettings() { showBizToast('카카오봇 설정은 설정 화면에서 지원 예정'); }
+
+// ========== 구글 스프레드시트 ==========
+const SHEETS_ID_KEY = 'insearch_sheets_id';
+
+function openSheetsSettings() {
+  const savedId = localStorage.getItem(SHEETS_ID_KEY) || '';
+  const input = document.getElementById('sheets-id-input');
+  if (input) input.value = savedId;
+  const sub = document.getElementById('sheets-status-sub');
+  if (sub) sub.textContent = savedId ? `ID: ${savedId.slice(0,20)}...` : '스프레드시트 ID 설정 필요';
+  openBizModal('biz-sheets-modal');
+}
+
+function saveSheetsId() {
+  const id = document.getElementById('sheets-id-input')?.value?.trim();
+  if (!id) { showBizToast('⚠️ ID를 입력하세요'); return; }
+  localStorage.setItem(SHEETS_ID_KEY, id);
+  const sub = document.getElementById('sheets-status-sub');
+  if (sub) sub.textContent = `ID: ${id.slice(0,20)}...`;
+  showBizToast('✅ 스프레드시트 ID 저장됨');
+}
+
+async function syncToSheets(type) {
+  const spreadsheetId = localStorage.getItem(SHEETS_ID_KEY);
+  if (!spreadsheetId) { showBizToast('⚠️ 스프레드시트 ID를 먼저 설정하세요'); return; }
+
+  const statusEl = document.getElementById('sheets-sync-status');
+  const typeNames = {clients:'고객관리', db:'DB수집', todos:'할일', schedules:'일정관리'};
+  if (statusEl) statusEl.textContent = `${typeNames[type]} 동기화 중...`;
+
+  // 데이터 수집
+  let data = [];
+  if (type === 'clients') {
+    data = getBizClients().map(c => ({
+      ID: c.id, 이름: c.name, 연락처: c.phone||'', 보험종류: c.insurance||'',
+      갱신일: c.renewDate||'', 상태: c.type||'normal', 메모: c.memo||'',
+      등록일: c.updatedAt ? c.updatedAt.slice(0,10) : ''
+    }));
+  } else if (type === 'db') {
+    data = getBizDbs().map(d => ({
+      ID: d.id, 이름: d.name, 연락처: d.phone||'', 출처: d.source||'',
+      상태: d.status||'미배분', 메모: d.memo||'',
+      등록일: d.createdAt ? d.createdAt.slice(0,10) : ''
+    }));
+  } else if (type === 'todos') {
+    data = (window.state?.todos||[]).map(t => ({
+      ID: t.id, 제목: t.title||'', 마감일: t.dueDate||'',
+      우선순위: t.priority||'', 완료여부: t.done?'완료':'미완료', 메모: t.memo||''
+    }));
+  } else if (type === 'schedules') {
+    data = (window.state?.schedules||[]).map(s => ({
+      ID: s.id, 제목: s.title||'', 날짜: s.date||'', 시간: s.time||'',
+      고객명: s.clientName||'', 메모: s.memo||'', 완료여부: s.done?'완료':'미완료'
+    }));
+  }
+
+  if (!data.length) { showBizToast(`${typeNames[type]} 데이터가 없어요`); if(statusEl) statusEl.textContent=''; return; }
+
+  try {
+    const resp = await fetch(`${INSEARCH_BACKEND}/api/sheets/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': window.INSEARCH_API_KEY || '' },
+      body: JSON.stringify({ action: 'write', sheetType: type, data, spreadsheetId })
+    });
+    if (!resp.ok) throw new Error(`서버 오류 ${resp.status}`);
+    const result = await resp.json();
+    if (statusEl) statusEl.textContent = `✅ ${typeNames[type]} ${result.written}건 동기화 완료`;
+    showBizToast(`✅ ${typeNames[type]} 동기화 완료`);
+  } catch(e) {
+    if (statusEl) statusEl.textContent = `❌ 동기화 실패: ${e.message}`;
+    showBizToast(`❌ 동기화 실패`);
+  }
+}
+
+async function syncAllToSheets() {
+  const spreadsheetId = localStorage.getItem(SHEETS_ID_KEY);
+  if (!spreadsheetId) { showBizToast('⚠️ 스프레드시트 ID를 먼저 설정하세요'); return; }
+  const statusEl = document.getElementById('sheets-sync-status');
+  if (statusEl) statusEl.textContent = '전체 동기화 중...';
+  for (const type of ['clients','db','todos','schedules']) {
+    await syncToSheets(type);
+    await new Promise(r => setTimeout(r, 500));
+  }
+  if (statusEl) statusEl.textContent = '✅ 전체 동기화 완료';
+}
 function bizLogout() {
   if (!confirm('로그아웃 할까요?')) return;
   signOut();
