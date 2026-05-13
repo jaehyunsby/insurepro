@@ -5877,7 +5877,6 @@ function startApp() {
     pinMode = 'unlock'; pinBuffer = ''; showPinOverlay('PIN 입력', '4자리 숫자를 입력해주세요');
   }
 }
-initAuth().then(() => { setTimeout(initModeOnStart, 100); });
 </script>
 <script>
 
@@ -6475,7 +6474,6 @@ function logKakaoCmd(cmd) {
 
 // ========== 알림 ==========
 // ========== 알림 패널 ==========
-let bizNotifOpen = false;
 const BIZ_NOTIF_KEY = 'insearch_biz_notifs';
 
 function getBizNotifs() {
@@ -6989,6 +6987,7 @@ function initModeOnStart() {
   }
 }
 
+initAuth().then(() => { setTimeout(initModeOnStart, 100); });
 </script>
 </body>
 </html>
