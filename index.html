@@ -1836,28 +1836,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
       <div id="biz-db-list"></div>
     </div>
 
-    <!-- 카카오봇 -->
-    <div class="biz-page" id="biz-page-kakao">
-      <div class="biz-card" style="padding:0;overflow:hidden;">
-        <div style="padding:10px 14px;background:#FAE100;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:18px;">💬</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#391B1B;">@포스트보험</div>
-            <div id="kakao-status-badge" style="font-size:10px;color:#5C3B1E;">● 연결 확인 중...</div>
-          </div>
-        </div>
-        <div id="kk-msgs" style="padding:12px;min-height:220px;max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:0;"></div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;padding:8px 10px;border-top:1px solid #F2F4F6;" id="kk-chips"></div>
-        <div style="display:flex;gap:6px;padding:8px 10px;border-top:1px solid #F2F4F6;">
-          <input id="kk-in" class="biz-input" placeholder="명령어 입력..." style="flex:1;padding:9px 12px;" onkeydown="if(event.key==='Enter')sendKakaoMsg()">
-          <button onclick="sendKakaoMsg()" style="padding:0 14px;background:#391B1B;color:#FAE100;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">전송</button>
-        </div>
-      </div>
-      <div class="biz-card">
-        <div class="biz-card-title">📋 지원 명령어</div>
-        <div id="kk-cmd-list"></div>
-      </div>
-    </div>
+
 
     <!-- 더보기 (설계사관리/설정) -->
     <div class="biz-page" id="biz-page-more">
@@ -1889,7 +1868,6 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
     <button class="biz-nav-item" id="biz-nav-clients" onclick="switchBizPage('clients',this)"><span>👥</span>고객</button>
     <button class="biz-nav-item" id="biz-nav-ai" onclick="switchBizPage('ai',this)"><span>🤖</span>분석</button>
     <button class="biz-nav-item" id="biz-nav-db" onclick="switchBizPage('db',this)"><span>🗄️</span>DB</button>
-    <button class="biz-nav-item" id="biz-nav-kakao" onclick="switchBizPage('kakao',this)"><span>💬</span>봇</button>
     <button class="biz-nav-item" id="biz-nav-more" onclick="switchBizPage('more',this)"><span>⋯</span>더보기</button>
   </nav>
 
@@ -1907,13 +1885,6 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
         <div class="biz-form-group"><label class="biz-form-label">보험 종류</label><input class="biz-input" id="cm-insurance" placeholder="암보험, 실손보험..."></div>
         <div class="biz-form-group"><label class="biz-form-label">갱신일</label><input class="biz-input" id="cm-renew" type="date"></div>
         <div class="biz-form-group"><label class="biz-form-label">메모</label><input class="biz-input" id="cm-memo" placeholder="상담 내용..."></div>
-        <div class="biz-form-group"><label class="biz-form-label">유형</label>
-          <div style="display:flex;gap:8px;">
-            <button id="cm-type-normal" class="tab-btn active" onclick="setBizClientType('normal',this)">일반</button>
-            <button id="cm-type-new" class="tab-btn" onclick="setBizClientType('new',this)">신규</button>
-            <button id="cm-type-db" class="tab-btn" onclick="setBizClientType('db',this)">DB</button>
-          </div>
-        </div>
         <button class="biz-btn-primary" onclick="saveBizClient()" style="margin-top:8px;">저장</button>
         <button id="biz-client-delete-btn" onclick="deleteBizClient()" style="display:none;width:100%;padding:14px;background:none;color:#F04452;border:none;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;">삭제</button>
       </div>
@@ -1948,6 +1919,19 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
   <!-- FAB (업무모드) -->
   <button class="biz-fab" id="biz-fab" onclick="handleBizFab()">+</button>
+
+  <!-- 알림 패널 -->
+  <div id="biz-notif-panel" style="position:fixed;top:0;right:0;width:100%;max-width:320px;height:100vh;background:#fff;z-index:400;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.32,.72,0,1);box-shadow:-4px 0 20px rgba(0,0,0,.12);">
+    <div style="padding:calc(14px + env(safe-area-inset-top)) 16px 12px;border-bottom:1px solid #F2F4F6;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div style="font-size:16px;font-weight:700;color:#191F28;">🔔 알림</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="readAllBizNotif()" style="font-size:11px;color:#534AB7;background:none;border:none;cursor:pointer;font-weight:600;">모두 읽음</button>
+        <button onclick="toggleBizNotif()" style="background:none;border:none;font-size:22px;color:#6B7684;cursor:pointer;line-height:1;">×</button>
+      </div>
+    </div>
+    <div id="biz-notif-list" style="flex:1;overflow-y:auto;"></div>
+  </div>
+  <div id="biz-notif-overlay" onclick="toggleBizNotif()" style="position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:399;display:none;"></div>
 
   <!-- 구글 스프레드시트 설정 모달 -->
   <div class="biz-modal-backdrop" id="biz-sheets-modal" onclick="if(event.target===this)closeBizModal('biz-sheets-modal')">
@@ -5962,7 +5946,7 @@ function switchBizPage(name, btn) {
   document.querySelectorAll('.biz-nav-item').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   else { const nb = document.getElementById('biz-nav-' + name); if(nb) nb.classList.add('active'); }
-  const titles = {dashboard:'대시보드', clients:'고객관리', ai:'AI 보장분석', db:'DB 수집관리', kakao:'카카오봇', more:'더보기'};
+  const titles = {dashboard:'대시보드', clients:'고객관리', ai:'AI 보장분석', db:'DB 수집관리', more:'더보기'};
   document.getElementById('biz-page-title').textContent = titles[name] || name;
   document.getElementById('biz-fab').style.display = ['clients','db'].includes(name) ? 'flex' : 'none';
   if (name === 'clients') renderBizClients();
@@ -5990,11 +5974,12 @@ async function initBizMode() {
   document.getElementById('biz-nav-dashboard').classList.add('active');
   document.getElementById('biz-page-title').textContent = '대시보드';
   document.getElementById('biz-fab').style.display = 'none';
+  updateBizNotifDot();
   renderBizDashboard();
   renderBizClients();
   renderBizDb();
-  initKakaoPage();
   renderBizAgents();
+  setTimeout(generateBizNotifs, 1500);
 }
 
 // ========== 대시보드 ==========
@@ -6094,7 +6079,7 @@ function cacheBizClients(arr) { localStorage.setItem(BIZ_CLIENTS_KEY, JSON.strin
 
 async function loadBizClients() {
   const res = await bizApiCall('clients', 'select', {
-    select: 'id,name,phone,body,driving,monthly_premium,memo,status,agent_id,created_at,next_contact',
+    select: 'id,name,phone,insurance_type,renew_date,next_contact,memo,status,agent_id,created_at',
     orders: [{ col: 'created_at', ascending: false }]
   });
   if (res.data) {
@@ -6102,8 +6087,8 @@ async function loadBizClients() {
       id: String(c.id),
       name: c.name || '',
       phone: c.phone || '',
-      insurance: c.body ? `체중${c.body}kg` : (c.driving ? '운전자' : ''),
-      renewDate: c.next_contact || '',
+      insurance: c.insurance_type || '',
+      renewDate: c.renew_date || c.next_contact || '',
       memo: c.memo || '',
       type: c.status || 'normal',
       updatedAt: c.created_at || ''
@@ -6120,11 +6105,11 @@ async function saveBizClient() {
   const payload = {
     name,
     phone: document.getElementById('cm-phone').value.trim() || null,
-    memo: document.getElementById('cm-memo').value.trim(),
+    insurance_type: document.getElementById('cm-insurance').value.trim() || null,
+    renew_date: document.getElementById('cm-renew').value || null,
     next_contact: document.getElementById('cm-renew').value || null,
-    status: bizClientTypeSelected,
-    body: null,
-    driving: null
+    memo: document.getElementById('cm-memo').value.trim(),
+    status: 'normal'
   };
 
   let res;
@@ -6495,9 +6480,116 @@ function logKakaoCmd(cmd) {
 }
 
 // ========== 알림 ==========
+// ========== 알림 패널 ==========
+let bizNotifOpen = false;
+const BIZ_NOTIF_KEY = 'insearch_biz_notifs';
+
+function getBizNotifs() {
+  try { return JSON.parse(localStorage.getItem(BIZ_NOTIF_KEY)||'[]'); } catch(e) { return []; }
+}
+function saveBizNotifs(arr) { localStorage.setItem(BIZ_NOTIF_KEY, JSON.stringify(arr)); }
+
+function addBizNotif(msg, sub, type) {
+  const notifs = getBizNotifs();
+  notifs.unshift({
+    id: Date.now().toString(),
+    msg, sub: sub||'', type: type||'info',
+    read: false,
+    time: new Date().toLocaleTimeString('ko', {hour:'2-digit', minute:'2-digit'})
+  });
+  if (notifs.length > 50) notifs.pop();
+  saveBizNotifs(notifs);
+  updateBizNotifDot();
+}
+
+function updateBizNotifDot() {
+  const notifs = getBizNotifs();
+  const unread = notifs.filter(n => !n.read).length;
+  const dot = document.getElementById('biz-ndot');
+  if (dot) dot.style.display = unread > 0 ? '' : 'none';
+}
+
 function toggleBizNotif() {
   bizNotifOpen = !bizNotifOpen;
-  showBizToast(bizNotifOpen ? '알림 패널 (준비 중)' : '');
+  const panel = document.getElementById('biz-notif-panel');
+  const overlay = document.getElementById('biz-notif-overlay');
+  if (panel) panel.style.transform = bizNotifOpen ? 'translateX(0)' : 'translateX(100%)';
+  if (overlay) overlay.style.display = bizNotifOpen ? '' : 'none';
+  if (bizNotifOpen) renderBizNotifs();
+}
+
+function renderBizNotifs() {
+  const el = document.getElementById('biz-notif-list');
+  if (!el) return;
+  const notifs = getBizNotifs();
+
+  // 알림 없으면 자동 생성 (갱신임박 등)
+  if (!notifs.length) {
+    el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#B0B8C1;font-size:13px;">새 알림이 없어요</div>';
+    return;
+  }
+
+  const typeColors = { danger:'#F04452', warning:'#B25A00', info:'#1B64DA', success:'#00A05C' };
+  const typeBg    = { danger:'#FEF1F2', warning:'#FFF4E0', info:'#E8F3FF', success:'#E6F7EF' };
+
+  el.innerHTML = notifs.map(n => `
+    <div onclick="readBizNotif('${n.id}')" style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-bottom:1px solid #F2F4F6;cursor:pointer;background:${n.read ? '#fff' : '#FAFBFF'};">
+      <div style="width:8px;height:8px;border-radius:50%;background:${n.read ? '#E5E8EB' : (typeColors[n.type]||'#1B64DA')};flex-shrink:0;margin-top:5px;"></div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:${n.read ? '400' : '600'};color:#191F28;">${n.msg}</div>
+        ${n.sub ? `<div style="font-size:11px;color:#6B7684;margin-top:2px;">${n.sub}</div>` : ''}
+      </div>
+      <div style="font-size:10px;color:#B0B8C1;flex-shrink:0;">${n.time}</div>
+    </div>`).join('');
+}
+
+function readBizNotif(id) {
+  const notifs = getBizNotifs();
+  const idx = notifs.findIndex(n => n.id === id);
+  if (idx >= 0) notifs[idx].read = true;
+  saveBizNotifs(notifs);
+  updateBizNotifDot();
+  renderBizNotifs();
+}
+
+function readAllBizNotif() {
+  const notifs = getBizNotifs().map(n => ({...n, read: true}));
+  saveBizNotifs(notifs);
+  updateBizNotifDot();
+  renderBizNotifs();
+}
+
+// 업무모드 초기화 시 알림 생성
+async function generateBizNotifs() {
+  const clients = await loadBizClients();
+  const today = new Date();
+  let hasNew = false;
+
+  // 갱신임박 알림
+  clients.forEach(c => {
+    if (!c.renewDate) return;
+    const daysLeft = Math.ceil((new Date(c.renewDate) - today) / 86400000);
+    if (daysLeft >= 0 && daysLeft <= 14) {
+      const existing = getBizNotifs().find(n => n.msg.includes(c.name) && n.msg.includes('갱신'));
+      if (!existing) {
+        addBizNotif(`갱신 임박 — ${c.name}`, `D-${daysLeft} / ${c.insurance||'보험'}`, 'danger');
+        hasNew = true;
+      }
+    }
+  });
+
+  // DB 미배분 알림
+  const dbs = await loadBizDbs();
+  const unassigned = dbs.filter(d => d.status === '미배분').length;
+  if (unassigned > 0) {
+    const existing = getBizNotifs().find(n => n.msg.includes('DB 미배분'));
+    if (!existing) {
+      addBizNotif(`DB 미배분 ${unassigned}건`, '배분이 필요한 DB가 있어요', 'warning');
+      hasNew = true;
+    }
+  }
+
+  updateBizNotifDot();
 }
 
 function showBizToast(msg, duration = 2000) {
