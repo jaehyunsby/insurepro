@@ -1708,7 +1708,6 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
       <input class="biz-input" id="client-search" placeholder="고객 검색..." style="margin-bottom:10px;" oninput="renderBizClients()">
       <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;" id="client-filter-tabs">
         <button class="tab-btn active" data-cf="all" onclick="setBizClientFilter('all',this)">전체</button>
-        <button class="tab-btn" data-cf="renew" onclick="setBizClientFilter('renew',this)">갱신임박</button>
         <button class="tab-btn" data-cf="new" onclick="setBizClientFilter('new',this)">신규</button>
         <button class="tab-btn" data-cf="db" onclick="setBizClientFilter('db',this)">DB</button>
       </div>
@@ -5998,8 +5997,7 @@ async function renderBizDashboard() {
   if (!recentClients.length) { cl.innerHTML = '<div style="color:#B0B8C1;font-size:13px;padding:4px 0;">등록된 고객 없음</div>'; }
   else cl.innerHTML = recentClients.map(c => {
     const daysLeft = c.renewDate ? Math.ceil((new Date(c.renewDate) - new Date()) / 86400000) : null;
-    const badge = daysLeft !== null && daysLeft <= 30 ? `<span class="biz-badge bb-amber">갱신D-${daysLeft}</span>` :
-                  c.type === 'new' ? `<span class="biz-badge bb-blue">신규</span>` :
+    const badge = c.type === 'new' ? `<span class="biz-badge bb-blue">신규</span>` :
                   c.type === 'db' ? `<span class="biz-badge bb-purple">DB</span>` : '';
     return `<div class="biz-list-item"><div class="biz-licon" style="background:#E8F3FF;color:#1B64DA;">👤</div><div class="biz-lmain"><div class="biz-lname">${c.name}</div><div class="biz-lsub">${c.insurance||'보험 미입력'}</div></div>${badge}</div>`;
   }).join('');
@@ -6150,7 +6148,6 @@ async function renderBizClients() {
   let filtered = clients.filter(c => {
     const matchSearch = !search || c.name.toLowerCase().includes(search) || (c.phone||'').includes(search);
     const daysLeft = c.renewDate ? Math.ceil((new Date(c.renewDate) - today) / 86400000) : null;
-    if (bizClientFilter === 'renew') return matchSearch && daysLeft !== null && daysLeft <= 30;
     if (bizClientFilter === 'new') return matchSearch && c.type === 'new';
     if (bizClientFilter === 'db') return matchSearch && c.type === 'db';
     return matchSearch;
@@ -6158,10 +6155,7 @@ async function renderBizClients() {
   if (!el) return;
   if (!filtered.length) { el.innerHTML = '<div style="text-align:center;padding:40px 0;color:#B0B8C1;font-size:13px;">등록된 고객이 없어요<br>+ 버튼으로 추가하세요</div>'; return; }
   el.innerHTML = filtered.map(c => {
-    const daysLeft = c.renewDate ? Math.ceil((new Date(c.renewDate) - today) / 86400000) : null;
-    const badge = daysLeft !== null && daysLeft <= 14 ? `<span class="biz-badge bb-red">D-${daysLeft}</span>` :
-                  daysLeft !== null && daysLeft <= 30 ? `<span class="biz-badge bb-amber">D-${daysLeft}</span>` :
-                  c.type === 'new' ? `<span class="biz-badge bb-blue">신규</span>` :
+    const badge = c.type === 'new' ? `<span class="biz-badge bb-blue">신규</span>` :
                   c.type === 'db' ? `<span class="biz-badge bb-purple">DB</span>` :
                   `<span class="biz-badge bb-gray">정상</span>`;
     return `<div class="biz-card" style="margin-bottom:8px;padding:12px 14px;cursor:pointer;" onclick="openBizClientModal('${c.id}')">
@@ -6523,7 +6517,7 @@ function renderBizNotifs() {
   if (!el) return;
   const notifs = getBizNotifs();
 
-  // 알림 없으면 자동 생성 (갱신임박 등)
+  // 알림 자동 생성
   if (!notifs.length) {
     el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#B0B8C1;font-size:13px;">새 알림이 없어요</div>';
     return;
@@ -6564,19 +6558,6 @@ async function generateBizNotifs() {
   const clients = await loadBizClients();
   const today = new Date();
   let hasNew = false;
-
-  // 갱신임박 알림
-  clients.forEach(c => {
-    if (!c.renewDate) return;
-    const daysLeft = Math.ceil((new Date(c.renewDate) - today) / 86400000);
-    if (daysLeft >= 0 && daysLeft <= 14) {
-      const existing = getBizNotifs().find(n => n.msg.includes(c.name) && n.msg.includes('갱신'));
-      if (!existing) {
-        addBizNotif(`갱신 임박 — ${c.name}`, `D-${daysLeft} / ${c.insurance||'보험'}`, 'danger');
-        hasNew = true;
-      }
-    }
-  });
 
   // DB 미배분 알림
   const dbs = await loadBizDbs();
