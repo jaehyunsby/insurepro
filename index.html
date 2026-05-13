@@ -6577,7 +6577,7 @@ async function syncToSheets(type) {
   try {
     const resp = await fetch(`${INSEARCH_BACKEND}/api/sheets/sync`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-API-Key': window.INSEARCH_API_KEY || '' },
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': BIZ_API_KEY },
       body: JSON.stringify({ action: 'write', sheetType: type, data, spreadsheetId })
     });
     if (!resp.ok) throw new Error(`서버 오류 ${resp.status}`);
