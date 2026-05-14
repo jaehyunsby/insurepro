@@ -1842,6 +1842,26 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
     <!-- 보험금청구 -->
     <div class="biz-page" id="biz-page-claim">
+      <!-- 청구내역 버튼 -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button id="claim-view-new" onclick="setClaimView('new')" style="flex:1;padding:10px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">+ 새 청구</button>
+        <button id="claim-view-history" onclick="setClaimView('history')" style="flex:1;padding:10px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📋 청구내역</button>
+      </div>
+
+      <!-- 청구내역 목록 -->
+      <div id="claim-history-view" style="display:none;">
+        <div style="display:flex;gap:0;background:#fff;border-radius:12px;border:1px solid #E5E8EB;overflow:hidden;margin-bottom:12px;">
+          <button onclick="setClaimHistoryFilter('all')" id="chf-all" style="flex:1;padding:10px;background:#534AB7;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">전체</button>
+          <button onclick="setClaimHistoryFilter('pending')" id="chf-pending" style="flex:1;padding:10px;background:#F7F8FA;color:#B0B8C1;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">● 임시저장</button>
+          <button onclick="setClaimHistoryFilter('sent')" id="chf-sent" style="flex:1;padding:10px;background:#F7F8FA;color:#B0B8C1;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">● 발송완료</button>
+          <button onclick="setClaimHistoryFilter('failed')" id="chf-failed" style="flex:1;padding:10px;background:#F7F8FA;color:#B0B8C1;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">● 발송실패</button>
+        </div>
+        <div style="margin-bottom:10px;"><input class="biz-input" id="claim-history-search" placeholder="🔍 피보험자 이름, 보험사 검색" oninput="renderClaimHistory()"></div>
+        <div id="claim-history-list"></div>
+      </div>
+
+      <!-- 새 청구 폼 -->
+      <div id="claim-new-view">
       <!-- 진행 단계 -->
       <div style="display:flex;gap:0;margin-bottom:14px;background:#fff;border-radius:14px;border:1px solid #E5E8EB;overflow:hidden;">
         <button id="claim-step-btn-1" onclick="goClaimStep(1)" style="flex:1;padding:10px 0;font-size:12px;font-weight:700;background:#534AB7;color:#fff;border:none;cursor:pointer;font-family:inherit;">① 피보험자</button>
@@ -1980,10 +2000,11 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
             <div style="font-size:11px;color:#854F0B;line-height:1.8;">• 간단서 또는 소견서<br>• 진료비 영수증 및 세부내역서<br>• 통장 사본 (신구 계좌 사)</div>
           </div>
           <div id="claim-summary" style="background:#F7F8FA;border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8;color:#191F28;"></div>
-          <button class="biz-btn-primary" onclick="submitClaim()" style="background:linear-gradient(135deg,#534AB7,#1B64DA);">🏥 청구서 제출</button>
+          <button class="biz-btn-primary" onclick="showPrivacyAndSubmit()" style="background:linear-gradient(135deg,#534AB7,#1B64DA);">🏥 청구서 제출</button>
           <button onclick="goClaimStep(1)" style="width:100%;padding:12px;background:none;border:none;color:#6B7684;font-size:13px;cursor:pointer;margin-top:6px;">← 처음으로</button>
         </div>
       </div>
+      </div><!-- /claim-new-view -->
     </div>
     <div class="biz-page" id="biz-page-more">
       <div class="biz-card">
@@ -2079,6 +2100,90 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
     <div id="biz-notif-list" style="flex:1;overflow-y:auto;"></div>
   </div>
   <div id="biz-notif-overlay" onclick="toggleBizNotif()" style="position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:399;display:none;"></div>
+
+  <!-- 개인정보 동의서 모달 -->
+  <div class="biz-modal-backdrop" id="biz-privacy-modal" onclick="if(event.target===this)closeBizModal('biz-privacy-modal')">
+    <div class="biz-modal" style="max-height:90vh;">
+      <div class="biz-modal-handle"></div>
+      <div class="biz-modal-header">
+        <div class="biz-modal-title">개인정보 동의서</div>
+        <button onclick="closeBizModal('biz-privacy-modal')" style="background:none;border:none;font-size:22px;color:#6B7684;cursor:pointer;">×</button>
+      </div>
+      <div class="biz-modal-body" style="overflow-y:auto;max-height:60vh;">
+        <div style="font-size:15px;font-weight:800;text-align:center;margin-bottom:16px;">개인(신용)정보 수집·이용·제공 동의서</div>
+        <div style="font-size:12px;color:#6B7684;line-height:1.7;margin-bottom:16px;">「개인정보 보호법」 제15조, 제17조, 제22조, 제23조, 제24조 및 「신용정보의 이용 및 보호에 관한 법률」 제32조, 제33조에 따라 귀하의 개인(신용)정보를 다음과 같이 수집·이용·제공하고자 합니다.</div>
+
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">1. 개인정보의 수집·이용 동의</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
+          <tr style="background:#F7F8FA;"><th style="padding:8px;border:1px solid #E5E8EB;text-align:left;">항목</th><th style="padding:8px;border:1px solid #E5E8EB;text-align:left;">내용</th></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">수집·이용 목적</td><td style="padding:8px;border:1px solid #E5E8EB;">보험금 청구 접수·심사·지급, 보험사고 조사, 민원 처리 및 분쟁 해결</td></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">수집 항목</td><td style="padding:8px;border:1px solid #E5E8EB;">성명, 연락처, 주소, 직업, 이메일, 피보험자와의 관계, 서명</td></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">보유·이용 기간</td><td style="padding:8px;border:1px solid #E5E8EB;">수집·이용 동의일로부터 청구 처리 완료 후 5년</td></tr>
+        </table>
+
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">2. 고유식별정보 처리 동의</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
+          <tr style="background:#F7F8FA;"><th style="padding:8px;border:1px solid #E5E8EB;text-align:left;">항목</th><th style="padding:8px;border:1px solid #E5E8EB;text-align:left;">내용</th></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">처리 목적</td><td style="padding:8px;border:1px solid #E5E8EB;">보험금 청구 본인 확인, 보험사 양식 작성</td></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">처리 항목</td><td style="padding:8px;border:1px solid #E5E8EB;">주민등록번호, 운전면허번호</td></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">보유 기간</td><td style="padding:8px;border:1px solid #E5E8EB;">청구 처리 완료 후 5년</td></tr>
+        </table>
+
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">3. 민감정보 처리 동의</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
+          <tr style="background:#F7F8FA;"><th style="padding:8px;border:1px solid #E5E8EB;text-align:left;">항목</th><th style="padding:8px;border:1px solid #E5E8EB;text-align:left;">내용</th></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">처리 목적</td><td style="padding:8px;border:1px solid #E5E8EB;">보험금 청구서 작성 및 보험사 제출</td></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">처리 항목</td><td style="padding:8px;border:1px solid #E5E8EB;">질병·상해 분류, 사고내용, 사고장소, 진료기간, 병원명, 첨부 의료서류</td></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">보유 기간</td><td style="padding:8px;border:1px solid #E5E8EB;">청구 처리 완료 후 5년</td></tr>
+        </table>
+
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">4. 개인정보 제3자 제공 동의</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
+          <tr style="background:#F7F8FA;"><th style="padding:8px;border:1px solid #E5E8EB;text-align:left;">항목</th><th style="padding:8px;border:1px solid #E5E8EB;text-align:left;">내용</th></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">제공받는 자</td><td style="padding:8px;border:1px solid #E5E8EB;">청구 대상 보험사</td></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">제공 목적</td><td style="padding:8px;border:1px solid #E5E8EB;">보험금 청구 접수 및 지급 심사</td></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">제공 항목</td><td style="padding:8px;border:1px solid #E5E8EB;">청구서에 기재된 모든 정보 및 첨부서류</td></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;color:#6B7684;">보유 기간</td><td style="padding:8px;border:1px solid #E5E8EB;">제공받는 자의 이용 목적 달성 시까지</td></tr>
+        </table>
+
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">5. 개인정보 처리 위탁 동의</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
+          <tr style="background:#F7F8FA;"><th style="padding:8px;border:1px solid #E5E8EB;">수탁자</th><th style="padding:8px;border:1px solid #E5E8EB;">위탁 업무</th></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;">(주)바로빌</td><td style="padding:8px;border:1px solid #E5E8EB;">팩스 발송 대행</td></tr>
+          <tr><td style="padding:8px;border:1px solid #E5E8EB;">Amazon Web Services</td><td style="padding:8px;border:1px solid #E5E8EB;">첨부서류 클라우드 저장</td></tr>
+        </table>
+
+        <div style="background:#F7F8FA;border-radius:10px;padding:12px;font-size:12px;color:#6B7684;margin-bottom:16px;">
+          귀하는 위 각 항목에 대한 동의를 거부하실 수 있습니다.<br>
+          다만, 필수 동의 항목에 동의하지 않으실 경우 보험금 청구 서비스 이용이 제한됩니다.
+        </div>
+
+        <div style="text-align:center;font-size:13px;color:#191F28;margin-bottom:8px;" id="privacy-date-text"></div>
+        <div style="text-align:right;font-size:13px;color:#191F28;margin-bottom:16px;">위 내용을 충분히 이해하였으며, 이에 동의합니다.</div>
+      </div>
+      <div style="display:flex;gap:8px;padding:16px;border-top:1px solid #F2F4F6;">
+        <button onclick="closeBizModal('biz-privacy-modal')" style="flex:1;padding:14px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">취소</button>
+        <button onclick="agreePrivacyAndSubmit()" style="flex:2;padding:14px;background:#534AB7;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">동의하고 계속</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 청구 확인 팝업 -->
+  <div class="biz-modal-backdrop" id="biz-claim-confirm-modal">
+    <div style="background:#fff;border-radius:20px;padding:24px;margin:auto;max-width:340px;width:90%;margin-top:20vh;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="color:#534AB7;font-size:20px;">✓</span>
+        <div style="font-size:16px;font-weight:800;">청구 확인</div>
+      </div>
+      <div style="font-size:12px;color:#F04452;margin-bottom:14px;">아래 정보 확인 바랍니다.</div>
+      <div style="font-size:13px;font-weight:700;color:#6B7684;margin-bottom:6px;">피보험자 정보</div>
+      <div id="claim-confirm-content" style="font-size:13px;line-height:2;color:#191F28;margin-bottom:14px;"></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="closeBizModal('biz-claim-confirm-modal')" style="flex:1;padding:13px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">수정하기</button>
+        <button onclick="finalSubmitClaim()" style="flex:2;padding:13px;background:#534AB7;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">청구하기</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 구글 스프레드시트 설정 모달 -->
   <div class="biz-modal-backdrop" id="biz-sheets-modal" onclick="if(event.target===this)closeBizModal('biz-sheets-modal')">
@@ -6635,6 +6740,168 @@ function logKakaoCmd(cmd) {
 }
 
 // ========== 알림 ==========
+// 청구 뷰 전환
+function setClaimView(view) {
+  const isNew = view === 'new';
+  document.getElementById('claim-new-view').style.display = isNew ? '' : 'none';
+  document.getElementById('claim-history-view').style.display = isNew ? 'none' : '';
+  document.getElementById('claim-view-new').style.background = isNew ? '#534AB7' : '#F7F8FA';
+  document.getElementById('claim-view-new').style.color = isNew ? '#fff' : '#6B7684';
+  document.getElementById('claim-view-new').style.border = isNew ? 'none' : '1px solid #E5E8EB';
+  document.getElementById('claim-view-history').style.background = !isNew ? '#534AB7' : '#F7F8FA';
+  document.getElementById('claim-view-history').style.color = !isNew ? '#fff' : '#6B7684';
+  document.getElementById('claim-view-history').style.border = !isNew ? 'none' : '1px solid #E5E8EB';
+  if (!isNew) renderClaimHistory();
+}
+
+let claimHistoryFilter = 'all';
+function setClaimHistoryFilter(f) {
+  claimHistoryFilter = f;
+  ['all','pending','sent','failed'].forEach(t => {
+    const btn = document.getElementById('chf-' + t);
+    if (!btn) return;
+    const isActive = t === f;
+    btn.style.background = isActive ? '#534AB7' : '#F7F8FA';
+    btn.style.color = isActive ? '#fff' : '#B0B8C1';
+  });
+  renderClaimHistory();
+}
+
+async function renderClaimHistory() {
+  const el = document.getElementById('claim-history-list');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:#B0B8C1;font-size:13px;">불러오는 중...</div>';
+
+  try {
+    let query = sb.from('claim_learnings').select('*').order('created_at', {ascending: false});
+    if (authUser) query = query.eq('user_id', authUser.id);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const kw = document.getElementById('claim-history-search')?.value?.toLowerCase() || '';
+    let items = (data || []).filter(d => {
+      if (kw && !d.client_name?.toLowerCase().includes(kw) && !d.insurer?.toLowerCase().includes(kw)) return false;
+      if (claimHistoryFilter === 'pending') return !d.sent_at && !d.failed_at;
+      if (claimHistoryFilter === 'sent') return !!d.sent_at;
+      if (claimHistoryFilter === 'failed') return !!d.failed_at;
+      return true;
+    });
+
+    // 탭 카운트 업데이트
+    const all = data?.length || 0;
+    const pending = data?.filter(d => !d.sent_at && !d.failed_at).length || 0;
+    const sent = data?.filter(d => d.sent_at).length || 0;
+    const failed = data?.filter(d => d.failed_at).length || 0;
+    const chfAll = document.getElementById('chf-all');
+    if (chfAll) chfAll.textContent = `전체 ${all}`;
+    const chfPending = document.getElementById('chf-pending');
+    if (chfPending) chfPending.innerHTML = `● 임시저장 ${pending}`;
+    const chfSent = document.getElementById('chf-sent');
+    if (chfSent) chfSent.innerHTML = `● 발송완료 ${sent}`;
+    const chfFailed = document.getElementById('chf-failed');
+    if (chfFailed) chfFailed.innerHTML = `● 발송실패 ${failed}`;
+
+    if (!items.length) {
+      el.innerHTML = '<div style="text-align:center;padding:40px;color:#B0B8C1;font-size:13px;">청구 내역이 없어요</div>';
+      return;
+    }
+
+    el.innerHTML = items.map(d => {
+      const statusLabel = d.sent_at ? '<span style="background:#E6F7EF;color:#00A05C;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;">발송완료</span>' :
+                          d.failed_at ? '<span style="background:#FEF1F2;color:#F04452;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;">발송실패</span>' :
+                          '<span style="background:#E8F3FF;color:#1B64DA;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;">발송대기</span>';
+      const date = d.created_at ? new Date(d.created_at).toLocaleDateString('ko') : '';
+      return `<div class="biz-card" style="margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;flex:1;">${d.insurer||'보험사 미선택'}</div>
+          ${statusLabel}
+        </div>
+        <div style="font-size:12px;color:#6B7684;">👤 ${d.client_name||''} · ${date}</div>
+        <div style="font-size:12px;color:#6B7684;">🏥 ${d.claim_type||''} · ${d.desc||''}</div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#F04452;font-size:13px;">오류: ' + e.message + '</div>';
+  }
+}
+
+// 개인정보 동의서 표시
+function showPrivacyAndSubmit() {
+  const name = document.getElementById('claim-name')?.value?.trim();
+  if (!name) { showBizToast('⚠️ 피보험자 이름을 입력하세요'); goClaimStep(1); return; }
+  if (!claimData.insurer) { showBizToast('⚠️ 보험사를 선택하세요'); goClaimStep(2); return; }
+  const desc = document.getElementById('claim-desc')?.value?.trim();
+  if (!desc) { showBizToast('⚠️ 사고 내용을 입력하세요'); goClaimStep(3); return; }
+
+  // 날짜 표시
+  const today = new Date().toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric'});
+  const dateEl = document.getElementById('privacy-date-text');
+  if (dateEl) dateEl.textContent = today;
+
+  openBizModal('biz-privacy-modal');
+}
+
+// 동의 후 청구 확인 팝업
+function agreePrivacyAndSubmit() {
+  closeBizModal('biz-privacy-modal');
+
+  const name = document.getElementById('claim-name')?.value || '';
+  const ssn1 = document.getElementById('claim-ssn1')?.value || '';
+  const ssn2 = document.getElementById('claim-ssn2')?.value || '';
+  const phone = document.getElementById('claim-phone')?.value || '';
+  const ssnMasked = ssn1 + (ssn2 ? '-' + ssn2.slice(0,1) + '******' : '');
+  const files = claimData.files.length ? `개인정보 동의서 외 ${claimData.files.length}건` : '없음';
+
+  const content = document.getElementById('claim-confirm-content');
+  if (content) {
+    content.innerHTML = `
+      <div style="display:flex;justify-content:space-between;border-bottom:1px solid #F2F4F6;padding:6px 0;"><span style="color:#6B7684;">성명</span><span>${name}</span></div>
+      <div style="display:flex;justify-content:space-between;border-bottom:1px solid #F2F4F6;padding:6px 0;"><span style="color:#6B7684;">주민등록번호</span><span>${ssnMasked}</span></div>
+      <div style="display:flex;justify-content:space-between;border-bottom:1px solid #F2F4F6;padding:6px 0;"><span style="color:#6B7684;">연락처</span><span>${phone}</span></div>
+      <div style="font-size:12px;font-weight:700;color:#6B7684;margin:10px 0 4px;">추가 확인사항</div>
+      <div style="display:flex;justify-content:space-between;border-bottom:1px solid #F2F4F6;padding:6px 0;"><span style="color:#6B7684;">보험사</span><span>${claimData.insurer}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;"><span style="color:#6B7684;">첨부파일</span><span>${files}</span></div>
+    `;
+  }
+  openBizModal('biz-claim-confirm-modal');
+}
+
+// 최종 제출
+async function finalSubmitClaim() {
+  closeBizModal('biz-claim-confirm-modal');
+
+  const name = document.getElementById('claim-name')?.value || '';
+  const desc = document.getElementById('claim-desc')?.value || '';
+  const ssn = (document.getElementById('claim-ssn1')?.value || '') + '-' + (document.getElementById('claim-ssn2')?.value || '');
+
+  if (sb && authUser) {
+    await sb.from('claim_learnings').insert({
+      user_id: authUser.id,
+      insurer: claimData.insurer,
+      claim_type: claimData.claimType,
+      client_name: name,
+      client_ssn: ssn,
+      client_phone: document.getElementById('claim-phone')?.value || '',
+      date: document.getElementById('claim-date')?.value || '',
+      desc,
+      bank: document.getElementById('claim-bank')?.value || '',
+      account_num: document.getElementById('claim-account-num')?.value || '',
+      account_holder: document.getElementById('claim-account-holder')?.value || '',
+      sig_data: claimData.sigData || null,
+      notify_type: claimData.notifyType,
+      created_at: new Date().toISOString()
+    });
+  }
+
+  showBizToast('✅ 청구서가 저장됐어요\n팩스 발송은 준비 중이에요');
+
+  // 청구내역으로 이동
+  goClaimStep(1);
+  setClaimView('history');
+}
+
 // ========== 보험금청구 ==========
 const INSURERS = {
   '손해': ['AIG손해보험','AXA손해보험','DB손해보험','KB손해보험','NH농협손해보험','교직원공제','라이나손보','롯데손보','메리츠화재','삼성화재','새마을금고공제','수협공제','신한EZ손해보험','신협공제','예별손해보험','우체국보험','하나손해보험','한화손해보험','현대해상화재','흥국화재'],
@@ -6815,23 +7082,6 @@ function submitClaim() {
   const desc = document.getElementById('claim-desc')?.value?.trim();
   if (!desc) { showBizToast('⚠️ 사고 내용을 입력하세요'); goClaimStep(3); return; }
 
-  // 청구 링크 열기 (openarena)
-  const insurerUrls = {
-    '현대해상화재': 'https://openarena.co.kr/autoclain/step1',
-    'DB손해보험': 'https://www.directdb.co.kr',
-    '삼성화재': 'https://www.samsungfire.com',
-    '메리츠화재': 'https://www.meritzfire.com',
-    'KB손해보험': 'https://www.kbinsure.co.kr',
-  };
-
-  const url = insurerUrls[claimData.insurer];
-  if (url) {
-    window.open(url, '_blank');
-    showBizToast('✅ 청구 페이지로 이동합니다');
-  } else {
-    showBizToast('✅ 청구서 정보가 저장됐어요');
-  }
-
   // Supabase 저장
   if (sb && authUser) {
     sb.from('claim_learnings').insert({
@@ -6841,9 +7091,13 @@ function submitClaim() {
       client_name: name,
       date: document.getElementById('claim-date')?.value,
       desc,
+      sig_data: claimData.sigData || null,
       created_at: new Date().toISOString()
     }).then(() => {}).catch(() => {});
   }
+
+  showBizToast('✅ 청구서가 저장됐어요');
+  goClaimStep(1);
 }
 const BIZ_NOTIF_KEY = 'insearch_biz_notifs';
 
