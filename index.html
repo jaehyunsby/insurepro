@@ -6625,7 +6625,7 @@ async function syncToSheets(type) {
     const rawClients = await loadBizClients();
     data = rawClients.map(c => ({
       'ID': c.id, '이름': c.name, '전화번호': c.phone||'', '주민번호': c.ssn||'',
-      '주소': c.addr||'', '키': c.height||'', '몸무게': c.body||'',
+      '주소': c.addr||'', '키/몸무게': c.body||'',
       '직업': c.job||'', '운전': c.driving||'', '메모': c.memo||'',
       '등록일': c.updatedAt ? c.updatedAt.slice(0,10) : ''
     }));
