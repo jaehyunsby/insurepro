@@ -6936,6 +6936,50 @@ function renderPreviewPage(d) {
   }
 }
 
+// 청구내역에서 미리보기/재청구
+let claimHistoryItems = [];
+
+async function showClaimPreviewById(id) {
+  const { data } = await sb.from('claim_learnings').select('*').eq('id', id).single();
+  if (!data) return;
+  const d = {
+    client_name: data.client_name, client_ssn: data.client_ssn,
+    client_phone: data.client_phone, insurer: data.insurer,
+    claim_type: data.claim_type, date: data.claim_date,
+    desc: data.description, bank: data.bank,
+    account_num: data.account_num, account_holder: data.account_holder,
+    sig_data: data.sig_data
+  };
+  previewCurrentPage = 1;
+  renderPreviewPage(d);
+  openBizModal('biz-claim-preview-modal');
+}
+
+async function rechargeClaimById(id) {
+  const { data } = await sb.from('claim_learnings').select('*').eq('id', id).single();
+  if (!data) return;
+  // 청구 폼에 데이터 채우기
+  setClaimView('new');
+  goClaimStep(1);
+  setTimeout(() => {
+    if (data.client_name) document.getElementById('claim-name').value = data.client_name;
+    if (data.client_phone) document.getElementById('claim-phone').value = data.client_phone;
+    if (data.client_ssn) {
+      const parts = data.client_ssn.split('-');
+      document.getElementById('claim-ssn1').value = parts[0]||'';
+      document.getElementById('claim-ssn2').value = parts[1]||'';
+    }
+    if (data.insurer) { claimData.insurer = data.insurer; setClaimInsTab(claimData.insurerType); }
+    if (data.claim_type) setClaimType(data.claim_type);
+    if (data.claim_date) document.getElementById('claim-date').value = data.claim_date;
+    if (data.description) document.getElementById('claim-desc').value = data.description;
+    if (data.bank) document.getElementById('claim-bank').value = data.bank;
+    if (data.account_num) document.getElementById('claim-account-num').value = data.account_num;
+    if (data.account_holder) document.getElementById('claim-account-holder').value = data.account_holder;
+    showBizToast('📋 데이터를 불러왔어요. 내용 확인 후 제출해주세요.');
+  }, 100);
+}
+
 function getTimeAgo(date) {
   const diff = Math.floor((Date.now() - date) / 60000);
   if (diff < 1) return '방금 전';
@@ -7038,8 +7082,8 @@ async function renderClaimHistory() {
           <div style="display:none;font-size:11px;color:#6B7684;padding:4px 0 0 18px;">개인(신용)정보 수집·이용·제공 동의 완료</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:12px;">
-          <button style="flex:1;padding:8px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:8px;font-size:12px;color:#534AB7;cursor:pointer;font-family:inherit;">👁 양식 미리보기</button>
-          <button style="padding:8px 14px;background:#FEF1F2;border:1px solid #F04452;border-radius:8px;font-size:12px;color:#F04452;cursor:pointer;font-family:inherit;">↺ 재청구</button>
+          <button onclick="showClaimPreviewById(\'${d.id}\')" style="flex:1;padding:8px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:8px;font-size:12px;color:#534AB7;cursor:pointer;font-family:inherit;">👁 양식 미리보기</button>
+          <button onclick="rechargeClaimById(\'${d.id}\')" style="padding:8px 14px;background:#FEF1F2;border:1px solid #F04452;border-radius:8px;font-size:12px;color:#F04452;cursor:pointer;font-family:inherit;">↺ 재청구</button>
         </div>
       </div>`;
     }).join('');
