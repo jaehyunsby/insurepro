@@ -1840,7 +1840,151 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
 
 
-    <!-- 더보기 (설계사관리/설정) -->
+    <!-- 보험금청구 -->
+    <div class="biz-page" id="biz-page-claim">
+      <!-- 진행 단계 -->
+      <div style="display:flex;gap:0;margin-bottom:14px;background:#fff;border-radius:14px;border:1px solid #E5E8EB;overflow:hidden;">
+        <button id="claim-step-btn-1" onclick="goClaimStep(1)" style="flex:1;padding:10px 0;font-size:12px;font-weight:700;background:#534AB7;color:#fff;border:none;cursor:pointer;font-family:inherit;">① 피보험자</button>
+        <button id="claim-step-btn-2" onclick="goClaimStep(2)" style="flex:1;padding:10px 0;font-size:12px;font-weight:700;background:#F7F8FA;color:#B0B8C1;border:none;cursor:pointer;font-family:inherit;">② 보험사</button>
+        <button id="claim-step-btn-3" onclick="goClaimStep(3)" style="flex:1;padding:10px 0;font-size:12px;font-weight:700;background:#F7F8FA;color:#B0B8C1;border:none;cursor:pointer;font-family:inherit;">③ 청구정보</button>
+        <button id="claim-step-btn-4" onclick="goClaimStep(4)" style="flex:1;padding:10px 0;font-size:12px;font-weight:700;background:#F7F8FA;color:#B0B8C1;border:none;cursor:pointer;font-family:inherit;">④ 제출</button>
+      </div>
+
+      <!-- STEP 1: 피보험자 정보 -->
+      <div id="claim-step-1">
+        <div class="biz-card">
+          <div class="biz-card-title">👤 피보험자 정보</div>
+          <!-- 고객 연동 -->
+          <div class="biz-form-group">
+            <label class="biz-form-label">고객 선택 (선택사항)</label>
+            <div style="display:flex;gap:8px;">
+              <select id="claim-client-select" class="biz-input" style="flex:1;" onchange="onClaimClientSelect()">
+                <option value="">직접 입력</option>
+              </select>
+            </div>
+          </div>
+          <div class="biz-form-group"><label class="biz-form-label">이름 *</label><input class="biz-input" id="claim-name" placeholder="홍길동"></div>
+          <div class="biz-form-group">
+            <label class="biz-form-label">주민등록번호 *</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input class="biz-input" id="claim-ssn1" placeholder="생년월일" maxlength="6" style="flex:1;" oninput="if(this.value.length===6)document.getElementById('claim-ssn2').focus()">
+              <span style="color:#B0B8C1;">-</span>
+              <input class="biz-input" id="claim-ssn2" placeholder="뒷자리" maxlength="7" style="flex:1;" type="password">
+            </div>
+          </div>
+          <div class="biz-form-group"><label class="biz-form-label">연락처 *</label><input class="biz-input" id="claim-phone" placeholder="010-0000-0000" type="tel"></div>
+          <div class="biz-form-group">
+            <label class="biz-form-label">계약자와 피보험자 동일여부 *</label>
+            <div style="display:flex;gap:8px;">
+              <button id="claim-same-yes" onclick="setClaimSame(true)" style="flex:1;padding:10px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">예 (동일인)</button>
+              <button id="claim-same-no" onclick="setClaimSame(false)" style="flex:1;padding:10px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">아니오</button>
+            </div>
+          </div>
+          <div id="claim-contractor-section" style="display:none;">
+            <div class="biz-form-group"><label class="biz-form-label">계약자 이름</label><input class="biz-input" id="claim-contractor-name" placeholder="계약자 이름"></div>
+            <div class="biz-form-group"><label class="biz-form-label">계약자 연락처</label><input class="biz-input" id="claim-contractor-phone" placeholder="010-0000-0000" type="tel"></div>
+          </div>
+          <button class="biz-btn-primary" onclick="goClaimStep(2)">다음 →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: 보험사 선택 -->
+      <div id="claim-step-2" style="display:none;">
+        <div class="biz-card">
+          <div class="biz-card-title">🏢 보험사 선택</div>
+          <div style="display:flex;gap:0;background:#F7F8FA;border-radius:10px;overflow:hidden;margin-bottom:14px;">
+            <button id="claim-ins-tab-손해" onclick="setClaimInsTab('손해')" style="flex:1;padding:9px;background:#534AB7;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">손해보험</button>
+            <button id="claim-ins-tab-생명" onclick="setClaimInsTab('생명')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">생명보험</button>
+          </div>
+          <div id="claim-ins-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+          <div id="claim-selected-ins" style="display:none;margin-top:12px;padding:10px 14px;background:#EEEDFE;border-radius:10px;font-size:13px;font-weight:700;color:#3C3489;"></div>
+          <button class="biz-btn-primary" onclick="goClaimStep(3)" style="margin-top:14px;">다음 →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: 청구 정보 -->
+      <div id="claim-step-3" style="display:none;">
+        <div class="biz-card">
+          <div class="biz-card-title">📋 청구 정보</div>
+          <div class="biz-form-group">
+            <label class="biz-form-label">사고 유형 *</label>
+            <div style="display:flex;gap:8px;">
+              <button id="claim-type-질병" onclick="setClaimType('질병')" style="flex:1;padding:9px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">질병</button>
+              <button id="claim-type-상해" onclick="setClaimType('상해')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">상해</button>
+              <button id="claim-type-교통사고" onclick="setClaimType('교통사고')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">교통사고</button>
+            </div>
+          </div>
+          <div class="biz-form-group">
+            <label class="biz-form-label">진료(사고)일자 *</label>
+            <input class="biz-input" id="claim-date" type="date">
+          </div>
+          <div class="biz-form-group">
+            <label class="biz-form-label">질병/사고내용 *</label>
+            <textarea class="biz-input" id="claim-desc" placeholder="질병(사고)내용을 간단히 작성해주세요" style="height:80px;resize:none;"></textarea>
+          </div>
+          <div class="biz-form-group">
+            <label class="biz-form-label">보상 안내 받을 방식</label>
+            <div style="display:flex;gap:8px;">
+              <button id="claim-notify-설계사" onclick="setClaimNotify('설계사')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">보험설계사</button>
+              <button id="claim-notify-보험청구인" onclick="setClaimNotify('보험청구인')" style="flex:1;padding:9px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">보험청구인</button>
+            </div>
+          </div>
+          <div class="biz-form-group" style="margin-top:4px;">
+            <label class="biz-form-label">계좌 유형</label>
+            <div style="display:flex;gap:8px;">
+              <button id="claim-account-기자급계좌" onclick="setClaimAccount('기자급계좌')" style="flex:1;padding:9px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">기자급계좌</button>
+              <button id="claim-account-일반" onclick="setClaimAccount('일반')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">일반</button>
+            </div>
+          </div>
+          <div class="biz-form-group"><label class="biz-form-label">은행명</label>
+            <select class="biz-input" id="claim-bank">
+              <option value="">은행 선택</option>
+              <option>국민은행</option><option>신한은행</option><option>우리은행</option><option>하나은행</option>
+              <option>농협은행</option><option>기업은행</option><option>카카오뱅크</option><option>케이뱅크</option>
+              <option>토스뱅크</option><option>SC제일은행</option><option>씨티은행</option><option>새마을금고</option>
+              <option>신협</option><option>우체국</option><option>수협</option><option>대구은행</option>
+              <option>부산은행</option><option>경남은행</option><option>전북은행</option><option>광주은행</option>
+            </select>
+          </div>
+          <div class="biz-form-group"><label class="biz-form-label">계좌번호</label><input class="biz-input" id="claim-account-num" placeholder="- 없이 입력" type="tel"></div>
+          <div class="biz-form-group"><label class="biz-form-label">예금주</label><input class="biz-input" id="claim-account-holder" placeholder="예금주명"></div>
+          <button class="biz-btn-primary" onclick="goClaimStep(4)">다음 →</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: 제출 -->
+      <div id="claim-step-4" style="display:none;">
+        <!-- 서명 -->
+        <div class="biz-card" style="margin-bottom:10px;">
+          <div class="biz-card-title">✍️ 서명</div>
+          <div style="margin-bottom:8px;">
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <button id="claim-sig-tab-대면" onclick="setClaimSigTab('대면')" style="flex:1;padding:9px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">대면 서명</button>
+              <button id="claim-sig-tab-비대면" onclick="setClaimSigTab('비대면')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">비대면 서명</button>
+            </div>
+            <canvas id="claim-sig-canvas" width="100%" style="width:100%;height:160px;border:1.5px solid #E5E8EB;border-radius:12px;background:#fff;touch-action:none;display:block;"></canvas>
+            <button onclick="clearClaimSig()" style="margin-top:6px;padding:6px 14px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:8px;font-size:12px;cursor:pointer;">↺ 다시 서명</button>
+          </div>
+        </div>
+        <div class="biz-card">
+          <div class="biz-card-title">📎 첨부서류</div>
+          <div style="border:1.5px dashed #E5E8EB;border-radius:12px;padding:20px;text-align:center;margin-bottom:10px;">
+            <div style="font-size:24px;margin-bottom:6px;">📄</div>
+            <div style="font-size:13px;color:#6B7684;margin-bottom:8px;">JPG, PNG, PDF (최대 50MB)</div>
+            <input type="file" id="claim-file-input" multiple accept=".jpg,.jpeg,.png,.pdf" style="display:none;" onchange="onClaimFileSelect(this)">
+            <button onclick="document.getElementById('claim-file-input').click()" style="padding:8px 16px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:8px;font-size:12px;cursor:pointer;">파일 선택</button>
+            <div id="claim-file-names" style="margin-top:8px;font-size:11px;color:#534AB7;"></div>
+          </div>
+          <div style="background:#FFF4E0;border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+            <div style="font-size:12px;font-weight:700;color:#B25A00;margin-bottom:6px;">필수 제출 서류</div>
+            <div style="font-size:11px;color:#854F0B;line-height:1.8;">• 간단서 또는 소견서<br>• 진료비 영수증 및 세부내역서<br>• 통장 사본 (신구 계좌 사)</div>
+          </div>
+          <div id="claim-summary" style="background:#F7F8FA;border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8;color:#191F28;"></div>
+          <button class="biz-btn-primary" onclick="submitClaim()" style="background:linear-gradient(135deg,#534AB7,#1B64DA);">🏥 청구서 제출</button>
+          <button onclick="goClaimStep(1)" style="width:100%;padding:12px;background:none;border:none;color:#6B7684;font-size:13px;cursor:pointer;margin-top:6px;">← 처음으로</button>
+        </div>
+      </div>
+    </div>
     <div class="biz-page" id="biz-page-more">
       <div class="biz-card">
         <div class="biz-card-title">👔 설계사 현황</div>
@@ -1870,6 +2014,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
     <button class="biz-nav-item" id="biz-nav-clients" onclick="switchBizPage('clients',this)"><span>👥</span>고객</button>
     <button class="biz-nav-item" id="biz-nav-ai" onclick="switchBizPage('ai',this)"><span>🤖</span>분석</button>
     <button class="biz-nav-item" id="biz-nav-db" onclick="switchBizPage('db',this)"><span>🗄️</span>DB</button>
+    <button class="biz-nav-item" id="biz-nav-claim" onclick="switchBizPage('claim',this)"><span>🏥</span>청구</button>
     <button class="biz-nav-item" id="biz-nav-more" onclick="switchBizPage('more',this)"><span>⋯</span>더보기</button>
   </nav>
 
@@ -2563,6 +2708,8 @@ function clearDoneTodos() {
   syncPush();
   renderTodos();
   showToast(`✅ 완료 항목 ${doneCount}개 삭제됨`);
+  // 스프레드시트 동기화
+  try { syncToSheets('todos'); } catch(e) {}
 }
 
 // ========== RENDER ==========
@@ -5957,15 +6104,15 @@ function switchBizPage(name, btn) {
   document.querySelectorAll('.biz-nav-item').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   else { const nb = document.getElementById('biz-nav-' + name); if(nb) nb.classList.add('active'); }
-  const titles = {dashboard:'대시보드', clients:'고객관리', ai:'AI 보장분석', db:'DB 수집관리', more:'더보기'};
+  const titles = {dashboard:'대시보드', clients:'고객관리', ai:'언더라이팅', db:'DB 수집관리', claim:'보험금청구', more:'더보기'};
   document.getElementById('biz-page-title').textContent = titles[name] || name;
   document.getElementById('biz-fab').style.display = ['clients','db'].includes(name) ? 'flex' : 'none';
   if (name === 'clients') renderBizClients();
   if (name === 'db') renderBizDb();
   if (name === 'more') renderBizAgents();
-  if (name === 'kakao') initKakaoPage();
   if (name === 'dashboard') renderBizDashboard();
   if (name === 'ai') { renderBizAiHistory(); renderUwHistory(); populateUwClientSelect(); }
+  if (name === 'claim') initClaimPage();
 }
 
 function openBizModal(id) { document.getElementById(id).classList.add('active'); }
@@ -6488,7 +6635,216 @@ function logKakaoCmd(cmd) {
 }
 
 // ========== 알림 ==========
-// ========== 알림 패널 ==========
+// ========== 보험금청구 ==========
+const INSURERS = {
+  '손해': ['AIG손해보험','AXA손해보험','DB손해보험','KB손해보험','NH농협손해보험','교직원공제','라이나손보','롯데손보','메리츠화재','삼성화재','새마을금고공제','수협공제','신한EZ손해보험','신협공제','예별손해보험','우체국보험','하나손해보험','한화손해보험','현대해상화재','흥국화재'],
+  '생명': ['교보생명','농협생명','동양생명','라이나생명','메트라이프','미래에셋생명','삼성생명','신한라이프','AIA생명','ABL생명','DB생명','KDB생명','NH농협생명','푸본현대생명','한화생명','흥국생명']
+};
+
+let claimData = {
+  name:'', ssn:'', phone:'', sameAsContractor: true,
+  contractorName:'', contractorPhone:'',
+  insurer:'', insurerType:'손해',
+  claimType:'질병', date:'', desc:'', notifyType:'보험청구인',
+  accountType:'기자급계좌', bank:'', accountNum:'', accountHolder:'',
+  sigType:'대면', sigData:'',
+  files:[]
+};
+
+// 서명 캔버스
+let sigCanvas, sigCtx, sigDrawing = false;
+
+function initSigCanvas() {
+  sigCanvas = document.getElementById('claim-sig-canvas');
+  if (!sigCanvas) return;
+  // 실제 픽셀 크기 설정
+  const rect = sigCanvas.getBoundingClientRect();
+  sigCanvas.width = rect.width || 300;
+  sigCanvas.height = 160;
+  sigCtx = sigCanvas.getContext('2d');
+  sigCtx.strokeStyle = '#191F28';
+  sigCtx.lineWidth = 2.5;
+  sigCtx.lineCap = 'round';
+  sigCtx.lineJoin = 'round';
+
+  // 터치/마우스 이벤트
+  sigCanvas.addEventListener('mousedown', e => { sigDrawing=true; sigCtx.beginPath(); sigCtx.moveTo(e.offsetX, e.offsetY); });
+  sigCanvas.addEventListener('mousemove', e => { if(!sigDrawing) return; sigCtx.lineTo(e.offsetX, e.offsetY); sigCtx.stroke(); });
+  sigCanvas.addEventListener('mouseup', () => { sigDrawing=false; claimData.sigData = sigCanvas.toDataURL(); });
+  sigCanvas.addEventListener('touchstart', e => { e.preventDefault(); sigDrawing=true; const t=e.touches[0]; const r=sigCanvas.getBoundingClientRect(); sigCtx.beginPath(); sigCtx.moveTo(t.clientX-r.left, t.clientY-r.top); }, {passive:false});
+  sigCanvas.addEventListener('touchmove', e => { e.preventDefault(); if(!sigDrawing) return; const t=e.touches[0]; const r=sigCanvas.getBoundingClientRect(); sigCtx.lineTo(t.clientX-r.left, t.clientY-r.top); sigCtx.stroke(); }, {passive:false});
+  sigCanvas.addEventListener('touchend', () => { sigDrawing=false; claimData.sigData = sigCanvas.toDataURL(); });
+}
+
+function clearClaimSig() {
+  if (!sigCtx || !sigCanvas) return;
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  claimData.sigData = '';
+}
+
+function setClaimSigTab(type) {
+  claimData.sigType = type;
+  ['대면','비대면'].forEach(t => {
+    const btn = document.getElementById('claim-sig-tab-' + t);
+    if (btn) { btn.style.background = t===type?'#534AB7':'#F7F8FA'; btn.style.color = t===type?'#fff':'#6B7684'; btn.style.border = t===type?'none':'1px solid #E5E8EB'; }
+  });
+}
+
+function setClaimAccount(type) {
+  claimData.accountType = type;
+  ['기자급계좌','일반'].forEach(t => {
+    const btn = document.getElementById('claim-account-' + t);
+    if (btn) { btn.style.background = t===type?'#534AB7':'#F7F8FA'; btn.style.color = t===type?'#fff':'#6B7684'; btn.style.border = t===type?'none':'1px solid #E5E8EB'; }
+  });
+}
+
+function initClaimPage() {
+  setTimeout(initSigCanvas, 100);
+  // 고객 드롭다운
+  const sel = document.getElementById('claim-client-select');
+  if (sel) {
+    const clients = getBizClients();
+    sel.innerHTML = '<option value="">직접 입력</option>' +
+      clients.map(c => `<option value="${c.id}" data-name="${c.name}" data-phone="${c.phone||''}" data-ssn="${c.ssn||''}">${c.name}${c.phone?' · '+c.phone:''}</option>`).join('');
+  }
+  setClaimInsTab('손해');
+  setClaimType('질병');
+  setClaimNotify('보험청구인');
+  setClaimSame(true);
+}
+
+function onClaimClientSelect() {
+  const sel = document.getElementById('claim-client-select');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt.value) return;
+  document.getElementById('claim-name').value = opt.dataset.name || '';
+  document.getElementById('claim-phone').value = opt.dataset.phone || '';
+  if (opt.dataset.ssn) {
+    const ssn = opt.dataset.ssn.replace('-','');
+    document.getElementById('claim-ssn1').value = ssn.slice(0,6);
+    document.getElementById('claim-ssn2').value = ssn.slice(6);
+  }
+}
+
+function setClaimSame(same) {
+  claimData.sameAsContractor = same;
+  document.getElementById('claim-same-yes').style.background = same ? '#534AB7' : '#F7F8FA';
+  document.getElementById('claim-same-yes').style.color = same ? '#fff' : '#6B7684';
+  document.getElementById('claim-same-no').style.background = !same ? '#534AB7' : '#F7F8FA';
+  document.getElementById('claim-same-no').style.color = !same ? '#fff' : '#6B7684';
+  document.getElementById('claim-contractor-section').style.display = same ? 'none' : '';
+}
+
+function setClaimInsTab(type) {
+  claimData.insurerType = type;
+  ['손해','생명'].forEach(t => {
+    const btn = document.getElementById('claim-ins-tab-' + t);
+    if (btn) { btn.style.background = t === type ? '#534AB7' : '#F7F8FA'; btn.style.color = t === type ? '#fff' : '#6B7684'; }
+  });
+  const list = document.getElementById('claim-ins-list');
+  if (!list) return;
+  list.innerHTML = INSURERS[type].map(ins => `
+    <button onclick="selectInsurer('${ins}')" style="padding:10px 4px;background:#fff;border:1px solid ${claimData.insurer===ins?'#534AB7':'#E5E8EB'};border-radius:10px;font-size:11px;font-weight:600;color:${claimData.insurer===ins?'#534AB7':'#191F28'};cursor:pointer;text-align:center;font-family:inherit;">${ins}</button>
+  `).join('');
+}
+
+function selectInsurer(ins) {
+  claimData.insurer = ins;
+  setClaimInsTab(claimData.insurerType);
+  const badge = document.getElementById('claim-selected-ins');
+  if (badge) { badge.style.display = ''; badge.textContent = '✓ ' + ins + ' 선택됨'; }
+}
+
+function setClaimType(type) {
+  claimData.claimType = type;
+  ['질병','상해','교통사고'].forEach(t => {
+    const btn = document.getElementById('claim-type-' + t);
+    if (btn) { btn.style.background = t === type ? '#534AB7' : '#F7F8FA'; btn.style.color = t === type ? '#fff' : '#6B7684'; btn.style.border = t === type ? 'none' : '1px solid #E5E8EB'; }
+  });
+}
+
+function setClaimNotify(type) {
+  claimData.notifyType = type;
+  ['설계사','보험청구인'].forEach(t => {
+    const btn = document.getElementById('claim-notify-' + t);
+    if (btn) { btn.style.background = t === type ? '#534AB7' : '#F7F8FA'; btn.style.color = t === type ? '#fff' : '#6B7684'; btn.style.border = t === type ? 'none' : '1px solid #E5E8EB'; }
+  });
+}
+
+function onClaimFileSelect(input) {
+  claimData.files = Array.from(input.files);
+  const el = document.getElementById('claim-file-names');
+  if (el) el.textContent = claimData.files.map(f => f.name).join(', ');
+}
+
+function goClaimStep(step) {
+  [1,2,3,4].forEach(s => {
+    const el = document.getElementById('claim-step-' + s);
+    if (el) el.style.display = s === step ? '' : 'none';
+    const btn = document.getElementById('claim-step-btn-' + s);
+    if (btn) { btn.style.background = s === step ? '#534AB7' : '#F7F8FA'; btn.style.color = s === step ? '#fff' : '#B0B8C1'; }
+  });
+  if (step === 4) { renderClaimSummary(); setTimeout(initSigCanvas, 100); }
+}
+
+function renderClaimSummary() {
+  const el = document.getElementById('claim-summary');
+  if (!el) return;
+  const name = document.getElementById('claim-name')?.value || '';
+  const phone = document.getElementById('claim-phone')?.value || '';
+  const date = document.getElementById('claim-date')?.value || '';
+  const desc = document.getElementById('claim-desc')?.value || '';
+  el.innerHTML = `
+    <div style="font-weight:700;margin-bottom:8px;">📋 청구 내용 확인</div>
+    <div>👤 피보험자: ${name}</div>
+    <div>📱 연락처: ${phone}</div>
+    <div>🏢 보험사: ${claimData.insurer||'미선택'}</div>
+    <div>🏥 사고유형: ${claimData.claimType}</div>
+    <div>📅 진료일: ${date}</div>
+    <div>📝 내용: ${desc}</div>
+    ${claimData.bank ? `<div>🏦 ${claimData.bank} ${claimData.accountNum} (${claimData.accountHolder})</div>` : ''}
+    ${claimData.files.length ? `<div>📎 첨부: ${claimData.files.length}개</div>` : ''}
+    ${claimData.sigData ? `<div>✍️ 서명 완료</div><img src="${claimData.sigData}" style="width:100%;max-height:80px;border:1px solid #E5E8EB;border-radius:8px;margin-top:4px;">` : '<div style="color:#F04452;">⚠️ 서명 필요</div>'}
+  `;
+}
+
+function submitClaim() {
+  const name = document.getElementById('claim-name')?.value?.trim();
+  if (!name) { showBizToast('⚠️ 피보험자 이름을 입력하세요'); goClaimStep(1); return; }
+  if (!claimData.insurer) { showBizToast('⚠️ 보험사를 선택하세요'); goClaimStep(2); return; }
+  const desc = document.getElementById('claim-desc')?.value?.trim();
+  if (!desc) { showBizToast('⚠️ 사고 내용을 입력하세요'); goClaimStep(3); return; }
+
+  // 청구 링크 열기 (openarena)
+  const insurerUrls = {
+    '현대해상화재': 'https://openarena.co.kr/autoclain/step1',
+    'DB손해보험': 'https://www.directdb.co.kr',
+    '삼성화재': 'https://www.samsungfire.com',
+    '메리츠화재': 'https://www.meritzfire.com',
+    'KB손해보험': 'https://www.kbinsure.co.kr',
+  };
+
+  const url = insurerUrls[claimData.insurer];
+  if (url) {
+    window.open(url, '_blank');
+    showBizToast('✅ 청구 페이지로 이동합니다');
+  } else {
+    showBizToast('✅ 청구서 정보가 저장됐어요');
+  }
+
+  // Supabase 저장
+  if (sb && authUser) {
+    sb.from('claim_learnings').insert({
+      user_id: authUser.id,
+      insurer: claimData.insurer,
+      claim_type: claimData.claimType,
+      client_name: name,
+      date: document.getElementById('claim-date')?.value,
+      desc,
+      created_at: new Date().toISOString()
+    }).then(() => {}).catch(() => {});
+  }
+}
 const BIZ_NOTIF_KEY = 'insearch_biz_notifs';
 
 function getBizNotifs() {
