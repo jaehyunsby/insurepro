@@ -6243,8 +6243,8 @@ function switchBizPage(name, btn) {
   if (name === 'claim') initClaimPage();
 }
 
-function openBizModal(id) { document.getElementById(id).classList.add('active'); }
-function closeBizModal(id) { document.getElementById(id).classList.remove('active'); }
+function openBizModal(id) { const el=document.getElementById(id); if(el){el.style.display='flex';el.classList.add('active');} }
+function closeBizModal(id) { const el=document.getElementById(id); if(el){el.classList.remove('active');setTimeout(()=>{if(!el.classList.contains('active'))el.style.display='none';},250);} }
 
 function handleBizFab() {
   if (bizCurrentPage === 'clients') openBizClientModal();
