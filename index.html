@@ -2009,6 +2009,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
           </div>
           <div id="claim-summary" style="background:#F7F8FA;border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8;color:#191F28;"></div>
           <button onclick="showClaimPreview()" style="width:100%;padding:13px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">👁 양식 미리보기</button>
+          <button onclick="saveDraftClaim()" style="width:100%;padding:13px;background:#FFF4E0;border:1px solid #B25A00;border-radius:12px;font-size:13px;font-weight:700;color:#B25A00;cursor:pointer;font-family:inherit;margin-bottom:8px;">💾 임시저장</button>
           <button class="biz-btn-primary" onclick="showPrivacyAndSubmit()" style="background:linear-gradient(135deg,#534AB7,#1B64DA);">🏥 청구서 제출</button>
           <button onclick="goClaimStep(1)" style="width:100%;padding:12px;background:none;border:none;color:#6B7684;font-size:13px;cursor:pointer;margin-top:6px;">← 처음으로</button>
         </div>
@@ -6984,7 +6985,7 @@ async function renderClaimHistory() {
     const kw = document.getElementById('claim-history-search')?.value?.toLowerCase() || '';
     let items = (data || []).filter(d => {
       if (kw && !d.client_name?.toLowerCase().includes(kw) && !d.insurer?.toLowerCase().includes(kw)) return false;
-      if (claimHistoryFilter === 'pending') return !d.sent_at && !d.failed_at;
+      if (claimHistoryFilter === 'pending') return !!d.is_draft;
       if (claimHistoryFilter === 'sent') return !!d.sent_at;
       if (claimHistoryFilter === 'failed') return !!d.failed_at;
       return true;
@@ -6992,7 +6993,7 @@ async function renderClaimHistory() {
 
     // 탭 카운트 업데이트
     const all = data?.length || 0;
-    const pending = data?.filter(d => !d.sent_at && !d.failed_at).length || 0;
+    const pending = data?.filter(d => d.is_draft).length || 0;
     const sent = data?.filter(d => d.sent_at).length || 0;
     const failed = data?.filter(d => d.failed_at).length || 0;
     const chfAll = document.getElementById('chf-all');
@@ -7012,6 +7013,7 @@ async function renderClaimHistory() {
     el.innerHTML = items.map(d => {
       const statusLabel = d.sent_at ? '<span style="background:#E6F7EF;color:#00A05C;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">발송완료</span>' :
                           d.failed_at ? '<span style="background:#FEF1F2;color:#F04452;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">발송실패</span>' :
+                          d.is_draft ? '<span style="background:#FFF4E0;color:#B25A00;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">임시저장</span>' :
                           '<span style="background:#E8F3FF;color:#1B64DA;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">발송대기</span>';
       const date = d.created_at ? new Date(d.created_at).toLocaleDateString('ko') : '';
       const timeAgo = d.created_at ? getTimeAgo(new Date(d.created_at)) : '';
@@ -7045,6 +7047,35 @@ async function renderClaimHistory() {
   } catch(e) {
     el.innerHTML = '<div style="text-align:center;padding:20px;color:#F04452;font-size:13px;">오류: ' + e.message + '</div>';
   }
+}
+
+// 임시저장
+async function saveDraftClaim() {
+  const name = document.getElementById('claim-name')?.value?.trim();
+  if (!name) { showBizToast('⚠️ 피보험자 이름을 입력하세요'); goClaimStep(1); return; }
+
+  if (sb && authUser) {
+    const { error } = await sb.from('claim_learnings').insert({
+      user_id: authUser.id,
+      insurer: claimData.insurer || '',
+      claim_type: claimData.claimType,
+      client_name: name,
+      client_ssn: (document.getElementById('claim-ssn1')?.value||'') + '-' + (document.getElementById('claim-ssn2')?.value||''),
+      client_phone: document.getElementById('claim-phone')?.value || '',
+      date: document.getElementById('claim-date')?.value || '',
+      desc: document.getElementById('claim-desc')?.value || '',
+      bank: document.getElementById('claim-bank')?.value || '',
+      account_num: document.getElementById('claim-account-num')?.value || '',
+      account_holder: document.getElementById('claim-account-holder')?.value || '',
+      sig_data: claimData.sigData || null,
+      notify_type: claimData.notifyType,
+      is_draft: true,
+      created_at: new Date().toISOString()
+    });
+    if (error) { showBizToast('❌ 저장 실패: ' + error.message); return; }
+  }
+  showBizToast('💾 임시저장됐어요');
+  setClaimView('history');
 }
 
 // 개인정보 동의서 표시
