@@ -6632,12 +6632,22 @@ async function syncToSheets(type) {
       등록일: d.createdAt ? d.createdAt.slice(0,10) : ''
     }));
   } else if (type === 'todos') {
-    data = (window.state?.todos||[]).map(t => ({
+    let todos = window.state?.todos || [];
+    if (!todos.length && sb && authUser) {
+      const { data: ud } = await sb.from('user_data').select('data').eq('user_id', authUser.id).maybeSingle();
+      todos = ud?.data?.todos || [];
+    }
+    data = todos.map(t => ({
       ID: t.id, 제목: t.title||'', 마감일: t.dueDate||'',
       우선순위: t.priority||'', 완료여부: t.done?'완료':'미완료', 메모: t.memo||''
     }));
   } else if (type === 'schedules') {
-    data = (window.state?.schedules||[]).map(s => ({
+    let schedules = window.state?.schedules || [];
+    if (!schedules.length && sb && authUser) {
+      const { data: ud } = await sb.from('user_data').select('data').eq('user_id', authUser.id).maybeSingle();
+      schedules = ud?.data?.schedules || [];
+    }
+    data = schedules.map(s => ({
       ID: s.id, 제목: s.title||'', 날짜: s.date||'', 시간: s.time||'',
       고객명: s.clientName||'', 메모: s.memo||'', 완료여부: s.done?'완료':'미완료'
     }));
