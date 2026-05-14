@@ -571,6 +571,9 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
     <div class="rec-sub active" id="rec-sub-todos">
       <div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="todo-search" placeholder="할일 검색" oninput="onTodoSearchInput()"></div>
       <div class="tab-group"><button class="tab-btn active" data-todo-filter="active">진행 중</button><button class="tab-btn" data-todo-filter="today">오늘</button><button class="tab-btn" data-todo-filter="overdue">지남</button><button class="tab-btn" data-todo-filter="done">완료</button><button class="tab-btn" data-todo-filter="all">전체</button></div>
+      <div style="padding:6px 16px 0;display:flex;justify-content:flex-end;">
+        <button onclick="clearDoneTodos()" style="font-size:11px;color:#F04452;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;" id="clear-done-btn">🗑 완료 항목 삭제</button>
+      </div>
       <div id="todos-list"></div>
     </div>
     <!-- 메모 -->
@@ -2551,6 +2554,16 @@ document.querySelectorAll('[data-goal-filter]').forEach(btn => btn.addEventListe
   renderGoals();
 }));
 function onTodoSearchInput() { todoSearch = document.getElementById('todo-search').value; renderTodos(); }
+
+function clearDoneTodos() {
+  const doneCount = (state.todos || []).filter(t => t.done).length;
+  if (!doneCount) { showToast('완료된 할일이 없어요'); return; }
+  if (!confirm(`완료된 할일 ${doneCount}개를 삭제할까요?`)) return;
+  state.todos = (state.todos || []).filter(t => !t.done);
+  syncPush();
+  renderTodos();
+  showToast(`✅ 완료 항목 ${doneCount}개 삭제됨`);
+}
 
 // ========== RENDER ==========
 function render() { renderHome(); renderBudgetPage(); renderRecordsPage(); renderMore(); renderSettings(); }
@@ -6815,28 +6828,48 @@ async function runUwAnalysis() {
   const t3 = setTimeout(() => { if(loadingMsg) loadingMsg.textContent = '✍️ 고지사항 정리 중...'; }, 15000);
 
   try {
+    const SYSTEM_PROMPT = `당신은 대한민국 보험 전문 언더라이팅 AI입니다.
+심평원 진료내역 자료를 분석하여 보험 가입 시 알릴의무(고지사항)를 정리해주세요.
+반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트는 절대 포함하지 마세요.
+{"진료내역":[{"날짜":"YYYY-MM","의료기관":"기관명","상병명":"진단명","횟수":"N회"}],"입원수술":[{"기간":"기간","의료기관":"기관명","내용":"내용","일수":"N일"}],"고지사항":"고지사항 텍스트","요약":"한줄요약"}`;
+
+    // 입력 내용 구성
+    let userText = payload.text || '';
+    if (payload.files && payload.files.length) {
+      userText = '첨부 파일의 심평원 진료내역을 분석해주세요.';
+    }
+    if (payload.fewShot && payload.fewShot.length) {
+      userText += '\n\n【참고 사례】\n' + payload.fewShot.map(s => '- ' + s).join('\n');
+    }
+
     const res = await fetch(`${INSEARCH_BACKEND}/api/ai/gemini`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': BIZ_API_KEY
+      },
       body: JSON.stringify({
-        feature: 'underwriting',
-        ...payload
+        contents: [{ role: 'user', parts: [{ text: userText }] }],
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        generationConfig: { temperature: 0.1, maxOutputTokens: 4000 }
       })
     });
     clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
     if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
     const data = await res.json();
 
-    // 백엔드가 {result: "..."} 또는 파싱된 객체를 반환
+    // gemini.js 반환 형식: candidates[0].content.parts[0].text
     let parsed;
-    if (data.진료내역 || data.고지사항) {
-      parsed = data;
-    } else {
-      const raw = data.result || data.text || '';
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || data.result || data.text || '';
+    if (raw) {
       const jsonText = raw.replace(/```json\n?|```/g, '').trim();
       try { parsed = JSON.parse(jsonText); } catch(e) {
         parsed = { 진료내역: [], 입원수술: [], 고지사항: raw, 요약: '분석 완료' };
       }
+    } else if (data.진료내역 || data.고지사항) {
+      parsed = data;
+    } else {
+      throw new Error('응답 파싱 실패');
     }
 
     uwLastResult = parsed;
