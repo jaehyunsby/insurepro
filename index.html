@@ -7062,8 +7062,8 @@ async function saveDraftClaim() {
       client_name: name,
       client_ssn: (document.getElementById('claim-ssn1')?.value||'') + '-' + (document.getElementById('claim-ssn2')?.value||''),
       client_phone: document.getElementById('claim-phone')?.value || '',
-      date: document.getElementById('claim-date')?.value || '',
-      desc: document.getElementById('claim-desc')?.value || '',
+      claim_date: document.getElementById('claim-date')?.value || '',
+      description: document.getElementById('claim-desc')?.value || '',
       bank: document.getElementById('claim-bank')?.value || '',
       account_num: document.getElementById('claim-account-num')?.value || '',
       account_holder: document.getElementById('claim-account-holder')?.value || '',
@@ -7135,13 +7135,14 @@ async function finalSubmitClaim() {
       client_name: name,
       client_ssn: ssn,
       client_phone: document.getElementById('claim-phone')?.value || '',
-      date: document.getElementById('claim-date')?.value || '',
-      desc,
+      claim_date: document.getElementById('claim-date')?.value || '',
+      description: desc,
       bank: document.getElementById('claim-bank')?.value || '',
       account_num: document.getElementById('claim-account-num')?.value || '',
       account_holder: document.getElementById('claim-account-holder')?.value || '',
       sig_data: claimData.sigData || null,
       notify_type: claimData.notifyType,
+      is_draft: false,
       created_at: new Date().toISOString()
     });
   }
