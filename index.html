@@ -2169,7 +2169,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
   </div>
 
   <!-- 청구 확인 팝업 -->
-  <div class="biz-modal-backdrop" id="biz-claim-confirm-modal">
+  <div class="biz-modal-backdrop" id="biz-claim-confirm-modal" onclick="if(event.target===this)closeBizModal('biz-claim-confirm-modal')" style="display:none;">
     <div style="background:#fff;border-radius:20px;padding:24px;margin:auto;max-width:340px;width:90%;margin-top:20vh;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
         <span style="color:#534AB7;font-size:20px;">✓</span>
