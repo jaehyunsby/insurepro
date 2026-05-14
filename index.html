@@ -6741,6 +6741,14 @@ function logKakaoCmd(cmd) {
 
 // ========== 알림 ==========
 // 청구 뷰 전환
+function getTimeAgo(date) {
+  const diff = Math.floor((Date.now() - date) / 60000);
+  if (diff < 1) return '방금 전';
+  if (diff < 60) return diff + '분 전';
+  if (diff < 1440) return Math.floor(diff/60) + '시간 전';
+  return Math.floor(diff/1440) + '일 전';
+}
+
 function setClaimView(view) {
   const isNew = view === 'new';
   document.getElementById('claim-new-view').style.display = isNew ? '' : 'none';
@@ -6808,17 +6816,35 @@ async function renderClaimHistory() {
     }
 
     el.innerHTML = items.map(d => {
-      const statusLabel = d.sent_at ? '<span style="background:#E6F7EF;color:#00A05C;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;">발송완료</span>' :
-                          d.failed_at ? '<span style="background:#FEF1F2;color:#F04452;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;">발송실패</span>' :
-                          '<span style="background:#E8F3FF;color:#1B64DA;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;">발송대기</span>';
+      const statusLabel = d.sent_at ? '<span style="background:#E6F7EF;color:#00A05C;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">발송완료</span>' :
+                          d.failed_at ? '<span style="background:#FEF1F2;color:#F04452;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">발송실패</span>' :
+                          '<span style="background:#E8F3FF;color:#1B64DA;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">발송대기</span>';
       const date = d.created_at ? new Date(d.created_at).toLocaleDateString('ko') : '';
-      return `<div class="biz-card" style="margin-bottom:8px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <div style="font-size:13px;font-weight:700;flex:1;">${d.insurer||'보험사 미선택'}</div>
+      const timeAgo = d.created_at ? getTimeAgo(new Date(d.created_at)) : '';
+      return `<div class="biz-card" style="margin-bottom:10px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:#FF6B2B;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700;flex-shrink:0;">${(d.insurer||'?').slice(0,1)}</div>
+          <div style="flex:1;font-size:14px;font-weight:700;">${d.insurer||'보험사 미선택'}</div>
           ${statusLabel}
+          <span style="font-size:11px;color:#B0B8C1;">${timeAgo}</span>
         </div>
-        <div style="font-size:12px;color:#6B7684;">👤 ${d.client_name||''} · ${date}</div>
-        <div style="font-size:12px;color:#6B7684;">🏥 ${d.claim_type||''} · ${d.desc||''}</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#191F28;margin-bottom:6px;">
+          <span style="color:#B0B8C1;">👤</span> ${d.client_name||''}
+        </div>
+        <div style="border-top:1px solid #F2F4F6;padding-top:10px;margin-top:4px;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6B7684;margin-bottom:4px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
+            <span>📎</span> 첨부파일 ${d.sig_data?'1건':'0건'} <span style="margin-left:auto;">∨</span>
+          </div>
+          <div style="display:none;font-size:11px;color:#6B7684;padding:4px 0 0 18px;">${d.sig_data?'서명 이미지 포함':''}</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6B7684;margin-top:4px;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
+            <span>🛡️</span> 개인정보 동의서 <span style="margin-left:auto;">∨</span>
+          </div>
+          <div style="display:none;font-size:11px;color:#6B7684;padding:4px 0 0 18px;">개인(신용)정보 수집·이용·제공 동의 완료</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button style="flex:1;padding:8px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:8px;font-size:12px;color:#534AB7;cursor:pointer;font-family:inherit;">👁 양식 미리보기</button>
+          <button style="padding:8px 14px;background:#FEF1F2;border:1px solid #F04452;border-radius:8px;font-size:12px;color:#F04452;cursor:pointer;font-family:inherit;">↺ 재청구</button>
+        </div>
       </div>`;
     }).join('');
 
@@ -6966,6 +6992,23 @@ function setClaimAccount(type) {
 }
 
 function initClaimPage() {
+  // 폼 초기화
+  claimData = {
+    name:'', ssn:'', phone:'', sameAsContractor: true,
+    contractorName:'', contractorPhone:'',
+    insurer:'', insurerType:'손해',
+    claimType:'질병', date:'', desc:'', notifyType:'보험청구인',
+    accountType:'기자급계좌', bank:'', accountNum:'', accountHolder:'',
+    sigType:'대면', sigData:'',
+    files:[]
+  };
+  const fields = ['claim-name','claim-ssn1','claim-ssn2','claim-phone','claim-desc','claim-account-num','claim-account-holder'];
+  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const bankEl = document.getElementById('claim-bank'); if (bankEl) bankEl.value = '';
+  const fileEl = document.getElementById('claim-file-input'); if (fileEl) fileEl.value = '';
+  const fileNames = document.getElementById('claim-file-names'); if (fileNames) fileNames.textContent = '';
+  setClaimView('new');
+  goClaimStep(1);
   setTimeout(initSigCanvas, 100);
   // 고객 드롭다운
   const sel = document.getElementById('claim-client-select');
