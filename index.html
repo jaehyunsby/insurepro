@@ -6804,135 +6804,338 @@ function renderPreviewPage(d) {
   const info = document.getElementById('preview-page-info');
   if (info) info.textContent = previewCurrentPage + ' / ' + PREVIEW_TOTAL;
   if (!el) return;
+
   const today = new Date();
-  const yy = today.getFullYear(), mm = String(today.getMonth()+1).padStart(2,'0'), dd = String(today.getDate()).padStart(2,'0');
+  const yy = today.getFullYear();
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd = String(today.getDate()).padStart(2,'0');
   const ssn = d.client_ssn || '';
   const ssnParts = ssn.split('-');
   const ssn1 = ssnParts[0] || '';
   const ssn2 = ssnParts[1] || '';
-  const base = '<div style="font-family:\'맑은 고딕\',sans-serif;font-size:10px;padding:12px;background:#fff;">';
+  const ssnMasked = ssn1 + (ssn2 ? '-' + ssn2[0] + '******' : '');
+
+  const S = 'style=';
+  const tbl = S+'"width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;"';
+  const th = S+'"border:1px solid #aaa;padding:5px;background:#f0f0f0;font-weight:700;"';
+  const td = S+'"border:1px solid #aaa;padding:5px;"';
+  const tdg = S+'"border:1px solid #aaa;padding:5px;background:#f0f0f0;"';
 
   if (previewCurrentPage === 1) {
-    el.innerHTML = base +
-      '<div style="display:flex;align-items:center;justify-content:space-between;border:2px solid #E5522A;padding:6px 10px;margin-bottom:8px;">' +
-        '<div style="font-size:14px;font-weight:900;color:#191F28;">보험금청구서 <span style="font-size:11px;font-weight:600;">(질병·상해)</span></div>' +
-        '<div style="font-size:16px;font-weight:900;color:#E5522A;">HiLife</div>' +
-      '</div>' +
-      '<div style="background:#FFF3F0;border:1px solid #E5522A;border-radius:6px;padding:8px;margin-bottom:10px;font-size:9px;color:#666;">📠 팩스: 0507-774-6060</div>' +
-      '<div style="background:#E5522A;color:#fff;padding:4px 8px;font-weight:700;font-size:10px;">① 인적사항 및 보상 안내받으실 분</div>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;">' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;text-align:center;">피보험자</td>' +
-        '<td style="border:1px solid #999;padding:4px;">성명<br><b>' + (d.client_name||'') + '</b></td>' +
-        '<td style="border:1px solid #999;padding:4px;">주민번호<br><b>' + ssn1 + ' - ' + ssn2 + '</b></td>' +
-        '<td style="border:1px solid #999;padding:4px;font-size:8px;">의료급여 □예 ☑아니오</td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;text-align:center;">보험금청구인</td>' +
-        '<td style="border:1px solid #999;padding:4px;"><b>' + (d.client_name||'') + '</b></td>' +
-        '<td style="border:1px solid #999;padding:4px;" colspan="2">연락처: <b>' + (d.client_phone||'') + '</b></td></tr>' +
-      '</table>' +
-      '<div style="background:#E5522A;color:#fff;padding:4px 8px;font-weight:700;font-size:10px;">② 청구사항</div>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;">' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">발병일시</td>' +
-        '<td style="border:1px solid #999;padding:4px;">' + (d.date||'') + '</td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">사고유형</td>' +
-        '<td style="border:1px solid #999;padding:4px;">' +
-          (d.claim_type==='질병'?'☑':'□') + ' 질병 &nbsp;' +
-          (d.claim_type==='상해'?'☑':'□') + ' 상해 &nbsp;' +
-          (d.claim_type==='교통사고'?'☑':'□') + ' 교통사고' +
-        '</td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">사고내용</td>' +
-        '<td style="border:1px solid #999;padding:4px;">' + (d.desc||'') + '</td></tr>' +
-      '</table>' +
-      '<div style="background:#E5522A;color:#fff;padding:4px 8px;font-weight:700;font-size:10px;">③ 보험금 수령계좌</div>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;">' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">금융기관명</td>' +
-        '<td style="border:1px solid #999;padding:4px;"><b>' + (d.bank||'') + '</b></td>' +
-        '<td style="border:1px solid #999;padding:4px;background:#F5F5F5;">계좌번호</td>' +
-        '<td style="border:1px solid #999;padding:4px;"><b>' + (d.account_num||'') + '</b></td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">예금주</td>' +
-        '<td style="border:1px solid #999;padding:4px;" colspan="3"><b>' + (d.account_holder||'') + '</b></td></tr>' +
-      '</table>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;">' +
-        '<tr><td style="border:1px solid #999;padding:6px;background:#F5F5F5;">작성일자</td>' +
-        '<td style="border:1px solid #999;padding:6px;"><b>20' + String(yy).slice(2) + ' 년 ' + mm + ' 월 ' + dd + ' 일</b></td>' +
-        '<td style="border:1px solid #999;padding:6px;background:#F5F5F5;">보험금청구인</td>' +
-        '<td style="border:1px solid #999;padding:6px;text-align:center;"><b>' + (d.client_name||'') + '</b>' +
-          (d.sig_data ? '<img src="' + d.sig_data + '" style="height:30px;display:block;margin:0 auto;">' : ' (서명란)') +
-        '</td></tr>' +
-      '</table>' +
-      '<div style="display:flex;justify-content:space-between;border-top:2px solid #E5522A;padding-top:6px;">' +
-        '<div style="font-size:8px;color:#666;">1588-5656 | www.hi.co.kr</div>' +
-        '<div style="font-size:12px;font-weight:900;color:#E5522A;">현대해상화재보험</div>' +
-      '</div>' +
-      '<div style="text-align:center;font-size:8px;color:#B0B8C1;margin-top:4px;">현재페이지는 (1/3)입니다.</div>' +
-    '</div>';
+    el.innerHTML = `<div style="font-family:'Malgun Gothic','맑은 고딕',sans-serif;font-size:9.5px;padding:14px;background:#fff;line-height:1.5;">
+
+    <!-- 헤더 -->
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:6px;border-bottom:3px solid #e55;">
+      <div style="font-size:18px;font-weight:900;color:#222;">보험금청구서 <span style="font-size:13px;font-weight:600;">(질병ㆍ상해)</span></div>
+      <div style="font-size:20px;font-weight:900;color:#e55;font-style:italic;">HiLife</div>
+    </div>
+
+    <!-- 청구방법 안내 -->
+    <div style="background:#e55;color:#fff;padding:3px 8px;font-size:9px;font-weight:700;display:inline-block;margin-bottom:6px;">보험금 청구 방법 안내</div>
+    <div style="font-size:8px;color:#555;margin-bottom:10px;">모바일/홈페이지/팩스 접수는 청구액 1,000만원 이하에 한함 &nbsp;|&nbsp; 팩스접수: 0507-774-6060</div>
+
+    <!-- ① 인적사항 -->
+    <div style="background:#e55;color:#fff;padding:3px 8px;font-size:9px;font-weight:700;margin-bottom:2px;">① 인적사항 및 보상 안내받으실 분</div>
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;text-align:center;width:12%;" rowspan="2">피보험자<br>(질병/상해)</td>
+        <td style="border:1px solid #aaa;padding:4px;width:18%;">성명<br><b style="font-size:11px;">${d.client_name||''}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;" colspan="2">주민번호<br><b>${ssn1||'______'} - ${ssn2||'_______'}</b></td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;">직장/직무<br>&nbsp;</td>
+        <td style="border:1px solid #aaa;padding:4px;font-size:8px;">의료급여수급권자<br>□예 ☑아니오</td>
+        <td style="border:1px solid #aaa;padding:4px;font-size:8px;">단체보험가입여부<br>□예 ☑아니오</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;text-align:center;">계약자</td>
+        <td style="border:1px solid #aaa;padding:4px;">성명<br><b>${d.client_name||''}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;" colspan="2">주민번호<br><b>${ssn1||'______'} - ${ssn2||'_______'}</b></td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;text-align:center;" rowspan="2">보험금<br>처리안내</td>
+        <td style="border:1px solid #aaa;padding:4px;">성명<br><b>${d.client_name||''}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;" colspan="2">연락처<br><b>${d.client_phone||''}</b></td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;" colspan="3">안내대상 ☑피보험자 □계약자 □기타 &nbsp;&nbsp; 안내방법 ☑문자 □전화 □우편 □E-MAIL □거부</td>
+      </tr>
+    </table>
+
+    <!-- ② 청구사항 -->
+    <div style="background:#e55;color:#fff;padding:3px 8px;font-size:9px;font-weight:700;margin-bottom:2px;">② 청구사항 &nbsp;<span style="font-weight:400;font-size:8px;">해당 유형에 V 체크해주세요.</span></div>
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;width:18%;">발병일시(사고일시)</td>
+        <td style="border:1px solid #aaa;padding:4px;">${d.date||yy} 년 &nbsp; 월 &nbsp; 일 &nbsp;&nbsp; 시경 &nbsp;&nbsp;&nbsp; 접수구분 □신규접수 □동일사고 추가접수</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">사고유형</td>
+        <td style="border:1px solid #aaa;padding:4px;">
+          ${d.claim_type==='질병'?'☑':'□'} 질병 &nbsp;&nbsp;
+          ${d.claim_type==='상해'?'☑':'□'} 상해 &nbsp;&nbsp;
+          ${d.claim_type==='교통사고'?'☑':'□'} 교통사고 &nbsp;&nbsp;&nbsp;
+          치료형태 □입원 □통원
+        </td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">치료경위(사고내용)</td>
+        <td style="border:1px solid #aaa;padding:4px;min-height:30px;">${d.desc||d.description||''}<br>&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">청구담보</td>
+        <td style="border:1px solid #aaa;padding:4px;font-size:8px;">□실손의료비 □입원일당 □진단비 □수술비 □후유장해 □사망 □기타(&nbsp;&nbsp;&nbsp;&nbsp;)</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">타보험가입사항</td>
+        <td style="border:1px solid #aaa;padding:4px;font-size:8px;">□삼성화재 □DB손보 □KB손보 □메리츠 □삼성생명 □한화생명 □교보생명 □기타</td>
+      </tr>
+    </table>
+
+    <!-- ③ 보험금 수령계좌 -->
+    <div style="background:#e55;color:#fff;padding:3px 8px;font-size:9px;font-weight:700;margin-bottom:2px;">③ 보험금 수령계좌 &nbsp;<span style="font-size:8px;font-weight:400;">□자동이체 계좌 요청 (수익자와 예금주 동일한 경우 선택 가능)</span></div>
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;width:20%;">금융기관명</td>
+        <td style="border:1px solid #aaa;padding:4px;"><b>${d.bank||''}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;width:18%;">계좌번호</td>
+        <td style="border:1px solid #aaa;padding:4px;"><b>${d.account_num||''}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;width:12%;">예금주</td>
+        <td style="border:1px solid #aaa;padding:4px;"><b>${d.account_holder||''}</b></td>
+      </tr>
+    </table>
+
+    <!-- ④ 확인사항 / 서명 -->
+    <div style="background:#e55;color:#fff;padding:3px 8px;font-size:9px;font-weight:700;margin-bottom:4px;">④ 확인사항</div>
+    <div style="font-size:8px;color:#555;margin-bottom:8px;line-height:1.6;">위에 기재한 보험금 청구 내용이 사실과 다름이 없음을 확인하며 "보험금 지급절차 안내문"을 통해 보상절차에 대한 정보를 안내받았음을 확인하고 상기와 같이 처리하는 것에 동의합니다.</div>
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:10px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#f5f5f5;width:18%;">작성일자</td>
+        <td style="border:1px solid #aaa;padding:5px;width:30%;"><b>20${String(yy).slice(2)} 년 ${mm} 월 ${dd} 일</b></td>
+        <td style="border:1px solid #aaa;padding:5px;background:#f5f5f5;width:25%;">보험금청구인(대리인)</td>
+        <td style="border:1px solid #aaa;padding:5px;text-align:center;">
+          <b>${d.client_name||''}</b> 성명
+          ${d.sig_data ? '<img src="'+d.sig_data+'" style="height:28px;vertical-align:middle;margin-left:8px;">' : '<span style="border-bottom:1px solid #999;display:inline-block;width:60px;margin-left:8px;">&nbsp;</span>'} (서명)
+        </td>
+      </tr>
+    </table>
+
+    <!-- 하단 -->
+    <div style="border-top:2px solid #e55;padding-top:5px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:7px;color:#555;">고객콜센터 1588-5656 | www.hi.co.kr</div>
+        <div style="font-size:7px;color:#555;">현재페이지는 - [1/8]입니다</div>
+      </div>
+      <div style="font-size:14px;font-weight:900;color:#e55;">현대해상화재보험</div>
+    </div>
+    </div>`;
 
   } else if (previewCurrentPage === 2) {
-    el.innerHTML = base +
-      '<div style="background:#FFF3F0;border:1px solid #E5522A;padding:4px 8px;font-weight:700;font-size:11px;margin-bottom:8px;">[필수] 개인(신용)정보 처리 상세 동의서 <span style="float:right;font-size:14px;color:#E5522A;">HiLife</span></div>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:6px;">' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">피보험자</td><td style="border:1px solid #999;padding:4px;"><b>' + (d.client_name||'') + '</b></td>' +
-        '<td style="border:1px solid #999;padding:4px;background:#F5F5F5;">주민번호</td><td style="border:1px solid #999;padding:4px;"><b>' + ssn1 + '-' + (ssn2?ssn2[0]+'******':'') + '</b></td></tr>' +
-      '</table>' +
-      '<div style="background:#534AB7;color:#fff;padding:4px 8px;font-size:9px;font-weight:700;margin-bottom:4px;">① 수집·이용에 관한 사항</div>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:8px;">' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;width:25%;">고유식별정보</td><td style="border:1px solid #999;padding:4px;">주민등록번호, 외국인등록번호, 여권번호, 운전면허번호</td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;" colspan="2" style="text-align:right;">위 고유식별정보 수집·이용에 동의하십니까? □동의하지 않음 <b>☑동의함</b></td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">민감정보</td><td style="border:1px solid #999;padding:4px;font-size:7px;">피보험자의 질병·상해에 관한 정보(진료기록, 상병명 등), 보험사고 조사 관련 정보</td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;" colspan="2" style="text-align:right;">위 민감정보 수집·이용에 동의하십니까? □동의하지 않음 <b>☑동의함</b></td></tr>' +
-      '</table>' +
-      '<div style="display:flex;justify-content:space-between;border-top:2px solid #E5522A;padding-top:6px;">' +
-        '<div style="font-size:8px;color:#666;">1588-5656 | www.hi.co.kr</div>' +
-        '<div style="font-size:12px;font-weight:900;color:#E5522A;">현대해상화재보험</div>' +
-      '</div>' +
-      '<div style="text-align:center;font-size:8px;color:#B0B8C1;margin-top:4px;">현재페이지는 (2/7)입니다.</div>' +
-    '</div>';
+    el.innerHTML = `<div style="font-family:'Malgun Gothic','맑은 고딕',sans-serif;font-size:9px;padding:14px;background:#fff;line-height:1.5;">
+
+    <div style="border:2px solid #e55;padding:4px 8px;font-size:11px;font-weight:900;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <span><b style="color:#e55;">[필수]</b> 보험금 청구를 위한 개인(신용)정보 처리 <b style="color:#e55;">상세</b> 동의서</span>
+      <span style="font-size:14px;font-weight:900;color:#e55;font-style:italic;">HiLife</span>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">피보험자</td>
+        <td style="border:1px solid #aaa;padding:4px;"><b>${d.client_name||''}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">생년월일/성별/사업자번호</td>
+        <td style="border:1px solid #aaa;padding:4px;"><b>${ssnMasked}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">사고번호</td>
+        <td style="border:1px solid #aaa;padding:4px;">&nbsp;</td>
+      </tr>
+    </table>
+
+    <div style="background:#4a86c8;color:#fff;padding:4px 10px;font-size:10px;font-weight:700;border-radius:4px;margin-bottom:6px;">1 수집ㆍ이용에 관한 사항</div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:8.5px;margin-bottom:8px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#f5f5f5;width:18%;vertical-align:top;">수집ㆍ이용목적</td>
+        <td style="border:1px solid #aaa;padding:5px;line-height:1.7;">
+          - 보험사고ㆍ보험사기조사 및 보험금지급ㆍ심사(손해사정 또는 의료자문, 잔존물대위, 구상업무 관련 포함)<br>
+          - 보험금청구서류 접수대행 서비스<br>
+          - 민원처리 및 분쟁대응, 금융거래 관련 업무
+        </td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#f5f5f5;vertical-align:top;">보유및이용기간</td>
+        <td style="border:1px solid #aaa;padding:5px;font-size:8px;line-height:1.6;">
+          동의일로부터 거래 종료 후 5년까지<br>
+          (단, 다른 관련 법령에 해당하는 경우 해당 법령상의 보존기간을 따름)
+        </td>
+      </tr>
+    </table>
+
+    <div style="font-size:9px;font-weight:700;margin-bottom:4px;">■ 수집ㆍ이용 항목</div>
+    <table style="width:100%;border-collapse:collapse;font-size:8.5px;margin-bottom:8px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#fff3e0;width:20%;vertical-align:middle;"><b>🔐 고유식별정보</b></td>
+        <td style="border:1px solid #aaa;padding:5px;">주민등록번호, 외국인등록번호, 여권번호, 운전면허번호</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;" colspan="2" style="text-align:right;font-size:8px;">위 고유식별정보 수집ㆍ이용에 동의하십니까? &nbsp; □동의하지 않음 &nbsp; <b>☑동의함</b></td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#fff0f0;vertical-align:top;"><b>⚠️ 민감정보</b></td>
+        <td style="border:1px solid #aaa;padding:5px;font-size:8px;line-height:1.6;">피보험자의 질병·상해에 관한 정보(진료기록, 상병명 등), 보험사고 조사(보험사기 포함) 및 손해사정 업무 수행과 관련하여 취득한 정보(경찰, 공공ㆍ국가기관, 의료기관 등으로부터 본인의 위임을 받아 취득한 각종 조사서, 증명서, 진료기록 등)</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;" colspan="2" style="text-align:right;font-size:8px;">위 민감정보 수집ㆍ이용에 동의하십니까? &nbsp; □동의하지 않음 &nbsp; <b>☑동의함</b></td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#e8f0fe;vertical-align:top;"><b>👤 개인(신용)정보</b><br><span style="font-size:7px;">일반개인정보</span></td>
+        <td style="border:1px solid #aaa;padding:5px;font-size:8px;">성명, 주소, 생년월일, 이메일, 유·무선 전화번호, 성별, 국적, 직업, 피보험자와 수익자의 관계, 국내거소신고번호</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#e8f0fe;vertical-align:top;"><span style="font-size:7px;">신용거래정보</span></td>
+        <td style="border:1px solid #aaa;padding:5px;font-size:8px;">금융거래 업무 관련 정보(보험금 지급계좌 등), 보험계약정보, 보험금정보</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;" colspan="2" style="text-align:right;font-size:8px;">위 개인(신용)정보 수집ㆍ이용에 동의하십니까? &nbsp; □동의하지 않음 &nbsp; <b>☑동의함</b></td>
+      </tr>
+    </table>
+
+    <div style="border-top:2px solid #e55;padding-top:5px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:7px;color:#555;">고객콜센터 1588-5656 | www.hi.co.kr &nbsp;|&nbsp; 현재페이지는 - [2/8]입니다</div>
+      <div style="font-size:13px;font-weight:900;color:#e55;">현대해상화재보험</div>
+    </div>
+    </div>`;
 
   } else if (previewCurrentPage === 3) {
-    el.innerHTML = base +
-      '<div style="background:#FFF3F0;border:1px solid #E5522A;padding:4px 8px;font-weight:700;font-size:11px;margin-bottom:8px;">[필수] 개인(신용)정보 처리 상세 동의서 <span style="float:right;font-size:14px;color:#E5522A;">HiLife</span></div>' +
-      '<div style="background:#534AB7;color:#fff;padding:4px 8px;font-size:9px;font-weight:700;margin-bottom:4px;">② 제공에 관한 사항</div>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:8px;">' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;width:25%;">제공받는자</td><td style="border:1px solid #999;padding:4px;font-size:7px;">보험회사, 금융거래기관, 계약관계자, 보험협회</td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">고유식별정보</td><td style="border:1px solid #999;padding:4px;">주민등록번호, 외국인등록번호</td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;" colspan="2" style="text-align:right;">위 고유식별정보 제공에 동의하십니까? □동의하지 않음 <b>☑동의함</b></td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">민감정보</td><td style="border:1px solid #999;padding:4px;font-size:7px;">피보험자의 질병·상해 정보, 손해사정 업무 관련 취득 정보</td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;" colspan="2" style="text-align:right;">위 민감정보 제공에 동의하십니까? □동의하지 않음 <b>☑동의함</b></td></tr>' +
-      '</table>' +
-      '<div style="display:flex;justify-content:space-between;border-top:2px solid #E5522A;padding-top:6px;">' +
-        '<div style="font-size:8px;color:#666;">1588-5656 | www.hi.co.kr</div>' +
-        '<div style="font-size:12px;font-weight:900;color:#E5522A;">현대해상화재보험</div>' +
-      '</div>' +
-      '<div style="text-align:center;font-size:8px;color:#B0B8C1;margin-top:4px;">현재페이지는 (3/7)입니다.</div>' +
-    '</div>';
+    el.innerHTML = `<div style="font-family:'Malgun Gothic','맑은 고딕',sans-serif;font-size:9px;padding:14px;background:#fff;line-height:1.5;">
+
+    <div style="border:2px solid #e55;padding:4px 8px;font-size:11px;font-weight:900;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <span><b style="color:#e55;">[필수]</b> 보험금 청구를 위한 개인(신용)정보 처리 <b style="color:#e55;">상세</b> 동의서</span>
+      <span style="font-size:14px;font-weight:900;color:#e55;font-style:italic;">HiLife</span>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">피보험자</td>
+        <td style="border:1px solid #aaa;padding:4px;"><b>${d.client_name||''}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">생년월일/성별/사업자번호</td>
+        <td style="border:1px solid #aaa;padding:4px;"><b>${ssnMasked}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">사고번호</td>
+        <td style="border:1px solid #aaa;padding:4px;">&nbsp;</td>
+      </tr>
+    </table>
+
+    <div style="background:#4a86c8;color:#fff;padding:4px 10px;font-size:10px;font-weight:700;border-radius:4px;margin-bottom:6px;">2 제공에 관한 사항 &nbsp;<span style="font-weight:400;font-size:8.5px;">1) 제공(국내)</span></div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:8.5px;margin-bottom:8px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#f5f5f5;width:18%;vertical-align:top;">제공받는자</td>
+        <td style="border:1px solid #aaa;padding:5px;font-size:8px;line-height:1.7;">
+          - 종합신용정보집중기관: 한국신용정보원<br>
+          - 공공기관 등: 금융위원회, 금융감독원, 국세청, 보험요율산출기관, 법원, 검찰 등<br>
+          - 보험회사 등: 생명·손해보험회사, 국내 재보험사, 공제사업자, 체신관서<br>
+          - 금융거래기관: 계좌개설 금융기관, 금융결제원<br>
+          - 보험협회 등: 생명ㆍ손해보험협회
+        </td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#f5f5f5;vertical-align:top;">보유및이용기간</td>
+        <td style="border:1px solid #aaa;padding:5px;font-size:8px;">제공받는 자의 이용목적을 달성할 때까지 (관련 법령상 보존기간을 따름)</td>
+      </tr>
+    </table>
+
+    <div style="font-size:9px;font-weight:700;margin-bottom:4px;">■ 제공 항목</div>
+    <table style="width:100%;border-collapse:collapse;font-size:8.5px;margin-bottom:8px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#fff3e0;width:20%;"><b>🔐 고유식별정보</b></td>
+        <td style="border:1px solid #aaa;padding:5px;">주민등록번호, 외국인등록번호</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;" colspan="2" style="text-align:right;font-size:8px;">위 고유식별정보 제공에 동의하십니까? &nbsp; □동의하지 않음 &nbsp; <b>☑동의함</b></td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#fff0f0;vertical-align:top;"><b>⚠️ 민감정보</b></td>
+        <td style="border:1px solid #aaa;padding:5px;font-size:8px;line-height:1.6;">피보험자의 질병·상해에 관한 정보(진료기록, 상병명 등), 보험사고 조사(보험사기 포함) 및 손해사정 업무 수행과 관련하여 취득한 정보</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;" colspan="2" style="text-align:right;font-size:8px;">위 민감정보 제공에 동의하십니까? &nbsp; □동의하지 않음 &nbsp; <b>☑동의함</b></td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#e8f0fe;vertical-align:top;"><b>👤 개인(신용)정보</b></td>
+        <td style="border:1px solid #aaa;padding:5px;font-size:8px;">성명, 주소, 생년월일, 이메일, 유·무선 전화번호, 성별, 국적, 직업, 피보험자와 수익자의 관계</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;" colspan="2" style="text-align:right;font-size:8px;">위 개인(신용)정보 제공에 동의하십니까? &nbsp; □동의하지 않음 &nbsp; <b>☑동의함</b></td>
+      </tr>
+    </table>
+
+    <div style="border-top:2px solid #e55;padding-top:5px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:7px;color:#555;">고객콜센터 1588-5656 | www.hi.co.kr &nbsp;|&nbsp; 현재페이지는 - [3/8]입니다</div>
+      <div style="font-size:13px;font-weight:900;color:#e55;">현대해상화재보험</div>
+    </div>
+    </div>`;
 
   } else {
-    el.innerHTML = base +
-      '<div style="background:#FFF3F0;border:1px solid #E5522A;padding:4px 8px;font-weight:700;font-size:11px;margin-bottom:8px;">[필수] 개인(신용)정보 처리 상세 동의서 <span style="float:right;font-size:14px;color:#E5522A;">HiLife</span></div>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:6px;">' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">피보험자</td><td style="border:1px solid #999;padding:4px;"><b>' + (d.client_name||'') + '</b></td>' +
-        '<td style="border:1px solid #999;padding:4px;background:#F5F5F5;">주민번호</td><td style="border:1px solid #999;padding:4px;"><b>' + ssn1 + '-' + (ssn2?ssn2[0]+'******':'') + '</b></td></tr>' +
-      '</table>' +
-      '<div style="background:#534AB7;color:#fff;padding:4px 8px;font-size:9px;font-weight:700;margin-bottom:4px;">③ 조회에 관한 사항</div>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:8px;">' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;width:25%;">조회대상기관</td><td style="border:1px solid #999;padding:4px;">한국신용정보원, 생명·손해보험협회</td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">조회목적</td><td style="border:1px solid #999;padding:4px;">보험사고 조사 및 보험금지급·심사</td></tr>' +
-        '<tr><td style="border:1px solid #999;padding:4px;background:#F5F5F5;">효력기간</td><td style="border:1px solid #999;padding:4px;">보험계약 종료 후 5년</td></tr>' +
-      '</table>' +
-      '<div style="border:2px dashed #E5522A;border-radius:8px;padding:12px;margin-top:8px;">' +
-        '<table style="width:100%;font-size:9px;">' +
-          '<tr><td style="padding:4px;color:#666;">동의일자</td><td><b>20' + String(yy).slice(2) + ' 년 ' + mm + ' 월 ' + dd + ' 일</b></td></tr>' +
-          '<tr><td style="padding:4px;color:#666;">동의자</td><td style="text-align:center;">' +
-            '<b>' + (d.client_name||'') + '</b> 성명 &nbsp;&nbsp;' +
-            (d.sig_data ? '<img src="' + d.sig_data + '" style="height:35px;vertical-align:middle;">' : '<span style="border-bottom:1px solid #999;display:inline-block;width:80px;">&nbsp;</span>') + ' 서명' +
-          '</td></tr>' +
-        '</table>' +
-      '</div>' +
-      '<div style="display:flex;justify-content:space-between;border-top:2px solid #E5522A;padding-top:6px;margin-top:8px;">' +
-        '<div style="font-size:8px;color:#666;">1588-5656 | www.hi.co.kr</div>' +
-        '<div style="font-size:12px;font-weight:900;color:#E5522A;">현대해상화재보험</div>' +
-      '</div>' +
-      '<div style="text-align:center;font-size:8px;color:#B0B8C1;margin-top:4px;">현재페이지는 (4/7)입니다.</div>' +
-    '</div>';
+    el.innerHTML = `<div style="font-family:'Malgun Gothic','맑은 고딕',sans-serif;font-size:9px;padding:14px;background:#fff;line-height:1.5;">
+
+    <div style="border:2px solid #e55;padding:4px 8px;font-size:11px;font-weight:900;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <span><b style="color:#e55;">[필수]</b> 보험금 청구를 위한 개인(신용)정보 처리 <b style="color:#e55;">상세</b> 동의서</span>
+      <span style="font-size:14px;font-weight:900;color:#e55;font-style:italic;">HiLife</span>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">피보험자</td>
+        <td style="border:1px solid #aaa;padding:4px;"><b>${d.client_name||''}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">생년월일/성별/사업자번호</td>
+        <td style="border:1px solid #aaa;padding:4px;"><b>${ssnMasked}</b></td>
+        <td style="border:1px solid #aaa;padding:4px;background:#f5f5f5;">사고번호</td>
+        <td style="border:1px solid #aaa;padding:4px;">&nbsp;</td>
+      </tr>
+    </table>
+
+    <div style="background:#4a86c8;color:#fff;padding:4px 10px;font-size:10px;font-weight:700;border-radius:4px;margin-bottom:6px;">3 조회에 관한 사항</div>
+    <table style="width:100%;border-collapse:collapse;font-size:8.5px;margin-bottom:10px;">
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#f5f5f5;width:20%;">조회대상기관</td>
+        <td style="border:1px solid #aaa;padding:5px;">종합신용정보집중기관, 생명ㆍ손해보험협회</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#f5f5f5;">조회목적</td>
+        <td style="border:1px solid #aaa;padding:5px;font-size:8px;">보험사고ㆍ보험사기 조사 및 보험금지급ㆍ심사 / 보험금 청구서류 집수대행 서비스</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #aaa;padding:5px;background:#f5f5f5;">조회동의의효력기간</td>
+        <td style="border:1px solid #aaa;padding:5px;font-size:8px;">해당 보험계약이 종료 후 5년까지 동의의 효력이 지속됩니다.</td>
+      </tr>
+    </table>
+
+    <!-- 서명란 -->
+    <div style="border:2px dashed #e55;border-radius:8px;padding:14px;margin-top:10px;">
+      <table style="width:100%;font-size:9px;">
+        <tr>
+          <td style="padding:6px;color:#666;width:30%;">동의일자</td>
+          <td style="padding:6px;"><b>20${String(yy).slice(2)}</b> 년 &nbsp; <b>${mm}</b> 월 &nbsp; <b>${dd}</b> 일</td>
+        </tr>
+        <tr>
+          <td style="padding:6px;color:#666;vertical-align:middle;">
+            동의자<br>
+            <span style="font-size:7px;">(계약자/피보험자/수익자<br>지정청구대리인, 법정대리인)</span>
+          </td>
+          <td style="padding:6px;text-align:center;">
+            <b style="font-size:12px;">${d.client_name||''}</b> &nbsp; 성명 &nbsp;&nbsp;&nbsp;
+            ${d.sig_data
+              ? '<img src="'+d.sig_data+'" style="height:38px;vertical-align:middle;border:1px solid #ddd;border-radius:4px;"> 서명'
+              : '<span style="border-bottom:1px solid #999;display:inline-block;width:100px;height:38px;">&nbsp;</span> 서명'
+            }
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="border-top:2px solid #e55;padding-top:5px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:7px;color:#555;">고객콜센터 1588-5656 | www.hi.co.kr &nbsp;|&nbsp; 현재페이지는 - [4/8]입니다</div>
+      <div style="font-size:13px;font-weight:900;color:#e55;">현대해상화재보험</div>
+    </div>
+    </div>`;
   }
 }
 
