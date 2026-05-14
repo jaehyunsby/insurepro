@@ -1983,7 +1983,15 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
               <button id="claim-sig-tab-비대면" onclick="setClaimSigTab('비대면')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">비대면 서명</button>
             </div>
             <canvas id="claim-sig-canvas" width="100%" style="width:100%;height:160px;border:1.5px solid #E5E8EB;border-radius:12px;background:#fff;touch-action:none;display:block;"></canvas>
-            <button onclick="clearClaimSig()" style="margin-top:6px;padding:6px 14px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:8px;font-size:12px;cursor:pointer;">↺ 다시 서명</button>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button onclick="clearClaimSig()" style="flex:1;padding:8px;background:#FEF1F2;border:1px solid #F04452;border-radius:8px;font-size:12px;color:#F04452;cursor:pointer;font-family:inherit;">🗑 지우기</button>
+              <button onclick="saveClaimSig()" style="flex:1;padding:8px;background:#E6F7EF;border:1px solid #00A05C;border-radius:8px;font-size:12px;color:#00A05C;cursor:pointer;font-family:inherit;">💾 서명 저장</button>
+              <button onclick="loadClaimSig()" style="flex:1;padding:8px;background:#E8F3FF;border:1px solid #1B64DA;border-radius:8px;font-size:12px;color:#1B64DA;cursor:pointer;font-family:inherit;">📂 서명 불러오기</button>
+            </div>
+            <div id="sig-saved-preview" style="display:none;margin-top:8px;padding:8px;background:#F7F8FA;border-radius:8px;text-align:center;">
+              <div style="font-size:11px;color:#6B7684;margin-bottom:4px;">저장된 서명</div>
+              <img id="sig-saved-img" style="max-height:50px;">
+            </div>
           </div>
         </div>
         <div class="biz-card">
@@ -7134,6 +7142,13 @@ let claimData = {
 let sigCanvas, sigCtx, sigDrawing = false;
 
 function initSigCanvas() {
+  // 저장된 서명 미리보기 표시
+  const savedSig = localStorage.getItem(SIG_STORAGE_KEY);
+  if (savedSig) {
+    const preview = document.getElementById('sig-saved-preview');
+    const img = document.getElementById('sig-saved-img');
+    if (preview && img) { img.src = savedSig; preview.style.display = ''; }
+  }
   sigCanvas = document.getElementById('claim-sig-canvas');
   if (!sigCanvas) return;
   // 실제 픽셀 크기 설정
@@ -7159,6 +7174,39 @@ function clearClaimSig() {
   if (!sigCtx || !sigCanvas) return;
   sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
   claimData.sigData = '';
+}
+
+const SIG_STORAGE_KEY = 'insearch_saved_signature';
+
+function saveClaimSig() {
+  if (!sigCanvas) return;
+  const data = sigCanvas.toDataURL();
+  if (data === 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==') {
+    showBizToast('⚠️ 서명을 먼저 그려주세요'); return;
+  }
+  localStorage.setItem(SIG_STORAGE_KEY, data);
+  claimData.sigData = data;
+  const preview = document.getElementById('sig-saved-preview');
+  const img = document.getElementById('sig-saved-img');
+  if (preview && img) { img.src = data; preview.style.display = ''; }
+  showBizToast('✅ 서명이 저장됐어요');
+}
+
+function loadClaimSig() {
+  const data = localStorage.getItem(SIG_STORAGE_KEY);
+  if (!data) { showBizToast('⚠️ 저장된 서명이 없어요'); return; }
+  if (!sigCtx || !sigCanvas) { initSigCanvas(); setTimeout(() => loadClaimSig(), 200); return; }
+  const img = new Image();
+  img.onload = () => {
+    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    sigCtx.drawImage(img, 0, 0, sigCanvas.width, sigCanvas.height);
+    claimData.sigData = data;
+    const preview = document.getElementById('sig-saved-preview');
+    const previewImg = document.getElementById('sig-saved-img');
+    if (preview && previewImg) { previewImg.src = data; preview.style.display = ''; }
+    showBizToast('✅ 저장된 서명을 불러왔어요');
+  };
+  img.src = data;
 }
 
 function setClaimSigTab(type) {
