@@ -6076,7 +6076,7 @@ function cacheBizClients(arr) { localStorage.setItem(BIZ_CLIENTS_KEY, JSON.strin
 
 async function loadBizClients() {
   const res = await bizApiCall('clients', 'select', {
-    select: 'id,name,phone,insurance_type,renew_date,next_contact,memo,status,agent_id,created_at',
+    select: 'id,name,phone,ssn,addr,job,body,driving,insurance_type,renew_date,next_contact,memo,status,agent_id,created_at',
     orders: [{ col: 'created_at', ascending: false }]
   });
   if (res.data) {
@@ -6084,6 +6084,11 @@ async function loadBizClients() {
       id: String(c.id),
       name: c.name || '',
       phone: c.phone || '',
+      ssn: c.ssn || '',
+      addr: c.addr || '',
+      job: c.job || '',
+      body: c.body || '',
+      driving: c.driving || '',
       insurance: c.insurance_type || '',
       renewDate: c.renew_date || c.next_contact || '',
       memo: c.memo || '',
@@ -6102,9 +6107,6 @@ async function saveBizClient() {
   const payload = {
     name,
     phone: document.getElementById('cm-phone').value.trim() || null,
-    insurance_type: document.getElementById('cm-insurance').value.trim() || null,
-    renew_date: document.getElementById('cm-renew').value || null,
-    next_contact: document.getElementById('cm-renew').value || null,
     memo: document.getElementById('cm-memo').value.trim(),
     status: 'normal'
   };
@@ -6162,7 +6164,7 @@ async function renderBizClients() {
         <div style="width:34px;height:34px;border-radius:50%;background:#EEEDFE;color:#3C3489;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${c.name.slice(0,1)}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;font-weight:700;color:#191F28;">${c.name}</div>
-          <div style="font-size:11px;color:#6B7684;">${c.phone||'연락처 없음'} · ${c.insurance||'보험 미입력'}</div>
+          <div style="font-size:11px;color:#6B7684;">${c.phone||'연락처 없음'}${c.job ? ' · '+c.job : ''}</div>
           ${c.memo ? `<div style="font-size:11px;color:#B0B8C1;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.memo}</div>` : ''}
         </div>
         ${badge}
@@ -6620,10 +6622,12 @@ async function syncToSheets(type) {
   // 데이터 수집
   let data = [];
   if (type === 'clients') {
-    data = getBizClients().map(c => ({
-      ID: c.id, 이름: c.name, 연락처: c.phone||'', 보험종류: c.insurance||'',
-      갱신일: c.renewDate||'', 상태: c.type||'normal', 메모: c.memo||'',
-      등록일: c.updatedAt ? c.updatedAt.slice(0,10) : ''
+    const rawClients = await loadBizClients();
+    data = rawClients.map(c => ({
+      'ID': c.id, '이름': c.name, '전화번호': c.phone||'', '주민번호': c.ssn||'',
+      '주소': c.addr||'', '키': c.height||'', '몸무게': c.body||'',
+      '직업': c.job||'', '운전': c.driving||'', '메모': c.memo||'',
+      '등록일': c.updatedAt ? c.updatedAt.slice(0,10) : ''
     }));
   } else if (type === 'db') {
     data = getBizDbs().map(d => ({
