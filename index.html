@@ -8229,7 +8229,7 @@ async function generateHyundaiPDF(cd, sigData) {
   const { PDFDocument, rgb } = PDFLib;
 
   // PDF 원본 + 폰트 동시 로드
-  const BASE = 'https://jaehyunsby.github.io/insurepro';
+  const BASE = 'https://insearchlap.kr';
   const [pdfBytes, fontBytes] = await Promise.all([
     fetch(BASE + '/templates/hyundai.pdf').then(r => r.arrayBuffer()),
     fetch(BASE + '/fonts/NanumGothic.ttf').then(r => r.arrayBuffer()),
