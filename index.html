@@ -6770,6 +6770,8 @@ let previewCurrentPage = 1;
 const PREVIEW_TOTAL = 4;
 
 async function showClaimPreview(claimRecord) {
+  if (!claimRecord && !claimData.insurer) { showBizToast('⚠️ 보험사를 먼저 선택해주세요'); return; }
+  if (!claimRecord && !INSURER_CONFIG[claimData.insurer]) { showBizToast(`⚠️ ${claimData.insurer} 양식은 아직 준비 중이에요`); return; }
   showBizToast('📄 미리보기 생성 중...');
   try {
     let cd;
@@ -6793,11 +6795,11 @@ async function showClaimPreview(claimRecord) {
         notifyType: claimRecord.notify_type || '보험청구인',
       };
       const sigData = claimRecord.sig_data || '';
-      const pdfBytes = await generateHyundaiPDF(cd, sigData);
+      const pdfBytes = await generateClaimPDF(cd, sigData, claimRecord?.insurer);
       showPDFPreview(pdfBytes);
     } else {
       // 현재 폼에서 열기
-      const pdfBytes = await generateHyundaiPDF(getCurrentClaimDataForPDF(), claimData.sigData);
+      const pdfBytes = await generateClaimPDF(getCurrentClaimDataForPDF(), claimData.sigData);
       showPDFPreview(pdfBytes);
     }
   } catch(e) {
@@ -7578,7 +7580,7 @@ function initClaimPage() {
   claimData = {
     name:'', ssn:'', phone:'', sameAsContractor: true,
     contractorName:'', contractorPhone:'',
-    insurer:'', insurerType:'손해',
+    insurer:'', insurers:[], insurerType:'손해', // insurers: 복수선택 시 사용
     claimType:'질병', date:'', desc:'', notifyType:'보험청구인',
     accountType:'기자급계좌', bank:'', accountNum:'', accountHolder:'',
     sigType:'대면', sigData:'',
@@ -7648,10 +7650,69 @@ function setClaimInsTab(type) {
 }
 
 function selectInsurer(ins) {
+  // 단일선택 (추후 복수선택으로 확장 가능)
   claimData.insurer = ins;
+  claimData.insurers = [ins]; // 복수선택 배열도 동기화
   setClaimInsTab(claimData.insurerType);
   const badge = document.getElementById('claim-selected-ins');
-  if (badge) { badge.style.display = ''; badge.textContent = '✓ ' + ins + ' 선택됨'; }
+  if (badge) {
+    badge.style.display = '';
+    badge.innerHTML = '✓ <b>' + ins + '</b> 선택됨' +
+      (INSURER_CONFIG[ins] ? ' <span style="color:#00A05C;font-size:11px;">✅ 양식 준비됨</span>' :
+       ' <span style="color:#F04452;font-size:11px;">⏳ 양식 준비 중</span>');
+  }
+}
+
+// 복수선택 함수 (추후 UI에서 호출)
+function toggleInsurer(ins) {
+  const idx = claimData.insurers.indexOf(ins);
+  if (idx >= 0) {
+    claimData.insurers.splice(idx, 1);
+  } else {
+    claimData.insurers.push(ins);
+  }
+  // 대표 보험사는 첫 번째
+  claimData.insurer = claimData.insurers[0] || '';
+  renderSelectedInsurers();
+}
+
+function renderSelectedInsurers() {
+  const badge = document.getElementById('claim-selected-ins');
+  if (!badge) return;
+  if (!claimData.insurers.length) { badge.style.display = 'none'; return; }
+  badge.style.display = '';
+  badge.innerHTML = claimData.insurers.map(ins =>
+    `<span style="display:inline-block;margin:2px 4px 2px 0;padding:3px 8px;background:#534AB7;color:#fff;border-radius:6px;font-size:12px;">
+      ${ins} ${INSURER_CONFIG[ins] ? '✅' : '⏳'}
+    </span>`
+  ).join('');
+}
+
+// 복수선택 시 PDF 일괄 생성 (추후 구현)
+async function generateAllClaimPDFs() {
+  if (!claimData.insurers.length) { showBizToast('⚠️ 보험사를 선택해주세요'); return; }
+  const ready = claimData.insurers.filter(ins => INSURER_CONFIG[ins]);
+  const notReady = claimData.insurers.filter(ins => !INSURER_CONFIG[ins]);
+  if (notReady.length) {
+    showBizToast(`⏳ 준비 중인 보험사: ${notReady.join(', ')}`);
+  }
+  if (!ready.length) return;
+  showBizToast(`📄 ${ready.length}개 보험사 PDF 생성 중...`);
+  for (const ins of ready) {
+    try {
+      const pdfBytes = await generateClaimPDF(getCurrentClaimDataForPDF(), claimData.sigData, ins);
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const name = document.getElementById('claim-name')?.value || '청구';
+      a.download = `${ins}_청구서_${name}_${new Date().toISOString().slice(0,10)}.pdf`;
+      a.click();
+      await new Promise(r => setTimeout(r, 500)); // 다운로드 간격
+    } catch(e) {
+      showBizToast(`❌ ${ins} PDF 실패: ${e.message}`);
+    }
+  }
+  showBizToast('✅ PDF 생성 완료');
 }
 
 function setClaimType(type) {
@@ -8278,11 +8339,105 @@ function initModeOnStart() {
 
 initAuth().then(() => { setTimeout(initModeOnStart, 100); });
 
+
+// ========== 보험사별 PDF 설정 ==========
+const INSURER_CONFIG = {
+  '현대해상화재': {
+    template: 'hyundai.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null, // HYUNDAI_COORDS 사용
+  },
+  'DB손해보험': {
+    template: 'db.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null, // 추후 캘리브레이션
+  },
+  '삼성화재': {
+    template: 'samsung.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null,
+  },
+  'KB손해보험': {
+    template: 'kb.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null,
+  },
+  '메리츠화재': {
+    template: 'meritz.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null,
+  },
+  '한화손해보험': {
+    template: 'hanwha.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null,
+  },
+  '롯데손보': {
+    template: 'lotte.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null,
+  },
+  '흥국화재': {
+    template: 'heungkuk.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null,
+  },
+  '교보생명': {
+    template: 'kyobo.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null,
+  },
+  '삼성생명': {
+    template: 'samsunglife.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null,
+  },
+  '한화생명': {
+    template: 'hanwhalife.pdf',
+    font: 'NanumGothic.ttf',
+    coords: null,
+  },
+};
+
+const BASE_URL = 'https://insearchlap.kr';
+
+async function getInsurerCoords(insurer) {
+  const cfg = INSURER_CONFIG[insurer];
+  if (!cfg) return null;
+  // 현대해상은 이미 내장
+  if (insurer === '현대해상화재') return HYUNDAI_COORDS;
+  // 나머지는 추후 JSON 파일로 fetch
+  try {
+    const coordFile = cfg.template.replace('.pdf', '_coords.json');
+    const res = await fetch(`${BASE_URL}/templates/coords/${coordFile}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch(e) { return null; }
+}
+
 // ========== 현대해상 PDF 좌표 ==========
 const HYUNDAI_COORDS = {"p1_name": {"page": 0, "x1": 123, "y1": 602, "x2": 200, "y2": 621}, "p1_ssn1": {"page": 0, "x1": 255, "y1": 602, "x2": 392, "y2": 620}, "p1_ssn2": {"page": 0, "x1": 402, "y1": 603, "x2": 563, "y2": 620}, "p1_medical_yes": {"page": 0, "x1": 286, "y1": 586, "x2": 293, "y2": 593}, "p1_medical_no": {"page": 0, "x1": 327, "y1": 586, "x2": 334, "y2": 593}, "p1_group_yes": {"page": 0, "x1": 467, "y1": 587, "x2": 473, "y2": 593}, "p1_group_no": {"page": 0, "x1": 508, "y1": 586, "x2": 515, "y2": 594}, "p1_cont_name": {"page": 0, "x1": 122, "y1": 556, "x2": 201, "y2": 574}, "p1_cont_ssn1": {"page": 0, "x1": 255, "y1": 556, "x2": 392, "y2": 576}, "p1_cont_ssn2": {"page": 0, "x1": 401, "y1": 556, "x2": 563, "y2": 576}, "p1_contact_name": {"page": 0, "x1": 123, "y1": 535, "x2": 199, "y2": 553}, "p1_contact_phone": {"page": 0, "x1": 254, "y1": 534, "x2": 525, "y2": 553}, "p1_noti_insured": {"page": 0, "x1": 132, "y1": 517, "x2": 138, "y2": 526}, "p1_noti_contractor": {"page": 0, "x1": 208, "y1": 518, "x2": 217, "y2": 526}, "p1_etc": {"page": 0, "x1": 275, "y1": 517, "x2": 281, "y2": 526}, "p1_noti_sms": {"page": 0, "x1": 131, "y1": 494, "x2": 138, "y2": 503}, "p1_planner_yes": {"page": 0, "x1": 489, "y1": 478, "x2": 496, "y2": 483}, "p1_planner_no": {"page": 0, "x1": 525, "y1": 477, "x2": 532, "y2": 484}, "p1_etc2": {"page": 0, "x1": 314, "y1": 516, "x2": 367, "y2": 528}, "p1_date_year": {"page": 0, "x1": 108, "y1": 433, "x2": 136, "y2": 445}, "p1_date_month": {"page": 0, "x1": 162, "y1": 433, "x2": 187, "y2": 445}, "p1_date_day": {"page": 0, "x1": 208, "y1": 433, "x2": 237, "y2": 444}, "p1_new_claim": {"page": 0, "x1": 389, "y1": 435, "x2": 396, "y2": 442}, "p1_add_claim": {"page": 0, "x1": 452, "y1": 435, "x2": 457, "y2": 442}, "p1_type_disease": {"page": 0, "x1": 92, "y1": 412, "x2": 100, "y2": 420}, "p1_type_injury": {"page": 0, "x1": 169, "y1": 412, "x2": 178, "y2": 419}, "p1_type_traffic": {"page": 0, "x1": 247, "y1": 412, "x2": 254, "y2": 420}, "p1_cause": {"page": 0, "x1": 86, "y1": 376, "x2": 327, "y2": 401}, "p1_auto_debit": {"page": 0, "x1": 136, "y1": 238, "x2": 143, "y2": 245}, "p1_bank": {"page": 0, "x1": 92, "y1": 208, "x2": 179, "y2": 227}, "p1_account_num": {"page": 0, "x1": 239, "y1": 208, "x2": 420, "y2": 228}, "p1_account_holder": {"page": 0, "x1": 480, "y1": 210, "x2": 558, "y2": 227}, "p1_sign_year": {"page": 0, "x1": 113, "y1": 125, "x2": 137, "y2": 138}, "p1_sign_month": {"page": 0, "x1": 159, "y1": 125, "x2": 183, "y2": 137}, "p1_sign_day": {"page": 0, "x1": 201, "y1": 126, "x2": 229, "y2": 137}, "p1_signer_name": {"page": 0, "x1": 369, "y1": 124, "x2": 464, "y2": 141}, "p1_signature": {"page": 0, "x1": 485, "y1": 122, "x2": 554, "y2": 142}, "p2_id_agree": {"page": 1, "x1": 503, "y1": 401, "x2": 527, "y2": 422}, "p2_sen_agree": {"page": 1, "x1": 503, "y1": 296, "x2": 526, "y2": 317}, "p2_per_agree": {"page": 1, "x1": 503, "y1": 173, "x2": 526, "y2": 195}, "p3_id_agree": {"page": 2, "x1": 501, "y1": 270, "x2": 524, "y2": 293}, "p3_sen_agree": {"page": 2, "x1": 500, "y1": 172, "x2": 526, "y2": 194}, "p4_per_agree": {"page": 3, "x1": 500, "y1": 629, "x2": 523, "y2": 651}, "p4_sen_agree": {"page": 3, "x1": 502, "y1": 211, "x2": 523, "y2": 231}, "p4_id_agree": {"page": 3, "x1": 499, "y1": 118, "x2": 521, "y2": 139}};
 
 // ========== 현대해상 PDF 생성 (pdf-lib) ==========
+async function generateClaimPDF(cd, sigData, insurer) {
+  insurer = insurer || claimData.insurer || '현대해상화재';
+  const cfg = INSURER_CONFIG[insurer];
+  if (!cfg) {
+    throw new Error(`${insurer} 양식이 아직 준비되지 않았어요`);
+  }
+  const coords = await getInsurerCoords(insurer);
+  if (!coords) {
+    throw new Error(`${insurer} 좌표 정보가 없어요. 관리자에게 문의하세요.`);
+  }
+  return await _generatePDF(cd, sigData, cfg.template, coords);
+}
+
+// 구버전 호환
 async function generateHyundaiPDF(cd, sigData) {
+  return generateClaimPDF(cd, sigData, '현대해상화재');
+}
+
+async function _generatePDF(cd, sigData, templateFile, coords) {
   if (!window.PDFLib) {
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js');
   }
@@ -8294,8 +8449,8 @@ async function generateHyundaiPDF(cd, sigData) {
   // PDF 원본 + 폰트 동시 로드
   const BASE = 'https://insearchlap.kr';
   const [pdfBytes, fontBytes] = await Promise.all([
-    fetch(BASE + '/templates/hyundai.pdf').then(r => r.arrayBuffer()),
-    fetch(BASE + '/fonts/NanumGothic.ttf').then(r => r.arrayBuffer()),
+    fetch(`${BASE_URL}/templates/${templateFile}`).then(r => r.arrayBuffer()),
+    fetch(`${BASE_URL}/fonts/NanumGothic.ttf`).then(r => r.arrayBuffer()),
   ]);
 
   const pdfDoc = await PDFDocument.load(pdfBytes);
@@ -8347,7 +8502,7 @@ async function generateHyundaiPDF(cd, sigData) {
 
   const WIDE = new Set(['p1_ssn1','p1_ssn2','p1_cont_ssn1','p1_cont_ssn2','p1_contact_phone','p1_account_num']);
 
-  for (const [fid, coord] of Object.entries(HYUNDAI_COORDS)) {
+  for (const [fid, coord] of Object.entries(coords)) {
     const val = fieldData[fid];
     if (val === undefined || val === null || val === '') continue;
     const page = pages[coord.page];
@@ -8399,7 +8554,7 @@ function loadScript(src) {
 async function downloadFromPreview() {
   showBizToast('📄 PDF 다운로드 중...');
   try {
-    const pdfBytes = await generateHyundaiPDF(getCurrentClaimDataForPDF(), claimData.sigData);
+    const pdfBytes = await generateClaimPDF(getCurrentClaimDataForPDF(), claimData.sigData);
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -8413,9 +8568,11 @@ async function downloadFromPreview() {
 }
 
 async function downloadClaimPDF() {
+  if (!claimData.insurer) { showBizToast('⚠️ 보험사를 먼저 선택해주세요'); return; }
+  if (!INSURER_CONFIG[claimData.insurer]) { showBizToast(`⚠️ ${claimData.insurer} 양식은 아직 준비 중이에요`); return; }
   showBizToast('📄 PDF 생성 중...');
   try {
-    const pdfBytes = await generateHyundaiPDF(getCurrentClaimDataForPDF(), claimData.sigData);
+    const pdfBytes = await generateClaimPDF(getCurrentClaimDataForPDF(), claimData.sigData);
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
