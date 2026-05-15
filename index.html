@@ -1842,7 +1842,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
     <!-- 보험금청구 -->
     <div class="biz-page" id="biz-page-claim">
-      <!-- 청구내역 버튼 -->
+      <!-- 새청구 / 청구내역 -->
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <button id="claim-view-new" onclick="setClaimView('new')" style="flex:1;padding:10px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">+ 새 청구</button>
         <button id="claim-view-history" onclick="setClaimView('history')" style="flex:1;padding:10px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📋 청구내역</button>
@@ -1850,11 +1850,11 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
       <!-- 청구내역 목록 -->
       <div id="claim-history-view" style="display:none;">
-        <div style="display:flex;gap:0;background:#fff;border-radius:12px;border:1px solid #E5E8EB;overflow:hidden;margin-bottom:12px;">
-          <button onclick="setClaimHistoryFilter('all')" id="chf-all" style="flex:1;padding:10px;background:#534AB7;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">전체</button>
-          <button onclick="setClaimHistoryFilter('pending')" id="chf-pending" style="flex:1;padding:10px;background:#F7F8FA;color:#B0B8C1;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">● 임시저장</button>
-          <button onclick="setClaimHistoryFilter('sent')" id="chf-sent" style="flex:1;padding:10px;background:#F7F8FA;color:#B0B8C1;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">● 발송완료</button>
-          <button onclick="setClaimHistoryFilter('failed')" id="chf-failed" style="flex:1;padding:10px;background:#F7F8FA;color:#B0B8C1;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">● 발송실패</button>
+        <div style="display:flex;background:#fff;border-radius:12px;border:1px solid #E5E8EB;overflow:hidden;margin-bottom:12px;">
+          <button onclick="setClaimHistoryFilter('all')" id="chf-all" style="flex:1;padding:9px;background:#534AB7;color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">전체</button>
+          <button onclick="setClaimHistoryFilter('pending')" id="chf-pending" style="flex:1;padding:9px;background:#F7F8FA;color:#B0B8C1;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">임시저장</button>
+          <button onclick="setClaimHistoryFilter('sent')" id="chf-sent" style="flex:1;padding:9px;background:#F7F8FA;color:#B0B8C1;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">발송완료</button>
+          <button onclick="setClaimHistoryFilter('failed')" id="chf-failed" style="flex:1;padding:9px;background:#F7F8FA;color:#B0B8C1;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">발송실패</button>
         </div>
         <div style="margin-bottom:10px;"><input class="biz-input" id="claim-history-search" placeholder="🔍 피보험자 이름, 보험사 검색" oninput="renderClaimHistory()"></div>
         <div id="claim-history-list"></div>
@@ -1862,37 +1862,42 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
       <!-- 새 청구 폼 -->
       <div id="claim-new-view">
-      <!-- 진행 단계 -->
-      <div style="display:flex;gap:0;margin-bottom:14px;background:#fff;border-radius:14px;border:1px solid #E5E8EB;overflow:hidden;">
-        <button id="claim-step-btn-1" onclick="goClaimStep(1)" style="flex:1;padding:10px 0;font-size:12px;font-weight:700;background:#534AB7;color:#fff;border:none;cursor:pointer;font-family:inherit;">① 피보험자</button>
-        <button id="claim-step-btn-2" onclick="goClaimStep(2)" style="flex:1;padding:10px 0;font-size:12px;font-weight:700;background:#F7F8FA;color:#B0B8C1;border:none;cursor:pointer;font-family:inherit;">② 보험사</button>
-        <button id="claim-step-btn-3" onclick="goClaimStep(3)" style="flex:1;padding:10px 0;font-size:12px;font-weight:700;background:#F7F8FA;color:#B0B8C1;border:none;cursor:pointer;font-family:inherit;">③ 청구정보</button>
-        <button id="claim-step-btn-4" onclick="goClaimStep(4)" style="flex:1;padding:10px 0;font-size:12px;font-weight:700;background:#F7F8FA;color:#B0B8C1;border:none;cursor:pointer;font-family:inherit;">④ 제출</button>
-      </div>
 
-      <!-- STEP 1: 피보험자 정보 -->
-      <div id="claim-step-1">
-        <div class="biz-card">
+        <!-- 보험사 선택 -->
+        <div class="biz-card" style="margin-bottom:10px;">
+          <div class="biz-card-title">🏢 보험사 선택</div>
+          <div style="display:flex;background:#F7F8FA;border-radius:10px;overflow:hidden;margin-bottom:10px;">
+            <button id="claim-ins-tab-손해" onclick="setClaimInsTab('손해')" style="flex:1;padding:8px;background:#534AB7;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">손해보험</button>
+            <button id="claim-ins-tab-생명" onclick="setClaimInsTab('생명')" style="flex:1;padding:8px;background:#F7F8FA;color:#6B7684;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">생명보험</button>
+          </div>
+          <div id="claim-ins-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;"></div>
+          <div id="claim-selected-ins" style="display:none;margin-top:10px;padding:8px 12px;background:#EEEDFE;border-radius:8px;font-size:13px;font-weight:700;color:#3C3489;"></div>
+        </div>
+
+        <!-- 피보험자 정보 -->
+        <div class="biz-card" style="margin-bottom:10px;">
           <div class="biz-card-title">👤 피보험자 정보</div>
-          <!-- 고객 연동 -->
           <div class="biz-form-group">
-            <label class="biz-form-label">고객 선택 (선택사항)</label>
-            <div style="display:flex;gap:8px;">
-              <select id="claim-client-select" class="biz-input" style="flex:1;" onchange="onClaimClientSelect()">
-                <option value="">직접 입력</option>
-              </select>
-            </div>
+            <label class="biz-form-label">고객 불러오기</label>
+            <select id="claim-client-select" class="biz-input" onchange="onClaimClientSelect()">
+              <option value="">직접 입력</option>
+            </select>
           </div>
           <div class="biz-form-group"><label class="biz-form-label">이름 *</label><input class="biz-input" id="claim-name" placeholder="홍길동"></div>
           <div class="biz-form-group">
             <label class="biz-form-label">주민등록번호 *</label>
             <div style="display:flex;gap:8px;align-items:center;">
-              <input class="biz-input" id="claim-ssn1" placeholder="생년월일" maxlength="6" style="flex:1;" oninput="if(this.value.length===6)document.getElementById('claim-ssn2').focus()">
-              <span style="color:#B0B8C1;">-</span>
-              <input class="biz-input" id="claim-ssn2" placeholder="뒷자리" maxlength="7" style="flex:1;" type="password">
+              <input class="biz-input" id="claim-ssn1" placeholder="생년월일" maxlength="6" style="flex:1;text-align:center;" oninput="if(this.value.length===6)document.getElementById('claim-ssn2').focus()">
+              <span style="color:#B0B8C1;flex-shrink:0;">-</span>
+              <input class="biz-input" id="claim-ssn2" placeholder="뒷자리" maxlength="7" style="flex:1;text-align:center;" type="password">
             </div>
           </div>
           <div class="biz-form-group"><label class="biz-form-label">연락처 *</label><input class="biz-input" id="claim-phone" placeholder="010-0000-0000" type="tel"></div>
+        </div>
+
+        <!-- 계약자 -->
+        <div class="biz-card" style="margin-bottom:10px;">
+          <div class="biz-card-title">👥 계약자</div>
           <div class="biz-form-group">
             <label class="biz-form-label">계약자와 피보험자 동일여부 *</label>
             <div style="display:flex;gap:8px;">
@@ -1904,28 +1909,23 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
             <div class="biz-form-group"><label class="biz-form-label">계약자 이름</label><input class="biz-input" id="claim-contractor-name" placeholder="계약자 이름"></div>
             <div class="biz-form-group"><label class="biz-form-label">계약자 연락처</label><input class="biz-input" id="claim-contractor-phone" placeholder="010-0000-0000" type="tel"></div>
           </div>
-          <button class="biz-btn-primary" onclick="goClaimStep(2)">다음 →</button>
         </div>
-      </div>
 
-      <!-- STEP 2: 보험사 선택 -->
-      <div id="claim-step-2" style="display:none;">
-        <div class="biz-card">
-          <div class="biz-card-title">🏢 보험사 선택</div>
-          <div style="display:flex;gap:0;background:#F7F8FA;border-radius:10px;overflow:hidden;margin-bottom:14px;">
-            <button id="claim-ins-tab-손해" onclick="setClaimInsTab('손해')" style="flex:1;padding:9px;background:#534AB7;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">손해보험</button>
-            <button id="claim-ins-tab-생명" onclick="setClaimInsTab('생명')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">생명보험</button>
+        <!-- 보상안내 -->
+        <div class="biz-card" style="margin-bottom:10px;">
+          <div class="biz-card-title">📬 보상안내</div>
+          <div class="biz-form-group">
+            <label class="biz-form-label">보상안내 받으실 분을 선택해 주세요</label>
+            <div style="display:flex;gap:8px;">
+              <button id="claim-notify-설계사" onclick="setClaimNotify('설계사')" style="flex:1;padding:10px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">보험설계사</button>
+              <button id="claim-notify-보험청구인" onclick="setClaimNotify('보험청구인')" style="flex:1;padding:10px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">보험청구인</button>
+            </div>
           </div>
-          <div id="claim-ins-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
-          <div id="claim-selected-ins" style="display:none;margin-top:12px;padding:10px 14px;background:#EEEDFE;border-radius:10px;font-size:13px;font-weight:700;color:#3C3489;"></div>
-          <button class="biz-btn-primary" onclick="goClaimStep(3)" style="margin-top:14px;">다음 →</button>
         </div>
-      </div>
 
-      <!-- STEP 3: 청구 정보 -->
-      <div id="claim-step-3" style="display:none;">
-        <div class="biz-card">
-          <div class="biz-card-title">📋 청구 정보</div>
+        <!-- 진료정보 -->
+        <div class="biz-card" style="margin-bottom:10px;">
+          <div class="biz-card-title">🏥 진료정보</div>
           <div class="biz-form-group">
             <label class="biz-form-label">사고 유형 *</label>
             <div style="display:flex;gap:8px;">
@@ -1936,86 +1936,86 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
           </div>
           <div class="biz-form-group">
             <label class="biz-form-label">진료(사고)일자 *</label>
-            <input class="biz-input" id="claim-date" type="date">
+            <div style="display:flex;gap:8px;">
+              <input class="biz-input" id="claim-date-year" placeholder="년" maxlength="4" style="flex:2;text-align:center;" type="tel">
+              <input class="biz-input" id="claim-date-month" placeholder="월" maxlength="2" style="flex:1;text-align:center;" type="tel">
+              <input class="biz-input" id="claim-date-day" placeholder="일" maxlength="2" style="flex:1;text-align:center;" type="tel">
+            </div>
           </div>
           <div class="biz-form-group">
             <label class="biz-form-label">질병/사고내용 *</label>
             <textarea class="biz-input" id="claim-desc" placeholder="질병(사고)내용을 간단히 작성해주세요" style="height:80px;resize:none;"></textarea>
           </div>
+        </div>
+
+        <!-- 계좌정보 -->
+        <div class="biz-card" style="margin-bottom:10px;">
+          <div class="biz-card-title">🏦 계좌정보</div>
           <div class="biz-form-group">
-            <label class="biz-form-label">보상 안내 받을 방식</label>
-            <div style="display:flex;gap:8px;">
-              <button id="claim-notify-설계사" onclick="setClaimNotify('설계사')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">보험설계사</button>
-              <button id="claim-notify-보험청구인" onclick="setClaimNotify('보험청구인')" style="flex:1;padding:9px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">보험청구인</button>
-            </div>
-          </div>
-          <div class="biz-form-group" style="margin-top:4px;">
             <label class="biz-form-label">계좌 유형</label>
             <div style="display:flex;gap:8px;">
               <button id="claim-account-기자급계좌" onclick="setClaimAccount('기자급계좌')" style="flex:1;padding:9px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">기자급계좌</button>
               <button id="claim-account-일반" onclick="setClaimAccount('일반')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">일반</button>
             </div>
           </div>
-          <div class="biz-form-group"><label class="biz-form-label">은행명</label>
+          <div class="biz-form-group">
+            <label class="biz-form-label">은행명</label>
             <select class="biz-input" id="claim-bank">
               <option value="">은행 선택</option>
               <option>국민은행</option><option>신한은행</option><option>우리은행</option><option>하나은행</option>
               <option>농협은행</option><option>기업은행</option><option>카카오뱅크</option><option>케이뱅크</option>
-              <option>토스뱅크</option><option>SC제일은행</option><option>씨티은행</option><option>새마을금고</option>
-              <option>신협</option><option>우체국</option><option>수협</option><option>대구은행</option>
-              <option>부산은행</option><option>경남은행</option><option>전북은행</option><option>광주은행</option>
+              <option>토스뱅크</option><option>SC제일은행</option><option>새마을금고</option><option>신협</option>
+              <option>우체국</option><option>수협</option><option>대구은행</option><option>부산은행</option>
             </select>
           </div>
           <div class="biz-form-group"><label class="biz-form-label">계좌번호</label><input class="biz-input" id="claim-account-num" placeholder="- 없이 입력" type="tel"></div>
           <div class="biz-form-group"><label class="biz-form-label">예금주</label><input class="biz-input" id="claim-account-holder" placeholder="예금주명"></div>
-          <button class="biz-btn-primary" onclick="goClaimStep(4)">다음 →</button>
         </div>
-      </div>
 
-      <!-- STEP 4: 제출 -->
-      <div id="claim-step-4" style="display:none;">
         <!-- 서명 -->
         <div class="biz-card" style="margin-bottom:10px;">
           <div class="biz-card-title">✍️ 서명</div>
-          <div style="margin-bottom:8px;">
-            <div style="display:flex;gap:8px;margin-bottom:8px;">
-              <button id="claim-sig-tab-대면" onclick="setClaimSigTab('대면')" style="flex:1;padding:9px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">대면 서명</button>
-              <button id="claim-sig-tab-비대면" onclick="setClaimSigTab('비대면')" style="flex:1;padding:9px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">비대면 서명</button>
-            </div>
-            <canvas id="claim-sig-canvas" width="100%" style="width:100%;height:160px;border:1.5px solid #E5E8EB;border-radius:12px;background:#fff;touch-action:none;display:block;"></canvas>
-            <div style="display:flex;gap:8px;margin-top:8px;">
-              <button onclick="clearClaimSig()" style="flex:1;padding:8px;background:#FEF1F2;border:1px solid #F04452;border-radius:8px;font-size:12px;color:#F04452;cursor:pointer;font-family:inherit;">🗑 지우기</button>
-              <button onclick="saveClaimSig()" style="flex:1;padding:8px;background:#E6F7EF;border:1px solid #00A05C;border-radius:8px;font-size:12px;color:#00A05C;cursor:pointer;font-family:inherit;">💾 서명 저장</button>
-              <button onclick="loadClaimSig()" style="flex:1;padding:8px;background:#E8F3FF;border:1px solid #1B64DA;border-radius:8px;font-size:12px;color:#1B64DA;cursor:pointer;font-family:inherit;">📂 서명 불러오기</button>
-            </div>
-            <div id="sig-saved-preview" style="display:none;margin-top:8px;padding:8px;background:#F7F8FA;border-radius:8px;text-align:center;">
-              <div style="font-size:11px;color:#6B7684;margin-bottom:4px;">저장된 서명</div>
-              <img id="sig-saved-img" style="max-height:50px;">
-            </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <button id="claim-sig-tab-대면" onclick="setClaimSigTab('대면')" style="flex:1;padding:8px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">대면 서명</button>
+            <button id="claim-sig-tab-비대면" onclick="setClaimSigTab('비대면')" style="flex:1;padding:8px;background:#F7F8FA;color:#6B7684;border:1px solid #E5E8EB;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">비대면 서명</button>
+          </div>
+          <canvas id="claim-sig-canvas" style="width:100%;height:160px;border:1.5px solid #E5E8EB;border-radius:12px;background:#fff;touch-action:none;display:block;"></canvas>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button onclick="clearClaimSig()" style="flex:1;padding:8px;background:#FEF1F2;border:1px solid #F04452;border-radius:8px;font-size:12px;color:#F04452;cursor:pointer;font-family:inherit;">🗑 지우기</button>
+            <button onclick="saveClaimSig()" style="flex:1;padding:8px;background:#E6F7EF;border:1px solid #00A05C;border-radius:8px;font-size:12px;color:#00A05C;cursor:pointer;font-family:inherit;">💾 서명 저장</button>
+            <button onclick="loadClaimSig()" style="flex:1;padding:8px;background:#E8F3FF;border:1px solid #1B64DA;border-radius:8px;font-size:12px;color:#1B64DA;cursor:pointer;font-family:inherit;">📂 불러오기</button>
+          </div>
+          <div id="sig-saved-preview" style="display:none;margin-top:8px;padding:8px;background:#F7F8FA;border-radius:8px;text-align:center;">
+            <div style="font-size:11px;color:#6B7684;margin-bottom:4px;">저장된 서명</div>
+            <img id="sig-saved-img" style="max-height:50px;">
           </div>
         </div>
-        <div class="biz-card">
+
+        <!-- 첨부서류 -->
+        <div class="biz-card" style="margin-bottom:10px;">
           <div class="biz-card-title">📎 첨부서류</div>
           <div style="border:1.5px dashed #E5E8EB;border-radius:12px;padding:20px;text-align:center;margin-bottom:10px;">
-            <div style="font-size:24px;margin-bottom:6px;">📄</div>
+            <div style="font-size:28px;margin-bottom:6px;">📄</div>
             <div style="font-size:13px;color:#6B7684;margin-bottom:8px;">JPG, PNG, PDF (최대 50MB)</div>
             <input type="file" id="claim-file-input" multiple accept=".jpg,.jpeg,.png,.pdf" style="display:none;" onchange="onClaimFileSelect(this)">
-            <button onclick="document.getElementById('claim-file-input').click()" style="padding:8px 16px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:8px;font-size:12px;cursor:pointer;">파일 선택</button>
+            <button onclick="document.getElementById('claim-file-input').click()" style="padding:8px 20px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">파일 선택</button>
             <div id="claim-file-names" style="margin-top:8px;font-size:11px;color:#534AB7;"></div>
           </div>
-          <div style="background:#FFF4E0;border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+          <div style="background:#FFF4E0;border-radius:10px;padding:10px 14px;">
             <div style="font-size:12px;font-weight:700;color:#B25A00;margin-bottom:6px;">필수 제출 서류</div>
             <div style="font-size:11px;color:#854F0B;line-height:1.8;">• 간단서 또는 소견서<br>• 진료비 영수증 및 세부내역서<br>• 통장 사본 (신구 계좌 사)</div>
           </div>
-          <div id="claim-summary" style="background:#F7F8FA;border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8;color:#191F28;"></div>
-          <button onclick="showClaimPreview()" style="width:100%;padding:13px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">👁 양식 미리보기</button>
-          <button onclick="saveDraftClaim()" style="width:100%;padding:13px;background:#FFF4E0;border:1px solid #B25A00;border-radius:12px;font-size:13px;font-weight:700;color:#B25A00;cursor:pointer;font-family:inherit;margin-bottom:8px;">💾 임시저장</button>
-          <button class="biz-btn-primary" onclick="showPrivacyAndSubmit()" style="background:linear-gradient(135deg,#534AB7,#1B64DA);">🏥 청구서 제출</button>
-          <button onclick="goClaimStep(1)" style="width:100%;padding:12px;background:none;border:none;color:#6B7684;font-size:13px;cursor:pointer;margin-top:6px;">← 처음으로</button>
         </div>
-      </div>
+
+        <!-- 하단 버튼 -->
+        <button onclick="showClaimPreview()" style="width:100%;padding:13px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">👁 양식 미리보기</button>
+        <button onclick="saveDraftClaim()" style="width:100%;padding:13px;background:#FFF4E0;border:1px solid #B25A00;border-radius:12px;font-size:13px;font-weight:700;color:#B25A00;cursor:pointer;font-family:inherit;margin-bottom:8px;">💾 임시저장</button>
+        <button onclick="showPrivacyAndSubmit()" style="width:100%;padding:14px;background:linear-gradient(135deg,#534AB7,#1B64DA);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:20px;">🏥 청구서 제출</button>
+
       </div><!-- /claim-new-view -->
     </div>
+
+
     <div class="biz-page" id="biz-page-more">
       <div class="biz-card">
         <div class="biz-card-title">👔 설계사 현황</div>
@@ -6782,7 +6782,7 @@ function getCurrentClaimData() {
     client_phone: document.getElementById('claim-phone')?.value || '',
     insurer: claimData.insurer || '현대해상화재',
     claim_type: claimData.claimType || '질병',
-    date: document.getElementById('claim-date')?.value || '',
+    date: [document.getElementById('claim-date-year')?.value||'', document.getElementById('claim-date-month')?.value||'', document.getElementById('claim-date-day')?.value||''].join('-').replace(/^-+|-+$/g,''),
     desc: document.getElementById('claim-desc')?.value || '',
     bank: document.getElementById('claim-bank')?.value || '',
     account_num: document.getElementById('claim-account-num')?.value || '',
@@ -7174,7 +7174,12 @@ async function rechargeClaimById(id) {
     }
     if (data.insurer) { claimData.insurer = data.insurer; setClaimInsTab(claimData.insurerType); }
     if (data.claim_type) setClaimType(data.claim_type);
-    if (data.claim_date) document.getElementById('claim-date').value = data.claim_date;
+    if (data.claim_date) {
+      const dp = data.claim_date.split('-');
+      if(document.getElementById('claim-date-year')) document.getElementById('claim-date-year').value = dp[0]||'';
+      if(document.getElementById('claim-date-month')) document.getElementById('claim-date-month').value = dp[1]||'';
+      if(document.getElementById('claim-date-day')) document.getElementById('claim-date-day').value = dp[2]||'';
+    }
     if (data.description) document.getElementById('claim-desc').value = data.description;
     if (data.bank) document.getElementById('claim-bank').value = data.bank;
     if (data.account_num) document.getElementById('claim-account-num').value = data.account_num;
@@ -7309,7 +7314,7 @@ async function saveDraftClaim() {
       client_name: name,
       client_ssn: (document.getElementById('claim-ssn1')?.value||'') + '-' + (document.getElementById('claim-ssn2')?.value||''),
       client_phone: document.getElementById('claim-phone')?.value || '',
-      claim_date: document.getElementById('claim-date')?.value || '',
+      claim_date: [document.getElementById('claim-date-year')?.value||'', document.getElementById('claim-date-month')?.value||'', document.getElementById('claim-date-day')?.value||''].join('-').replace(/^-+|-+$/g,''),
       description: document.getElementById('claim-desc')?.value || '',
       bank: document.getElementById('claim-bank')?.value || '',
       account_num: document.getElementById('claim-account-num')?.value || '',
@@ -7382,7 +7387,7 @@ async function finalSubmitClaim() {
       client_name: name,
       client_ssn: ssn,
       client_phone: document.getElementById('claim-phone')?.value || '',
-      claim_date: document.getElementById('claim-date')?.value || '',
+      claim_date: [document.getElementById('claim-date-year')?.value||'', document.getElementById('claim-date-month')?.value||'', document.getElementById('claim-date-day')?.value||''].join('-').replace(/^-+|-+$/g,''),
       description: desc,
       bank: document.getElementById('claim-bank')?.value || '',
       account_num: document.getElementById('claim-account-num')?.value || '',
@@ -7515,14 +7520,21 @@ function initClaimPage() {
     sigType:'대면', sigData:'',
     files:[]
   };
-  const fields = ['claim-name','claim-ssn1','claim-ssn2','claim-phone','claim-desc','claim-account-num','claim-account-holder'];
-  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['claim-name','claim-ssn1','claim-ssn2','claim-phone','claim-desc',
+   'claim-account-num','claim-account-holder','claim-date-year','claim-date-month','claim-date-day',
+   'claim-contractor-name','claim-contractor-phone'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
   const bankEl = document.getElementById('claim-bank'); if (bankEl) bankEl.value = '';
   const fileEl = document.getElementById('claim-file-input'); if (fileEl) fileEl.value = '';
-  const fileNames = document.getElementById('claim-file-names'); if (fileNames) fileNames.textContent = '';
+  const fileNamesEl = document.getElementById('claim-file-names'); if (fileNamesEl) fileNamesEl.textContent = '';
   setClaimView('new');
-  goClaimStep(1);
-  setTimeout(initSigCanvas, 100);
+  setClaimInsTab('손해');
+  setClaimType('질병');
+  setClaimNotify('보험청구인');
+  setClaimSame(true);
+  setClaimAccount('기자급계좌');
+  setTimeout(initSigCanvas, 200);
   // 고객 드롭다운
   const sel = document.getElementById('claim-client-select');
   if (sel) {
