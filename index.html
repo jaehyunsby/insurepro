@@ -2009,6 +2009,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
         <!-- 하단 버튼 -->
         <button onclick="showClaimPreview()" style="width:100%;padding:13px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">👁 양식 미리보기</button>
+        <button onclick="downloadClaimPDF()" style="width:100%;padding:13px;background:#E8F3FF;border:1px solid #1B64DA;border-radius:12px;font-size:13px;font-weight:700;color:#1B64DA;cursor:pointer;font-family:inherit;margin-bottom:8px;">📄 PDF 다운로드</button>
         <button onclick="saveDraftClaim()" style="width:100%;padding:13px;background:#FFF4E0;border:1px solid #B25A00;border-radius:12px;font-size:13px;font-weight:700;color:#B25A00;cursor:pointer;font-family:inherit;margin-bottom:8px;">💾 임시저장</button>
         <button onclick="showPrivacyAndSubmit()" style="width:100%;padding:14px;background:linear-gradient(135deg,#534AB7,#1B64DA);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:20px;">🏥 청구서 제출</button>
 
@@ -8213,6 +8214,158 @@ function initModeOnStart() {
 }
 
 initAuth().then(() => { setTimeout(initModeOnStart, 100); });
+
+// ========== 현대해상 PDF 좌표 ==========
+const HYUNDAI_COORDS = {"p1_name": {"page": 0, "x1": 123, "y1": 602, "x2": 200, "y2": 621}, "p1_ssn1": {"page": 0, "x1": 255, "y1": 602, "x2": 392, "y2": 620}, "p1_ssn2": {"page": 0, "x1": 402, "y1": 603, "x2": 563, "y2": 620}, "p1_medical_yes": {"page": 0, "x1": 286, "y1": 586, "x2": 293, "y2": 593}, "p1_medical_no": {"page": 0, "x1": 327, "y1": 586, "x2": 334, "y2": 593}, "p1_group_yes": {"page": 0, "x1": 467, "y1": 587, "x2": 473, "y2": 593}, "p1_group_no": {"page": 0, "x1": 508, "y1": 586, "x2": 515, "y2": 594}, "p1_cont_name": {"page": 0, "x1": 122, "y1": 556, "x2": 201, "y2": 574}, "p1_cont_ssn1": {"page": 0, "x1": 255, "y1": 556, "x2": 392, "y2": 576}, "p1_cont_ssn2": {"page": 0, "x1": 401, "y1": 556, "x2": 563, "y2": 576}, "p1_contact_name": {"page": 0, "x1": 123, "y1": 535, "x2": 199, "y2": 553}, "p1_contact_phone": {"page": 0, "x1": 254, "y1": 534, "x2": 525, "y2": 553}, "p1_noti_insured": {"page": 0, "x1": 132, "y1": 517, "x2": 138, "y2": 526}, "p1_noti_contractor": {"page": 0, "x1": 208, "y1": 518, "x2": 217, "y2": 526}, "p1_etc": {"page": 0, "x1": 275, "y1": 517, "x2": 281, "y2": 526}, "p1_noti_sms": {"page": 0, "x1": 131, "y1": 494, "x2": 138, "y2": 503}, "p1_planner_yes": {"page": 0, "x1": 489, "y1": 478, "x2": 496, "y2": 483}, "p1_planner_no": {"page": 0, "x1": 525, "y1": 477, "x2": 532, "y2": 484}, "p1_etc2": {"page": 0, "x1": 314, "y1": 516, "x2": 367, "y2": 528}, "p1_date_year": {"page": 0, "x1": 108, "y1": 433, "x2": 136, "y2": 445}, "p1_date_month": {"page": 0, "x1": 162, "y1": 433, "x2": 187, "y2": 445}, "p1_date_day": {"page": 0, "x1": 208, "y1": 433, "x2": 237, "y2": 444}, "p1_new_claim": {"page": 0, "x1": 389, "y1": 435, "x2": 396, "y2": 442}, "p1_add_claim": {"page": 0, "x1": 452, "y1": 435, "x2": 457, "y2": 442}, "p1_type_disease": {"page": 0, "x1": 92, "y1": 412, "x2": 100, "y2": 420}, "p1_type_injury": {"page": 0, "x1": 169, "y1": 412, "x2": 178, "y2": 419}, "p1_type_traffic": {"page": 0, "x1": 247, "y1": 412, "x2": 254, "y2": 420}, "p1_cause": {"page": 0, "x1": 86, "y1": 376, "x2": 327, "y2": 401}, "p1_auto_debit": {"page": 0, "x1": 136, "y1": 238, "x2": 143, "y2": 245}, "p1_bank": {"page": 0, "x1": 92, "y1": 208, "x2": 179, "y2": 227}, "p1_account_num": {"page": 0, "x1": 239, "y1": 208, "x2": 420, "y2": 228}, "p1_account_holder": {"page": 0, "x1": 480, "y1": 210, "x2": 558, "y2": 227}, "p1_sign_year": {"page": 0, "x1": 113, "y1": 125, "x2": 137, "y2": 138}, "p1_sign_month": {"page": 0, "x1": 159, "y1": 125, "x2": 183, "y2": 137}, "p1_sign_day": {"page": 0, "x1": 201, "y1": 126, "x2": 229, "y2": 137}, "p1_signer_name": {"page": 0, "x1": 369, "y1": 124, "x2": 464, "y2": 141}, "p1_signature": {"page": 0, "x1": 485, "y1": 122, "x2": 554, "y2": 142}, "p2_id_agree": {"page": 1, "x1": 503, "y1": 401, "x2": 527, "y2": 422}, "p2_sen_agree": {"page": 1, "x1": 503, "y1": 296, "x2": 526, "y2": 317}, "p2_per_agree": {"page": 1, "x1": 503, "y1": 173, "x2": 526, "y2": 195}, "p3_id_agree": {"page": 2, "x1": 501, "y1": 270, "x2": 524, "y2": 293}, "p3_sen_agree": {"page": 2, "x1": 500, "y1": 172, "x2": 526, "y2": 194}, "p4_per_agree": {"page": 3, "x1": 500, "y1": 629, "x2": 523, "y2": 651}, "p4_sen_agree": {"page": 3, "x1": 502, "y1": 211, "x2": 523, "y2": 231}, "p4_id_agree": {"page": 3, "x1": 499, "y1": 118, "x2": 521, "y2": 139}};
+
+// ========== 현대해상 PDF 생성 (pdf-lib) ==========
+async function generateHyundaiPDF(cd, sigData) {
+  if (!window.PDFLib) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js');
+  }
+  if (!window.fontkit) {
+    await loadScript('https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js');
+  }
+  const { PDFDocument, rgb } = PDFLib;
+
+  // PDF 원본 + 폰트 동시 로드
+  const BASE = 'https://jaehyunsby.github.io/insurepro';
+  const [pdfBytes, fontBytes] = await Promise.all([
+    fetch(BASE + '/templates/hyundai.pdf').then(r => r.arrayBuffer()),
+    fetch(BASE + '/fonts/NanumGothic.ttf').then(r => r.arrayBuffer()),
+  ]);
+
+  const pdfDoc = await PDFDocument.load(pdfBytes);
+  pdfDoc.registerFontkit(fontkit);
+  const krFont = await pdfDoc.embedFont(fontBytes);
+  const pages = pdfDoc.getPages();
+
+  const today = new Date();
+  const yy = String(today.getFullYear()).slice(2);
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd = String(today.getDate()).padStart(2,'0');
+
+  const fieldData = {
+    p1_name: cd.name,
+    p1_ssn1: cd.ssn ? cd.ssn.split('-')[0] : '',
+    p1_ssn2: cd.ssn ? cd.ssn.split('-')[1] : '',
+    p1_cont_name: cd.sameAsContractor ? cd.name : (cd.contractorName||''),
+    p1_cont_ssn1: cd.ssn ? cd.ssn.split('-')[0] : '',
+    p1_cont_ssn2: cd.ssn ? cd.ssn.split('-')[1] : '',
+    p1_contact_name: cd.name,
+    p1_contact_phone: cd.phone,
+    p1_date_year: cd.dateYear || yy,
+    p1_date_month: cd.dateMonth || mm,
+    p1_date_day: cd.dateDay || dd,
+    p1_type_disease: cd.claimType === '질병',
+    p1_type_injury: cd.claimType === '상해',
+    p1_type_traffic: cd.claimType === '교통사고',
+    p1_new_claim: true,
+    p1_noti_insured: cd.notifyType === '보험청구인',
+    p1_noti_sms: true,
+    p1_medical_no: true,
+    p1_group_no: true,
+    p1_planner_no: true,
+    p1_auto_debit: cd.accountType === '기자급계좌',
+    p1_cause: cd.desc,
+    p1_bank: cd.bank,
+    p1_account_num: cd.accountNum,
+    p1_account_holder: cd.accountHolder,
+    p1_sign_year: yy,
+    p1_sign_month: mm,
+    p1_sign_day: dd,
+    p1_signer_name: cd.name,
+    p2_id_agree: true, p2_sen_agree: true, p2_per_agree: true,
+    p3_id_agree: true, p3_sen_agree: true,
+    p4_per_agree: true, p4_sen_agree: true, p4_id_agree: true,
+    p4_agree_year: yy, p4_agree_month: mm, p4_agree_day: dd,
+    p4_signer_name: cd.name,
+  };
+
+  const WIDE = new Set(['p1_ssn1','p1_ssn2','p1_cont_ssn1','p1_cont_ssn2','p1_contact_phone','p1_account_num']);
+
+  for (const [fid, coord] of Object.entries(HYUNDAI_COORDS)) {
+    const val = fieldData[fid];
+    if (val === undefined || val === null || val === '') continue;
+    const page = pages[coord.page];
+    const { x1, y1, x2, y2 } = coord;
+    const cx = (x1+x2)/2, cy = (y1+y2)/2;
+    const h = Math.abs(y2-y1), w = Math.abs(x2-x1);
+
+    if (typeof val === 'boolean') {
+      if (val) {
+        const fs = Math.min(h*1.1, 10);
+        page.drawText('V', { x: cx-fs*0.3, y: cy-fs*0.3, size: fs, font: krFont, color: rgb(0,0,0.7) });
+      }
+    } else if (fid.includes('signature') && sigData) {
+      try {
+        const b64 = sigData.split(',')[1];
+        const imgBytes = Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
+        const img = await pdfDoc.embedPng(imgBytes);
+        page.drawImage(img, { x:x1, y:y1, width:w, height:h });
+      } catch(e) {}
+    } else if (typeof val === 'string' && val) {
+      const fs = Math.min(h*0.85, 11);
+      if (WIDE.has(fid)) {
+        const cw = krFont.widthOfTextAtSize(val[0]||'0', fs);
+        const total = cw * val.length;
+        const gap = total < w ? (w - total) / (val.length+1) : 0;
+        let x = x1 + gap;
+        for (const ch of val) {
+          page.drawText(ch, { x, y: cy-fs*0.35, size: fs, font: krFont, color: rgb(0,0,0) });
+          x += cw + gap;
+        }
+      } else {
+        page.drawText(val, { x: x1+1, y: cy-fs*0.35, size: fs, font: krFont, color: rgb(0,0,0) });
+      }
+    }
+  }
+
+  return await pdfDoc.save();
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function downloadClaimPDF() {
+  showBizToast('📄 PDF 생성 중...');
+  try {
+    const cd = {
+      name: document.getElementById('claim-name')?.value || '',
+      ssn: (document.getElementById('claim-ssn1')?.value||'') + '-' + (document.getElementById('claim-ssn2')?.value||''),
+      phone: document.getElementById('claim-phone')?.value || '',
+      sameAsContractor: claimData.sameAsContractor,
+      contractorName: document.getElementById('claim-contractor-name')?.value || '',
+      claimType: claimData.claimType,
+      dateYear: String(document.getElementById('claim-date-year')?.value||'').slice(-2),
+      dateMonth: document.getElementById('claim-date-month')?.value || '',
+      dateDay: document.getElementById('claim-date-day')?.value || '',
+      desc: document.getElementById('claim-desc')?.value || '',
+      bank: document.getElementById('claim-bank')?.value || '',
+      accountNum: document.getElementById('claim-account-num')?.value || '',
+      accountHolder: document.getElementById('claim-account-holder')?.value || '',
+      accountType: claimData.accountType,
+      notifyType: claimData.notifyType,
+    };
+    const pdfBytes = await generateHyundaiPDF(cd, claimData.sigData);
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `현대해상_청구서_${cd.name}_${new Date().toISOString().slice(0,10)}.pdf`;
+    a.click();
+    showBizToast('✅ PDF 다운로드 완료');
+  } catch(e) {
+    console.error(e);
+    showBizToast('❌ PDF 생성 실패: ' + e.message);
+  }
+}
+
 </script>
 </body>
 </html>
