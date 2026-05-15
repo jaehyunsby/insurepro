@@ -2118,8 +2118,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #E5E8EB;position:sticky;top:0;background:#fff;z-index:1;">
         <div style="font-size:15px;font-weight:700;">미리보기 <span id="preview-page-info" style="font-size:12px;color:#B0B8C1;"></span></div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button onclick="prevPreviewPage()" style="padding:6px 10px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:8px;font-size:12px;cursor:pointer;">‹</button>
-          <button onclick="nextPreviewPage()" style="padding:6px 10px;background:#F7F8FA;border:1px solid #E5E8EB;border-radius:8px;font-size:12px;cursor:pointer;">›</button>
+          <button onclick="downloadFromPreview()" style="padding:6px 12px;background:#1B64DA;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">💾 다운로드</button>
           <button onclick="closeBizModal('biz-claim-preview-modal')" style="background:none;border:none;font-size:22px;color:#6B7684;cursor:pointer;">×</button>
         </div>
       </div>
@@ -6770,9 +6769,73 @@ function logKakaoCmd(cmd) {
 let previewCurrentPage = 1;
 const PREVIEW_TOTAL = 4;
 
-function showClaimPreview(claimRecord) {
-  previewCurrentPage = 1;
-  renderPreviewPage(claimRecord || getCurrentClaimData());
+async function showClaimPreview(claimRecord) {
+  showBizToast('📄 미리보기 생성 중...');
+  try {
+    let cd;
+    if (claimRecord && claimRecord.client_name) {
+      // 청구내역에서 열기
+      cd = {
+        name: claimRecord.client_name,
+        ssn: claimRecord.client_ssn || '',
+        phone: claimRecord.client_phone || '',
+        sameAsContractor: true,
+        contractorName: '',
+        claimType: claimRecord.claim_type || '질병',
+        dateYear: claimRecord.claim_date ? String(claimRecord.claim_date).slice(2,4) : '',
+        dateMonth: claimRecord.claim_date ? String(claimRecord.claim_date).slice(5,7) : '',
+        dateDay: claimRecord.claim_date ? String(claimRecord.claim_date).slice(8,10) : '',
+        desc: claimRecord.description || '',
+        bank: claimRecord.bank || '',
+        accountNum: claimRecord.account_num || '',
+        accountHolder: claimRecord.account_holder || '',
+        accountType: '기자급계좌',
+        notifyType: claimRecord.notify_type || '보험청구인',
+      };
+      const sigData = claimRecord.sig_data || '';
+      const pdfBytes = await generateHyundaiPDF(cd, sigData);
+      showPDFPreview(pdfBytes);
+    } else {
+      // 현재 폼에서 열기
+      const pdfBytes = await generateHyundaiPDF(getCurrentClaimDataForPDF(), claimData.sigData);
+      showPDFPreview(pdfBytes);
+    }
+  } catch(e) {
+    showBizToast('❌ 미리보기 실패: ' + e.message);
+    console.error(e);
+  }
+}
+
+function getCurrentClaimDataForPDF() {
+  return {
+    name: document.getElementById('claim-name')?.value || '',
+    ssn: (document.getElementById('claim-ssn1')?.value||'') + '-' + (document.getElementById('claim-ssn2')?.value||''),
+    phone: document.getElementById('claim-phone')?.value || '',
+    sameAsContractor: claimData.sameAsContractor,
+    contractorName: document.getElementById('claim-contractor-name')?.value || '',
+    claimType: claimData.claimType,
+    dateYear: String(document.getElementById('claim-date-year')?.value||'').slice(-2),
+    dateMonth: document.getElementById('claim-date-month')?.value || '',
+    dateDay: document.getElementById('claim-date-day')?.value || '',
+    desc: document.getElementById('claim-desc')?.value || '',
+    bank: document.getElementById('claim-bank')?.value || '',
+    accountNum: document.getElementById('claim-account-num')?.value || '',
+    accountHolder: document.getElementById('claim-account-holder')?.value || '',
+    accountType: claimData.accountType,
+    notifyType: claimData.notifyType,
+  };
+}
+
+function showPDFPreview(pdfBytes) {
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const modal = document.getElementById('biz-claim-preview-modal');
+  const content = document.getElementById('claim-preview-content');
+  if (content) {
+    content.innerHTML = `<iframe src="${url}" style="width:100%;height:70vh;border:none;"></iframe>`;
+  }
+  const info = document.getElementById('preview-page-info');
+  if (info) info.textContent = '실제 PDF';
   openBizModal('biz-claim-preview-modal');
 }
 
@@ -8333,31 +8396,31 @@ function loadScript(src) {
   });
 }
 
-async function downloadClaimPDF() {
-  showBizToast('📄 PDF 생성 중...');
+async function downloadFromPreview() {
+  showBizToast('📄 PDF 다운로드 중...');
   try {
-    const cd = {
-      name: document.getElementById('claim-name')?.value || '',
-      ssn: (document.getElementById('claim-ssn1')?.value||'') + '-' + (document.getElementById('claim-ssn2')?.value||''),
-      phone: document.getElementById('claim-phone')?.value || '',
-      sameAsContractor: claimData.sameAsContractor,
-      contractorName: document.getElementById('claim-contractor-name')?.value || '',
-      claimType: claimData.claimType,
-      dateYear: String(document.getElementById('claim-date-year')?.value||'').slice(-2),
-      dateMonth: document.getElementById('claim-date-month')?.value || '',
-      dateDay: document.getElementById('claim-date-day')?.value || '',
-      desc: document.getElementById('claim-desc')?.value || '',
-      bank: document.getElementById('claim-bank')?.value || '',
-      accountNum: document.getElementById('claim-account-num')?.value || '',
-      accountHolder: document.getElementById('claim-account-holder')?.value || '',
-      accountType: claimData.accountType,
-      notifyType: claimData.notifyType,
-    };
-    const pdfBytes = await generateHyundaiPDF(cd, claimData.sigData);
+    const pdfBytes = await generateHyundaiPDF(getCurrentClaimDataForPDF(), claimData.sigData);
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `현대해상_청구서_${cd.name}_${new Date().toISOString().slice(0,10)}.pdf`;
+    const name = document.getElementById('claim-name')?.value || '청구';
+    a.download = `현대해상_청구서_${name}_${new Date().toISOString().slice(0,10)}.pdf`;
+    a.click();
+    showBizToast('✅ PDF 다운로드 완료');
+  } catch(e) {
+    showBizToast('❌ 다운로드 실패: ' + e.message);
+  }
+}
+
+async function downloadClaimPDF() {
+  showBizToast('📄 PDF 생성 중...');
+  try {
+    const pdfBytes = await generateHyundaiPDF(getCurrentClaimDataForPDF(), claimData.sigData);
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const name = document.getElementById('claim-name')?.value || '청구';
+    a.download = `현대해상_청구서_${name}_${new Date().toISOString().slice(0,10)}.pdf`;
     a.click();
     showBizToast('✅ PDF 다운로드 완료');
   } catch(e) {
