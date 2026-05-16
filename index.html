@@ -1708,6 +1708,14 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
     <!-- 고객관리 -->
     <div class="biz-page" id="biz-page-clients">
+      <!-- 고객/DB 탭 -->
+      <div style="display:flex;gap:0;background:#fff;border-radius:12px;border:1px solid #E5E8EB;overflow:hidden;margin-bottom:12px;flex-shrink:0;">
+        <button id="client-tab-clients" onclick="switchClientTab('clients')" style="flex:1;padding:10px;background:#534AB7;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">👥 고객</button>
+        <button id="client-tab-db" onclick="switchClientTab('db')" style="flex:1;padding:10px;background:#F7F8FA;color:#6B7684;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🗄️ DB</button>
+      </div>
+
+      <!-- 고객 탭 -->
+      <div id="client-tab-content-clients">
       <input class="biz-input" id="client-search" placeholder="고객 검색..." style="margin-bottom:10px;" oninput="renderBizClients()">
       <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;" id="client-filter-tabs">
         <button class="tab-btn active" data-cf="all" onclick="setBizClientFilter('all',this)">전체</button>
@@ -1830,18 +1838,29 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
     </div>
 
     <!-- DB 수집 -->
-    <div class="biz-page" id="biz-page-db">
+      </div><!-- /client-tab-content-clients -->
+
+      <!-- DB 탭 -->
+      <div id="client-tab-content-db" style="display:none;">
       <div class="biz-stats">
         <div class="biz-stat"><div class="biz-stat-label">총 DB</div><div class="biz-stat-value" id="db-total">—</div></div>
         <div class="biz-stat"><div class="biz-stat-label">미배분</div><div class="biz-stat-value" id="db-unassigned">—</div></div>
       </div>
       <div id="biz-db-list"></div>
-    </div>
 
+      </div><!-- /client-tab-content-db -->
+    </div><!-- /biz-page-clients -->
 
-
-    <!-- 보험금청구 -->
+    <!-- 자동화 -->
     <div class="biz-page" id="biz-page-claim">
+      <!-- 서브탭 -->
+      <div style="display:flex;gap:0;background:#fff;border-radius:12px;border:1px solid #E5E8EB;overflow:hidden;margin-bottom:14px;flex-shrink:0;">
+        <button id="auto-tab-claim" onclick="switchAutoTab('claim')" style="flex:1;padding:10px;background:#534AB7;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🏥 보험금청구</button>
+        <button id="auto-tab-register" onclick="switchAutoTab('register')" style="flex:1;padding:10px;background:#F7F8FA;color:#6B7684;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📋 고객등록</button>
+      </div>
+
+      <!-- 보험금청구 탭 -->
+      <div id="auto-tab-content-claim">
       <!-- 새청구 / 청구내역 -->
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <button id="claim-view-new" onclick="setClaimView('new')" style="flex:1;padding:10px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">+ 새 청구</button>
@@ -2014,7 +2033,19 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
         <button onclick="showPrivacyAndSubmit()" style="width:100%;padding:14px;background:linear-gradient(135deg,#534AB7,#1B64DA);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:20px;">🏥 청구서 제출</button>
 
       </div><!-- /claim-new-view -->
-    </div>
+      </div><!-- /auto-tab-content-claim -->
+
+      <!-- 고객등록 탭 -->
+      <div id="auto-tab-content-register" style="display:none;">
+        <div class="biz-card" style="text-align:center;padding:48px 20px;">
+          <div style="font-size:44px;margin-bottom:14px;">📋</div>
+          <div style="font-size:16px;font-weight:800;color:#191F28;margin-bottom:8px;">고객등록 시스템</div>
+          <div style="font-size:13px;color:#6B7684;line-height:1.8;">보험사 전산 등록을 위한<br>정보 입력 → PDF 생성 → 팩스 발송</div>
+          <div style="margin-top:20px;padding:12px 16px;background:#EEEDFE;border-radius:10px;font-size:12px;color:#534AB7;font-weight:700;">🚧 준비 중</div>
+        </div>
+      </div><!-- /auto-tab-content-register -->
+
+    </div><!-- /biz-page-claim -->
 
 
     <div class="biz-page" id="biz-page-more">
@@ -2045,8 +2076,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
     <button class="biz-nav-item active" id="biz-nav-dashboard" onclick="switchBizPage('dashboard',this)"><span>🏠</span>홈</button>
     <button class="biz-nav-item" id="biz-nav-clients" onclick="switchBizPage('clients',this)"><span>👥</span>고객</button>
     <button class="biz-nav-item" id="biz-nav-ai" onclick="switchBizPage('ai',this)"><span>🤖</span>분석</button>
-    <button class="biz-nav-item" id="biz-nav-db" onclick="switchBizPage('db',this)"><span>🗄️</span>DB</button>
-    <button class="biz-nav-item" id="biz-nav-claim" onclick="switchBizPage('claim',this)"><span>🏥</span>청구</button>
+    <button class="biz-nav-item" id="biz-nav-claim" onclick="switchBizPage('claim',this)"><span>⚡</span>자동화</button>
     <button class="biz-nav-item" id="biz-nav-more" onclick="switchBizPage('more',this)"><span>⋯</span>더보기</button>
   </nav>
 
@@ -6226,6 +6256,98 @@ function showModeSelect() {
   document.getElementById('mode-switch-bar').classList.add('hidden');
 }
 
+
+
+// ========== 자동화 서브탭 ==========
+function switchAutoTab(tab) {
+  ['claim','register'].forEach(t => {
+    const btn = document.getElementById('auto-tab-' + t);
+    const content = document.getElementById('auto-tab-content-' + t);
+    const isActive = t === tab;
+    if (btn) {
+      btn.style.background = isActive ? '#534AB7' : '#F7F8FA';
+      btn.style.color = isActive ? '#fff' : '#6B7684';
+    }
+    if (content) content.style.display = isActive ? '' : 'none';
+  });
+  if (tab === 'claim') {
+    // 보험금청구 초기화는 이미 initClaimPage에서 처리
+  }
+}
+
+// ========== 고객/DB 탭 전환 ==========
+function switchClientTab(tab) {
+  ['clients','db'].forEach(t => {
+    const btn = document.getElementById('client-tab-' + t);
+    const content = document.getElementById('client-tab-content-' + t);
+    const isActive = t === tab;
+    if (btn) {
+      btn.style.background = isActive ? '#534AB7' : '#F7F8FA';
+      btn.style.color = isActive ? '#fff' : '#6B7684';
+    }
+    if (content) content.style.display = isActive ? '' : 'none';
+  });
+  // FAB 버튼 라벨/동작 변경
+  const fab = document.getElementById('biz-fab');
+  if (fab) {
+    if (tab === 'clients') {
+      fab.onclick = () => openBizClientModal();
+      fab.title = '고객 추가';
+    } else {
+      fab.onclick = () => openBizDbModal();
+      fab.title = 'DB 추가';
+    }
+  }
+  if (tab === 'clients') renderBizClients();
+  if (tab === 'db') renderBizDb();
+
+}
+
+// ========== 자동화 서브탭 ==========
+function switchAutoTab(tab) {
+  ['claim','register'].forEach(t => {
+    const btn = document.getElementById('auto-tab-' + t);
+    const content = document.getElementById('auto-tab-content-' + t);
+    const isActive = t === tab;
+    if (btn) {
+      btn.style.background = isActive ? '#534AB7' : '#F7F8FA';
+      btn.style.color = isActive ? '#fff' : '#6B7684';
+    }
+    if (content) content.style.display = isActive ? '' : 'none';
+  });
+  if (tab === 'claim') {
+    // 보험금청구 초기화는 이미 initClaimPage에서 처리
+  }
+}
+
+// ========== 고객/DB 탭 전환 ==========
+function switchClientTab(tab) {
+  ['clients','db'].forEach(t => {
+    const btn = document.getElementById('client-tab-' + t);
+    const content = document.getElementById('client-tab-content-' + t);
+    const isActive = t === tab;
+    if (btn) {
+      btn.style.background = isActive ? '#534AB7' : '#F7F8FA';
+      btn.style.color = isActive ? '#fff' : '#6B7684';
+    }
+    if (content) content.style.display = isActive ? '' : 'none';
+  });
+  // FAB 버튼 동작 변경
+  const fab = document.getElementById('biz-fab');
+  if (fab) {
+    if (tab === 'clients') {
+      fab.onclick = () => openBizClientModal();
+      fab.style.display = 'flex';
+    } else {
+      fab.onclick = () => openBizDbModal();
+      fab.style.display = 'flex';
+    }
+  }
+  if (tab === 'clients') renderBizClients();
+  if (tab === 'db') renderBizDb();
+
+}
+
 function switchBizPage(name, btn) {
   bizCurrentPage = name;
   document.querySelectorAll('.biz-page').forEach(p => p.classList.remove('active'));
@@ -6233,11 +6355,10 @@ function switchBizPage(name, btn) {
   document.querySelectorAll('.biz-nav-item').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   else { const nb = document.getElementById('biz-nav-' + name); if(nb) nb.classList.add('active'); }
-  const titles = {dashboard:'대시보드', clients:'고객관리', ai:'언더라이팅', db:'DB 수집관리', claim:'보험금청구', more:'더보기'};
+  const titles = {dashboard:'대시보드', clients:'고객관리', ai:'언더라이팅', claim:'자동화', more:'더보기'};
   document.getElementById('biz-page-title').textContent = titles[name] || name;
-  document.getElementById('biz-fab').style.display = ['clients','db'].includes(name) ? 'flex' : 'none';
-  if (name === 'clients') renderBizClients();
-  if (name === 'db') renderBizDb();
+  document.getElementById('biz-fab').style.display = name === 'clients' ? 'flex' : 'none';
+  if (name === 'clients') { renderBizClients(); }
   if (name === 'more') renderBizAgents();
   if (name === 'dashboard') renderBizDashboard();
   if (name === 'ai') { renderBizAiHistory(); renderUwHistory(); populateUwClientSelect(); }
@@ -7594,6 +7715,7 @@ function initClaimPage() {
   const bankEl = document.getElementById('claim-bank'); if (bankEl) bankEl.value = '';
   const fileEl = document.getElementById('claim-file-input'); if (fileEl) fileEl.value = '';
   const fileNamesEl = document.getElementById('claim-file-names'); if (fileNamesEl) fileNamesEl.textContent = '';
+  switchAutoTab('claim');
   setClaimView('new');
   setClaimInsTab('손해');
   setClaimType('질병');
